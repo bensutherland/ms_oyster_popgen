@@ -1,5 +1,5 @@
-#### Analyze MOP oyster populations using Eric Normandeau's stacks_workflow pipeline
-##### https://github.com/enormandeau/stacks_workflow
+### Analyze MOP oyster populations using Eric Normandeau's stacks_workflow pipeline
+https://github.com/enormandeau/stacks_workflow
 
 ### Setup
 Put all raw data into `02-raw` using cp or cp -l    
@@ -38,35 +38,11 @@ Determine number of reads per sample
 for i in $(ls *.fq.gz) ; do echo $i ; gunzip -c $i | grep -cE '^@' - ; done
 # move to excel and plot
 
-# THIS IS WHERE de novo AND REFERENCE-BASED DIVERGE
-#
-### de novo ###
 
-# assess output of ustacks
-grep -E 'Sample ID|Loaded|merged into|Number of utilized reads|After remainders merged' 10-log_files/2017-05-31_11h50m34s_stacks_1a_ustacks.log > 10-log_files/ustacks_output_trimmed.txt
-# this provides:
-# sample ID; Number RAD-Tags; Number of loci; Coverage stats; Number used reads
-# Then run the following assessment script to collect data
-./00-scripts/assessment_scripts/01_assess_ustacks.sh
-# Then use the R script to get stats and figures on this output data  
-/Users/wayne/Documents/miller/Moore_oyster/04_analysis/stacks_workflow_2017-05-31/assessing_results/assessing_results.R
-
-# skip ahead to cstacks
-
-
-### reference-based ###
-# Align against reference genome
-# Two options: Genbank genome (longer) or PAG genome (in chromosomes)
-
-# Locations of genomes:
-#PAG
-/Users/wayne/Documents/miller/Moore_oyster/00_resources/Cgigas_genome_PAG/Assembly_1/C_gigas_assembly_1_all_chr.fa
-# NCBI
-/Users/wayne/Documents/z-genome-Cgig/GCA_000297895.1_oyster_v9_genomic.fna.gz
-
-# First try with PAG genome
-# first need to edit the alignment script to update the variables GENOMEFOLDER and GENOME
-00-scripts/bwa_mem_align_reads.sh 3 
+### Reference-based STACKS 
+Align against reference genome for C. gigas from NCBI    
+Edit alignment script to update variables GENOMEFOLDER and GENOME    
+Then run: `00-scripts/bwa_mem_align_reads.sh 3`     
 # also see lots of alignment settings and mapping settings for more information on what is being retained
 # There are options for the PAG genome or the NCBI genome
 
