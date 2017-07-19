@@ -1,29 +1,38 @@
-# Following Eric Normandeau's stacks_workflow pipeline
-# https://github.com/enormandeau/stacks_workflow
+#### Analyze MOP oyster populations using Eric Normandeau's stacks_workflow pipeline
+##### https://github.com/enormandeau/stacks_workflow
 
-# Raw data in 02-raw folder
+### Setup
+Put all raw data into `02-raw` using cp or cp -l    
+Make a new directory in the raw data folder
+`mkdir 02-raw/fastqc_raw`    
 
-# Perform fastqc on raw data
+Run fastqc and summarize results    
+`fastqc 02-raw/*.fastq.gz -o 02-raw/fastqc_raw/ -t 5`    
+`multiqc -o 02-raw/fastqc_raw/ 02-raw/fastqc_raw`   
+
+Prepare lane_info.txt file, containing names of lanes/chips    
+`./00-scripts/00_prepare_lane_info.sh`
+
+Trim for adapters and too short reads    
+`./00-scripts/01_cutadapt.sh <numCPUs>`    
+Record the results of the trimming for reference
+
+Run fastqc on trimmed data and summarize results     
+`mkdir 02-raw/trimmed/fastqc_trimmed/`    
+`multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed`         
+
+Prepare a sample information file manually, using the example file, sample_information.csv as a template.    
 
 
-# Prepare lane_info.txt file
-./00-scripts/00_prepare_lane_info.sh
+### De-multiplex your data    
+Trim with process_radtags
+`./00-scripts/02_process_radtags.sh 70 nsiI mspI`
 
-# Remove adapters (and short read trim) from raw data using cutadapt
-./00-scripts/01_cutadapt.sh <numCPUs>
-# record the results of the trimming for reference
+Rename and copy
+`./00-scripts/03_rename_samples.sh`
 
-# Prepare the sample_information.csv file
-#Do manually, use example file
-
-# Trim using process_radtags
-./00-scripts/02_process_radtags.sh 70 nsiI mspI
-
-# Rename and copy
-./00-scripts/03_rename_samples.sh
-
-# Determine how many reads per file from the samples folder:
-cd 04-all_samples
+Determine number of reads per sample
+`cd 04-all_samples`    
 for i in $(ls *.fq.gz) ; do echo $i ; gunzip -c $i | grep -cE '^@' - ; done
 # move to excel and plot
 
