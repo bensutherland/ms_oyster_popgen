@@ -21,12 +21,14 @@ Run fastqc on trimmed data and summarize results
 `mkdir 02-raw/trimmed/fastqc_trimmed/`    
 `multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed`         
 
-Prepare a sample information file manually, using the example file, sample_information.csv as a template.    
+Prepare a sample information file manually, using the example file, sample_information.csv as a template. Remember, this must be a tab-delimited text file! (not csv)    
+
+Add the barcodes file that contains all barcodes for the project. This corresponds to the sample information file.    
 
 
 ### De-multiplex your data    
 Trim with process_radtags
-`./00-scripts/02_process_radtags.sh 70 nsiI mspI`
+`./00-scripts/02_process_radtags_2_enzymes.sh 70 nsiI mspI` 
 
 Rename and copy
 `./00-scripts/03_rename_samples.sh`
