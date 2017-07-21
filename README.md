@@ -61,9 +61,8 @@ Index the reference genome for use with bwa
 Edit the following script to point to the correct GENOMEFOLDER and GENOME variables, then run it        
 `00-scripts/bwa_mem_align_reads.sh 6`     
 
-To assess mapping results, use the automated script:     
+Compare total number of reads to the total number of mappings per sample using the automated script:
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
-This will provide average 
 
 Assess mapping results    
 # number of mappings for one sample:
