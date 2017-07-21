@@ -1,16 +1,30 @@
 ### Analyze MOP oyster populations using Eric Normandeau's stacks_workflow pipeline
 https://github.com/enormandeau/stacks_workflow
 
+Requirements:    
+`cutadapt`
+`fastqc`   
+`multiqc`   
+`bwa`   
+`samtools`
+`stacks`    
+
+
 ### Setup
 Put all raw data into `02-raw` using cp or cp -l    
-Make a new directory in the raw data folder
-`mkdir 02-raw/fastqc_raw`    
+
+Manually prepare a sample info file (see example file sample_information.csv). Importantly this must be a tab-delimited text file, but save as .csv.    
+
+Add the barcodes file that contains all barcodes for the project. This corresponds to the sample information file.    
+
+### Cleanup
 
 Run fastqc and summarize results    
+`mkdir 02-raw/fastqc_raw`    
 `fastqc 02-raw/*.fastq.gz -o 02-raw/fastqc_raw/ -t 5`    
 `multiqc -o 02-raw/fastqc_raw/ 02-raw/fastqc_raw`   
 
-Prepare lane_info.txt file, containing names of lanes/chips    
+Use automated script to prep lane_info.txt file
 `./00-scripts/00_prepare_lane_info.sh`
 
 Trim for adapters and too short reads    
@@ -19,54 +33,52 @@ Record the results of the trimming for reference
 
 Run fastqc on trimmed data and summarize results     
 `mkdir 02-raw/trimmed/fastqc_trimmed/`    
-`multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed`         
+`multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed`       
 
-Prepare a sample information file manually, using the example file, sample_information.csv as a template. Remember, this must be a tab-delimited text file! (not csv)    
-
-Add the barcodes file that contains all barcodes for the project. This corresponds to the sample information file.    
-
-
-### De-multiplex your data    
+### De-multiplex
 Trim with process_radtags
 `./00-scripts/02_process_radtags_2_enzymes.sh 70 nsiI mspI` 
 
-Rename and copy
+Use automated script to rename and copy samples    
 `./00-scripts/03_rename_samples.sh`
 
 Determine number of reads per sample
 `cd 04-all_samples`    
-for i in $(ls *.fq.gz) ; do echo $i ; gunzip -c $i | grep -cE '^@' - ; done
+`rm num_reads_per_sample.txt ; for i in $(ls *.fq.gz) ; do echo $i >> num_reads_per_sample.txt ; gunzip -c $i | grep -cE '^@' - >> num_reads_per_sample.txt ; done`
+`sed -i 'N;s/\n/\t/' num_reads_per_sample.txt`
 # move to excel and plot
 
 
-### Reference-based STACKS 
-Align against reference genome for C. gigas from NCBI    
-Edit alignment script to update variables GENOMEFOLDER and GENOME    
-Then run: `00-scripts/bwa_mem_align_reads.sh 3`     
-# also see lots of alignment settings and mapping settings for more information on what is being retained
-# There are options for the PAG genome or the NCBI genome
+### Reference-based stacks
+## Align samples against reference genome
+Here use C. gigas assembly from NCBI    
+Index the reference genome for use with bwa   
+`bwa index GCA_000297895.1_oyster_v9_genomic.fna.gz`
 
-### Assessing Mapping Results ###
-# Then check for things like how many mappings were successful
+Edit the following script to point to the correct GENOMEFOLDER and GENOME variables, then run it        
+`00-scripts/bwa_mem_align_reads.sh 6`     
+
+Assess mapping results    
 # number of mappings for one sample:
 samtools view ./Barnes_95.bam | wc -l
 # number of unique scaffolds being mapped to:
 samtools view Barnes_95.bam | awk '{print $3}' - | sort -n | uniq -c | sort -n | wc -l
 
 
-### Prepare for Stacks ###
-# Finally, prepare the population map file, this will go into 01-info_files/population_map.txt
-./00-scripts/04_prepare_population_map.sh
+### Prepare for Stacks
+Use automated script to prepare the population map file
+`./00-scripts/04_prepare_population_map.sh`
 
 
 ### Running stacks with individual components ###
-./00-scripts/stacks_1b_pstacks.sh
+`./00-scripts/stacks_1b_pstacks.sh`
 
 # Obtain info 
 # grep -E 'Alignments|^Kept' 10-log_files/*_1b_pstacks.log > ./10-log_files/pstacks_output.txt
 
 # cstacks
-./00-scripts/stacks_2_cstacks.sh
+First edit the cstacks script to enable use of -g for using genomic location rather than sequence similarity.
+`./00-scripts/stacks_2_cstacks.sh`
 
 # Obtain info 
 # grep -E 'newly added|loci in the catalog| were matched to a catalog locus\.' 10-log_files/2017-05-31_14h41m03s_stacks_2_cstacks.log > 10-log_files/cstacks_output_trimmed.txt
@@ -75,7 +87,12 @@ samtools view Barnes_95.bam | awk '{print $3}' - | sort -n | uniq -c | sort -n |
 #00-scripts/assessment_scripts/02_assess_cstacks.sh
 # then go to the same R script to make figures
 
+
+Edit to use more cores and to use -g flag
 ./00-scripts/stacks_3_sstacks.sh
+
+
+
 # see the output by:
 # grep -E 'Processing|matching loci' 10-log_files/*sstacks.log | grep -v 'haplotypes examined' - > 10-log_files/sstacks_output_trimmed.txt
 # this gives you how many loci were matched against the catalog per sample
