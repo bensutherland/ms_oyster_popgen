@@ -27,7 +27,7 @@ barplot(collective$reads, las = 1, names.arg = collective$sample, ylab = "Num re
 x<- barplot(collective$mappings, las = 1, add = TRUE, col = "grey", xaxt = "n")
 
 labs <- paste(collective$sample)
-text(cex = 0.6, x=x-0.25, y=-1.25, labs, xpd=T, srt=45)
+text(cex = 0.8, x=x-0.25, y=-1.25, labs, xpd=T, srt=45)
 legend(x = "topright", legend = c("reads","mappings"), fill = c("white","black"))
 dev.off()
 
