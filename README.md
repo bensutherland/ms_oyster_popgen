@@ -2,18 +2,19 @@
 https://github.com/enormandeau/stacks_workflow
 
 Requirements:    
-`cutadapt`
+`cutadapt`    
 `fastqc`   
 `multiqc`   
 `bwa`   
-`samtools`
+`samtools`    
 `stacks`    
 
 
 ### Setup
-Put all raw data into `02-raw` using cp or cp -l    
+All raw data in `02-raw` using cp or cp -l    
 
-Manually prepare a sample info file (see example file sample_information.csv). Importantly this must be a tab-delimited text file, but save as .csv.    
+Manually prepare a sample info file (see example file sample_information.csv).   
+This must be a tab-delimited text file, but the file name is .csv.    
 
 Add the barcodes file that contains all barcodes for the project. This corresponds to the sample information file.    
 
@@ -42,12 +43,14 @@ Trim with process_radtags
 Use automated script to rename and copy samples    
 `./00-scripts/03_rename_samples.sh`
 
-Determine number of reads per sample
-`cd 04-all_samples`    
-`rm num_reads_per_sample.txt ; for i in $(ls *.fq.gz) ; do echo $i >> num_reads_per_sample.txt ; gunzip -c $i | grep -cE '^@' - >> num_reads_per_sample.txt ; done`
-`sed -i 'N;s/\n/\t/' num_reads_per_sample.txt`
-# move to excel and plot
-
+####
+This may be redundant:
+# Determine number of reads per sample
+# `cd 04-all_samples`    
+# `rm num_reads_per_sample.txt ; for i in $(ls *.fq.gz) ; do echo $i >> num_reads_per_sample.txt ; gunzip -c $i | grep -cE '^@' - >> num_reads_per_sample.txt ; done`
+# `sed -i 'N;s/\n/\t/' num_reads_per_sample.txt`
+# # move to excel and plot
+#### 
 
 ### Reference-based stacks
 ## Align samples against reference genome
@@ -57,6 +60,10 @@ Index the reference genome for use with bwa
 
 Edit the following script to point to the correct GENOMEFOLDER and GENOME variables, then run it        
 `00-scripts/bwa_mem_align_reads.sh 6`     
+
+To assess mapping results, use the automated script:     
+`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
+This will provide average 
 
 Assess mapping results    
 # number of mappings for one sample:
