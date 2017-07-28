@@ -64,6 +64,7 @@ This produces a graph as well as some summary statistics.
 
 #todo: retain summary statistics for both above in a log file     
 
+
 ### Prep for Stacks
 Use automated script to prepare the population map file
 `./00-scripts/04_prepare_population_map.sh`
@@ -72,8 +73,9 @@ Use automated script to prepare the population map file
 `./00-scripts/stacks_1b_pstacks.sh`
 
 Obtain some info on your pstacks alignment results from the log file:   
-HERE 
-# grep -E 'Alignments|^Kept' 10-log_files/*_1b_pstacks.log > ./10-log_files/pstacks_output.txt
+`./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
+This provides an output file `output_pstacks_results.csv` that provides sample names, the number of loci in the sample, and the average coverage.
+
 
 # cstacks
 First edit the cstacks script to enable use of -g for using genomic location rather than sequence similarity.
