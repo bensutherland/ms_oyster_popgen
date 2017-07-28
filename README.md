@@ -52,8 +52,8 @@ This may be redundant:
 # # move to excel and plot
 #### 
 
-### Reference-based stacks
-## Align samples against reference genome
+## Reference-based stacks
+### Align samples against reference genome
 Here use C. gigas assembly from NCBI    
 Index the reference genome for use with bwa   
 `bwa index GCA_000297895.1_oyster_v9_genomic.fna.gz`
@@ -63,23 +63,22 @@ Edit the following script to point to the correct GENOMEFOLDER and GENOME variab
 
 Compare total number of reads to the total number of mappings per sample using the automated script:
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
+In brief, this will produce two files in `04-all_samples`, `reads_per_sample_table.txt` and `mappings_per_sample.txt`. Then it will run an r script that will perform some summary statistics on the output of this. Specifically, this will produce a graph that shows the total number of reads vs the number of reads mapping.     
 
-Assess mapping results    
-# number of mappings for one sample:
-samtools view ./Barnes_95.bam | wc -l
-# number of unique scaffolds being mapped to:
-samtools view Barnes_95.bam | awk '{print $3}' - | sort -n | uniq -c | sort -n | wc -l
+Other ways that you can assess your mapping results include:    
+Evaluate the number of unique scaffolds being mapped per library:    
+`samtools view Barnes_95.bam | awk '{print $3}' - | sort -n | uniq -c | sort -n | wc -l`
 
 
-### Prepare for Stacks
+### Prep for Stacks
 Use automated script to prepare the population map file
 `./00-scripts/04_prepare_population_map.sh`
 
-
-### Running stacks with individual components ###
+### pstacks
 `./00-scripts/stacks_1b_pstacks.sh`
 
-# Obtain info 
+Obtain some info on your pstacks alignment results from the log file:   
+HERE 
 # grep -E 'Alignments|^Kept' 10-log_files/*_1b_pstacks.log > ./10-log_files/pstacks_output.txt
 
 # cstacks
