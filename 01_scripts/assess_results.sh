@@ -37,11 +37,10 @@ sed 'N;s/\n/ /' mappings_per_sample.txt > mappings_per_sample_table.txt
 # Remove intermediate file
 rm mappings_per_sample.txt
 
-# Run Rscript to calculate
-#awk '{ print $2 }' reads_per_sample_table.txt | R --vanilla --slave -e "data=read.delim(pipe('cat /dev/stdin'), header =F) ; mean(data\$V1)"
-
+# Move back to main directory to run rscript
 cd ..
 
-# Run some quick stats on the result 
-Rscript ./../ms_oyster_popgen/01_scripts/summary_stats.R
+# Plot number of reads and number of mappings in a barplot
+# Will save out to main directory 
+Rscript ./../ms_oyster_popgen/01_scripts/assess_reads_mappings.R
 
