@@ -43,14 +43,6 @@ Trim with process_radtags
 Use automated script to rename and copy samples    
 `./00-scripts/03_rename_samples.sh`
 
-####
-This may be redundant:
-# Determine number of reads per sample
-# `cd 04-all_samples`    
-# `rm num_reads_per_sample.txt ; for i in $(ls *.fq.gz) ; do echo $i >> num_reads_per_sample.txt ; gunzip -c $i | grep -cE '^@' - >> num_reads_per_sample.txt ; done`
-# `sed -i 'N;s/\n/\t/' num_reads_per_sample.txt`
-# # move to excel and plot
-#### 
 
 ## Reference-based stacks
 ### Align samples against reference genome
@@ -63,7 +55,8 @@ Edit the following script to point to the correct GENOMEFOLDER and GENOME variab
 
 Compare total number of reads to the total number of mappings per sample using the automated script:
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
-In brief, this will produce two files in `04-all_samples`, `reads_per_sample_table.txt` and `mappings_per_sample.txt`. Then it will run an r script that will perform some summary statistics on the output of this. Specifically, this will produce a graph that shows the total number of reads vs the number of reads mapping.     
+This produces files in `04-all_samples`: `reads_per_sample_table.txt` and `mappings_per_sample.txt`.   
+Also produces a graph in the main directory of number reads per sample vs number of mappings.
 
 Other ways that you can assess your mapping results include:    
 Evaluate the number of unique scaffolds being mapped per library:    
