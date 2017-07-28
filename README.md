@@ -58,10 +58,11 @@ Compare total number of reads to the total number of mappings per sample using t
 This produces files in `04-all_samples`: `reads_per_sample_table.txt` and `mappings_per_sample.txt`.   
 Also produces a graph in the main directory of number reads per sample vs number of mappings.
 
-Other ways that you can assess your mapping results include:    
-Evaluate the number of unique scaffolds being mapped per library:    
-`samtools view Barnes_95.bam | awk '{print $3}' - | sort -n | uniq -c | sort -n | wc -l`
+Compare total number of reads per sample to the number of unique scaffolds being mapped against using the script:    
+`./../ms_oyster_popgen/01_scripts/determine_number_unique_scaff_mapped.sh`    
+This produces a graph as well as some summary statistics.   
 
+#todo: retain summary statistics for both above in a log file     
 
 ### Prep for Stacks
 Use automated script to prepare the population map file
