@@ -74,25 +74,20 @@ Use automated script to prepare the population map file
 
 Obtain some info on your pstacks alignment results from the log file:   
 `./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
-This provides an output file `output_pstacks_results.csv` that provides sample names, the number of loci in the sample, and the average coverage.
+This provides an output file `output_pstacks_results.csv` that provides sample names, the number of loci in the sample, and the average coverage. Also gives graph.
 
 
 # cstacks
 First edit the cstacks script to enable use of -g for using genomic location rather than sequence similarity.
 `./00-scripts/stacks_2_cstacks.sh`
 
-# Obtain info 
-# grep -E 'newly added|loci in the catalog| were matched to a catalog locus\.' 10-log_files/2017-05-31_14h41m03s_stacks_2_cstacks.log > 10-log_files/cstacks_output_trimmed.txt
-
-# run assessment script
-#00-scripts/assessment_scripts/02_assess_cstacks.sh
-# then go to the same R script to make figures
+Assess results to get the number of loci matched to catalog and number new loci added per sample for all of the samples (starting with the second sample because there can be no matched for sample 1).
+`./../ms_oyster_popgen/02_assess_cstacks.sh`
 
 
+# sstacks
 Edit to use more cores and to use -g flag
-./00-scripts/stacks_3_sstacks.sh
-
-
+`./00-scripts/stacks_3_sstacks.sh`
 
 # see the output by:
 # grep -E 'Processing|matching loci' 10-log_files/*sstacks.log | grep -v 'haplotypes examined' - > 10-log_files/sstacks_output_trimmed.txt
