@@ -88,14 +88,16 @@ Assess results to get the number of loci matched to catalog and number new loci 
 # sstacks
 Edit to use more cores and to use -g flag
 `./00-scripts/stacks_3_sstacks.sh`
+The log file can be viewed to see how many loci are matched against the total number of loci in the catalog (if needed).
 
-# see the output by:
-# grep -E 'Processing|matching loci' 10-log_files/*sstacks.log | grep -v 'haplotypes examined' - > 10-log_files/sstacks_output_trimmed.txt
-# this gives you how many loci were matched against the catalog per sample
 
-# populations (basically just to get a vcf, as filtering done in next step)
-./00-scripts/stacks_4_populations.sh
+# populations
+This step is basically just to create the vcf file, as filtering is done later
+`./00-scripts/stacks_4_populations.sh`
+Make sure to change the log likelihood to turn it off, as this doesn't work with my current data.
+--lnl_lim 
 
+HERE
 # Filtering
 00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o 05-stacks/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 70 --use_percent -a 0.01 -A 0.05 -s 20 -H 0.6
 
@@ -111,3 +113,8 @@ vcftools --vcf ./05-stacks/batch_1_filt_max_maf.vcf --site-depth --out 05-stacks
 
 # Run populations again on your filtered vcf (not the single snp one)
 populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt 
+
+
+
+# Not using:
+ grep -E 'newly added|loci in the catalog| were matched to a catalog locus\.' 10-log_files/2017-05-31_14h41m03s_stacks_2_cstacks.log
