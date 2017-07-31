@@ -90,31 +90,61 @@ Edit to use more cores and to use -g flag
 `./00-scripts/stacks_3_sstacks.sh`
 The log file can be viewed to see how many loci are matched against the total number of loci in the catalog (if needed).
 
-
 # populations
 This step is basically just to create the vcf file, as filtering is done later
 `./00-scripts/stacks_4_populations.sh`
 Make sure to change the log likelihood to turn it off, as this doesn't work with my current data.
 --lnl_lim 
 
-HERE
 # Filtering
 00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o 05-stacks/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 70 --use_percent -a 0.01 -A 0.05 -s 20 -H 0.6
 
+
+### To find number of reads used ###
 # Limit to a single SNP (max_maf)
 00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt.vcf 05-stacks/batch_1_filt_max_maf.vcf
 
 # How many loci in your vcf file? 
-grep -vE '#' 05-stacks/batch_1_filt_max_maf.vcf  | wc -l
+grep -vE '^#' 05-stacks/batch_1_filt_max_maf.vcf  | wc -l
 
 # What is the total number of reads present in your output vcf?
-vcftools --vcf ./05-stacks/batch_1_filt_max_maf.vcf --site-depth --out 05-stacks/batch_1_filt_max_maf_site-depth
-# Then sum up the column in excel
+`vcftools --vcf ./05-stacks/batch_1_filt_max_maf.vcf --site-depth --out 05-stacks/batch_1_filt_max_maf_site-depth`
+
+# Then sum up the column
+`grep -vE '^CHROM' 05-stacks/batch_1_filt_max_maf_site-depth.ldepth | awk '{ print $3 }' - | paste -sd+ - | bc`
+
+# Compare to the total number of reads input
+`awk '{ print $2 }' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc`
+
+# And the number of mappings
+`awk '{ print $2 }' 04-all_samples/mappings_per_sample_table.txt | paste -sd+ - | bc`
 
 # Run populations again on your filtered vcf (not the single snp one)
 populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt 
 
 
 
-# Not using:
- grep -E 'newly added|loci in the catalog| were matched to a catalog locus\.' 10-log_files/2017-05-31_14h41m03s_stacks_2_cstacks.log
+### Graphing ###
+Before filters
+`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o graphs_before_filters_oyster -g`
+
+After filters
+`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1_filt.vcf -o graphs_after_filters_oyster -g`
+
+Combine
+`00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
+
+
+### Remove low read individuals ###
+# identify those with less than 1.5 M reads
+`awk '$2 < 1500000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt`
+
+# Save as a file
+`awk '$2 < 1500000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove_under1.5M.txt`
+
+mkdir 04-all_samples/removed_samples
+
+cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_re
+move_under1.5M.txt ) ; do mv $i removed_samples/ ; done ; cd ..
+
+
