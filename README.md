@@ -43,6 +43,10 @@ Trim with process_radtags
 Use automated script to rename and copy samples    
 `./00-scripts/03_rename_samples.sh`
 
+Prepare for Stacks
+Use automated script to prepare the population map file
+`./00-scripts/04_prepare_population_map.sh`
+
 
 ## Reference-based stacks
 ### Align samples against reference genome
@@ -65,10 +69,6 @@ This produces a graph as well as some summary statistics.
 #todo: retain summary statistics for both above in a log file     
 
 ## Stacks
-Prepare for Stacks
-Use automated script to prepare the population map file
-`./00-scripts/04_prepare_population_map.sh`
-
 ### pstacks
 `./00-scripts/stacks_1b_pstacks.sh`
 
@@ -97,7 +97,7 @@ Basically only to create a .vcf with minimal filtering. Edit script to remove th
 Use vcf filtering script
 00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o 05-stacks/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 70 --use_percent -a 0.01 -A 0.05 -s 20 -H 0.6
 
-Graph output 
+### Graph output 
 Unfiltered:
 `./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o graphs_before_filters_oyster -g`
 
@@ -127,32 +127,25 @@ Count how many reads are in read input file
 Evaluate total number of mappings
 `awk '{ print $2 }' 04-all_samples/mappings_per_sample_table.txt | paste -sd+ - | bc`
 
-# Run populations again on your filtered vcf (not the single snp one)
-populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt 
 
-
-
-### Graphing ###
-Before filters
-`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o graphs_before_filters_oyster -g`
-
-After filters
-`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1_filt.vcf -o graphs_after_filters_oyster -g`
-
-Combine
-`00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
-
-
-### Remove low read individuals ###
-# identify those with less than 1.5 M reads
-`awk '$2 < 1500000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt`
-
-# Save as a file
+## Remove individuals with too few reads
+Identify samples with less than 1.5 M reads
 `awk '$2 < 1500000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove_under1.5M.txt`
 
-mkdir 04-all_samples/removed_samples
+Make directory to remove too few read indiv.
+`mkdir 04-all_samples/removed_samples`
 
-cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_re
-move_under1.5M.txt ) ; do mv $i removed_samples/ ; done ; cd ..
+Move bam files into the removed_samples directory
+`cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove_under1.5M.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
+
+Go back and rerun the Stacks section starting at pstacks
+Once you have run it again, use your final, filtered vcf file in the next stage.
+
+## Final output
+`populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt`
+
+
+
+
 
 
