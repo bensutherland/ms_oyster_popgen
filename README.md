@@ -146,7 +146,3 @@ Once you have run it again, use your final, filtered vcf file in the next stage.
 `populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt`
 
 
-
-
-
-
