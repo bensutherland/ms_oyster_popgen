@@ -64,8 +64,8 @@ This produces a graph as well as some summary statistics.
 
 #todo: retain summary statistics for both above in a log file     
 
-
-### Prep for Stacks
+## Stacks
+Prepare for Stacks
 Use automated script to prepare the population map file
 `./00-scripts/04_prepare_population_map.sh`
 
@@ -74,49 +74,57 @@ Use automated script to prepare the population map file
 
 Obtain some info on your pstacks alignment results from the log file:   
 `./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
-This provides an output file `output_pstacks_results.csv` that provides sample names, the number of loci in the sample, and the average coverage. Also gives graph.
+Produces output `output_pstacks_results.csv` and graph with num reads per sample and average locus coverage per sample.
 
-
-# cstacks
-First edit the cstacks script to enable use of -g for using genomic location rather than sequence similarity.
+### cstacks
+Edit following script to use -g to use genomic location instead of seq similarity.
 `./00-scripts/stacks_2_cstacks.sh`
 
-Assess results to get the number of loci matched to catalog and number new loci added per sample for all of the samples (starting with the second sample because there can be no matched for sample 1).
+Assess results to determine per sample the number of loci matched to the catalog and the number of new loci added. Note: this starts at sample 2.
 `./../ms_oyster_popgen/02_assess_cstacks.sh`
 
-
-# sstacks
-Edit to use more cores and to use -g flag
+### sstacks
+Edit following script to use -g flag and use more cores
 `./00-scripts/stacks_3_sstacks.sh`
-The log file can be viewed to see how many loci are matched against the total number of loci in the catalog (if needed).
+Log file can be viewed to see how many loci are matched against the catalog. 
 
-# populations
-This step is basically just to create the vcf file, as filtering is done later
+### populations
+Basically only to create a .vcf with minimal filtering. Edit script to remove the log-likelihood filter which is not working with alignment based data (--lnl_lim)
 `./00-scripts/stacks_4_populations.sh`
-Make sure to change the log likelihood to turn it off, as this doesn't work with my current data.
---lnl_lim 
 
-# Filtering
+
+## Filtering
+Use vcf filtering script
 00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o 05-stacks/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 70 --use_percent -a 0.01 -A 0.05 -s 20 -H 0.6
 
+Graph output 
+Unfiltered:
+`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o graphs_before_filters_oyster -g`
 
-### To find number of reads used ###
-# Limit to a single SNP (max_maf)
-00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt.vcf 05-stacks/batch_1_filt_max_maf.vcf
+Filtered:
+`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1_filt.vcf -o graphs_after_filters_oyster -g`
 
-# How many loci in your vcf file? 
-grep -vE '^#' 05-stacks/batch_1_filt_max_maf.vcf  | wc -l
+Combine:
+`00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
 
-# What is the total number of reads present in your output vcf?
+
+## Evaluate number of reads used in output
+Limit to a single SNP (max_maf) to only count once per locus
+`00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt.vcf 05-stacks/batch_1_filt_max_maf.vcf`
+
+Count number of loci in vcf
+`grep -vE '^#' 05-stacks/batch_1_filt_max_maf.vcf  | wc -l`
+
+Count how many reads are being used in your single SNP vcf 
 `vcftools --vcf ./05-stacks/batch_1_filt_max_maf.vcf --site-depth --out 05-stacks/batch_1_filt_max_maf_site-depth`
 
-# Then sum up the column
+Sum reads 
 `grep -vE '^CHROM' 05-stacks/batch_1_filt_max_maf_site-depth.ldepth | awk '{ print $3 }' - | paste -sd+ - | bc`
 
-# Compare to the total number of reads input
+Count how many reads are in read input file
 `awk '{ print $2 }' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc`
 
-# And the number of mappings
+Evaluate total number of mappings
 `awk '{ print $2 }' 04-all_samples/mappings_per_sample_table.txt | paste -sd+ - | bc`
 
 # Run populations again on your filtered vcf (not the single snp one)
