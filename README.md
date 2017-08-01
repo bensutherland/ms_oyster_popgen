@@ -1,4 +1,5 @@
-### Analyze MOP oyster populations using Eric Normandeau's stacks_workflow pipeline
+# MOP oyster populations 
+Instruction guide and scripts using Eric Normandeau's stacks_workflow pipeline
 https://github.com/enormandeau/stacks_workflow
 
 Requirements:    
@@ -10,7 +11,7 @@ Requirements:
 `stacks`    
 
 
-### Setup
+## Setup
 All raw data in `02-raw` using cp or cp -l    
 
 Manually prepare a sample info file (see example file sample_information.csv).   
@@ -68,7 +69,7 @@ This produces a graph as well as some summary statistics.
 
 #todo: retain summary statistics for both above in a log file     
 
-## Stacks
+## Stacks steps
 ### pstacks
 `./00-scripts/stacks_1b_pstacks.sh`
 
@@ -94,17 +95,17 @@ Basically only to create a .vcf with minimal filtering. Edit script to remove th
 
 
 ## Filtering
-Use vcf filtering script
-00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o 05-stacks/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 70 --use_percent -a 0.01 -A 0.05 -s 20 -H 0.6
+Use vcf filtering script    
+`00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o 05-stacks/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 70 --use_percent -a 0.01 -A 0.05 -s 20 -H 0.6`
 
 ### Graph output 
-Unfiltered:
+Unfiltered:    
 `./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o graphs_before_filters_oyster -g`
 
-Filtered:
+Filtered:    
 `./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1_filt.vcf -o graphs_after_filters_oyster -g`
 
-Combine:
+Combine:    
 `00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
 
 
@@ -138,7 +139,7 @@ Make directory to remove too few read indiv.
 Move bam files into the removed_samples directory
 `cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove_under1.5M.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
 
-Go back and rerun the Stacks section starting at pstacks
+Go back and rerun the Stacks section starting at [pstacks](#Stacks-steps)
 Once you have run it again, use your final, filtered vcf file in the next stage.
 
 ## Final output
