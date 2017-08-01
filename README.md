@@ -26,7 +26,7 @@ Run fastqc and summarize results
 `fastqc 02-raw/*.fastq.gz -o 02-raw/fastqc_raw/ -t 5`    
 `multiqc -o 02-raw/fastqc_raw/ 02-raw/fastqc_raw`   
 
-Use automated script to prep lane_info.txt file
+Use automated script to prep lane_info.txt file    
 `./00-scripts/00_prepare_lane_info.sh`
 
 Trim for adapters and too short reads    
@@ -38,7 +38,7 @@ Run fastqc on trimmed data and summarize results
 `multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed`       
 
 ### De-multiplex
-Trim with process_radtags
+Trim with process_radtags    
 `./00-scripts/02_process_radtags_2_enzymes.sh 70 nsiI mspI` 
 
 Use automated script to rename and copy samples    
@@ -78,19 +78,19 @@ Obtain some info on your pstacks alignment results from the log file:
 Produces output `output_pstacks_results.csv` and graph with num reads per sample and average locus coverage per sample.
 
 ### cstacks
-Edit following script to use -g to use genomic location instead of seq similarity.
+Edit following script to use -g to use genomic location instead of seq similarity.    
 `./00-scripts/stacks_2_cstacks.sh`
 
-Assess results to determine per sample the number of loci matched to the catalog and the number of new loci added. Note: this starts at sample 2.
+Assess results to determine per sample the number of loci matched to the catalog and the number of new loci added. Note: this starts at sample 2.    
 `./../ms_oyster_popgen/02_assess_cstacks.sh`
 
 ### sstacks
-Edit following script to use -g flag and use more cores
-`./00-scripts/stacks_3_sstacks.sh`
+Edit following script to use -g flag and use more cores     
+`./00-scripts/stacks_3_sstacks.sh`     
 Log file can be viewed to see how many loci are matched against the catalog. 
 
 ### populations
-Basically only to create a .vcf with minimal filtering. Edit script to remove the log-likelihood filter which is not working with alignment based data (--lnl_lim)
+Basically only to create a .vcf with minimal filtering. Edit script to remove the log-likelihood filter which is not working with alignment based data (--lnl_lim)     
 `./00-scripts/stacks_4_populations.sh`
 
 
@@ -109,34 +109,34 @@ Combine:
 `00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
 
 
-## Evaluate number of reads used in output
-Limit to a single SNP (max_maf) to only count once per locus
+## Evaluate number of reads used in output    
+Limit to a single SNP (max_maf) to only count once per locus    
 `00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt.vcf 05-stacks/batch_1_filt_max_maf.vcf`
 
-Count number of loci in vcf
+Count number of loci in vcf    
 `grep -vE '^#' 05-stacks/batch_1_filt_max_maf.vcf  | wc -l`
 
-Count how many reads are being used in your single SNP vcf 
+Count how many reads are being used in your single SNP vcf     
 `vcftools --vcf ./05-stacks/batch_1_filt_max_maf.vcf --site-depth --out 05-stacks/batch_1_filt_max_maf_site-depth`
 
-Sum reads 
+Sum reads     
 `grep -vE '^CHROM' 05-stacks/batch_1_filt_max_maf_site-depth.ldepth | awk '{ print $3 }' - | paste -sd+ - | bc`
 
-Count how many reads are in read input file
+Count how many reads are in read input file    
 `awk '{ print $2 }' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc`
 
-Evaluate total number of mappings
+Evaluate total number of mappings    
 `awk '{ print $2 }' 04-all_samples/mappings_per_sample_table.txt | paste -sd+ - | bc`
 
 
-## Remove individuals with too few reads
-Identify samples with less than 1.5 M reads
+## Remove individuals with too few reads     
+Identify samples with less than 1.5 M reads    
 `awk '$2 < 1500000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove_under1.5M.txt`
 
-Make directory to remove too few read indiv.
+Make directory to remove too few read indiv.    
 `mkdir 04-all_samples/removed_samples`
 
-Move bam files into the removed_samples directory
+Move bam files into the removed_samples directory    
 `cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove_under1.5M.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
 
 Go back and rerun the Stacks section starting at [pstacks](#stacks-steps)
