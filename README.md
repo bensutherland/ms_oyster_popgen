@@ -72,20 +72,23 @@ This produces a graph as well as some summary statistics.
 ## Stacks steps
 ### pstacks
 `./00-scripts/stacks_1b_pstacks.sh`
+For unmapped reads, 
 
 Obtain some info on your pstacks alignment results from the log file:   
 `./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
 Produces output `output_pstacks_results.csv` and graph with num reads per sample and average locus coverage per sample.
 
 ### cstacks
-Edit following script to use -g to use genomic location instead of seq similarity.    
+For mapped reads, edit following script to use -g to use genomic location instead of seq similarity.    
+For unmapped reads, edit the following script to not use the -g option, and to only use the `*unmapped.bam` files.    
 `./00-scripts/stacks_2_cstacks.sh`
 
-Assess results to determine per sample the number of loci matched to the catalog and the number of new loci added. Note: this starts at sample 2.    
+For mapped reads, assess results to determine per sample the number of loci matched to the catalog and the number of new loci added. Note: this starts at sample 2.    
 `./../ms_oyster_popgen/02_assess_cstacks.sh`
 
 ### sstacks
 Edit following script to use -g flag and use more cores     
+For unmapped reads, edit to not use -g and to only use `*unmapped.bam` files.    
 `./00-scripts/stacks_3_sstacks.sh`     
 Log file can be viewed to see how many loci are matched against the catalog. 
 
@@ -146,3 +149,7 @@ Once you have run it again, use your final, filtered vcf file in the next stage.
 `populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt`
 
 
+## Obtain fasta file
+For pstacks, get fasta for Rapture panel set, which is: batch_1_filt_p50_max_maf.vcf
+Add flag to output fasta, and use the input instead of a folder as a --in_vcf
+populations --in_vcf batch_1_filt_p50_max_maf.vcf -O fasta_file -t 4 --fasta
