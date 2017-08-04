@@ -149,7 +149,17 @@ Once you have run it again, use your final, filtered vcf file in the next stage.
 `populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt`
 
 
-## Obtain fasta file
-For pstacks, get fasta for Rapture panel set, which is: batch_1_filt_p50_max_maf.vcf
-Add flag to output fasta, and use the input instead of a folder as a --in_vcf
-populations --in_vcf batch_1_filt_p50_max_maf.vcf -O fasta_file -t 4 --fasta
+## Obtain fasta file for de novo and alignment for comparison to build catalog for Rapture panel
+de novo
+Use stacks population module to output your batch_1.vcf, use filter_vcf.py to filter using -p 50, use utility script to obtain a single SNP per locus (max_maf), obtain the catalog locus IDs from the vcf using the following code:    
+`grep -vE '^#' 05-stacks/batch_1_filt_p50_max_maf.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 05-stacks/whitelist_denovo_max_maf_p50_SNP.txt`
+
+Then go back and edit the populations script to include the -W flag and point towards the whitelist. Also turn on the .fasta output option.    
+On the fasta output, obtain a single Allele 0 record per locus to produce the final file to compare, as follows:    
+`grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq | awk '{ print $1".*Allele_0" }' - > 05-stacks/obtain_one_record_per_accn_list_with_wildcard.txt`    
+
+Use this record list to obtain the single record:    
+`while read p; do grep -A1 -m1 $p".*Allele_0" 05-stacks/batch_1.fa ; done < 05-stacks/obtain_one_record_per_accn_list.txt > 05-stacks/batch_1_filtered_single_record.fa`    
+
+Then go back and do the same for the alignment based results, probably in a different 05-stacks folder.
+
