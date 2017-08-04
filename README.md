@@ -156,10 +156,27 @@ Use stacks population module to output your batch_1.vcf, use filter_vcf.py to fi
 
 Then go back and edit the populations script to include the -W flag and point towards the whitelist. Also turn on the .fasta output option.    
 On the fasta output, obtain a single Allele 0 record per locus to produce the final file to compare, as follows:    
-`grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq | awk '{ print $1".*Allele_0" }' - > 05-stacks/obtain_one_record_per_accn_list_with_wildcard.txt`    
+`grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 05-stacks/obtain_one_record_per_accn_list.txt`
 
 Use this record list to obtain the single record:    
 `while read p; do grep -A1 -m1 $p".*Allele_0" 05-stacks/batch_1.fa ; done < 05-stacks/obtain_one_record_per_accn_list.txt > 05-stacks/batch_1_filtered_single_record.fa`    
 
 Then go back and do the same for the alignment based results, probably in a different 05-stacks folder.
+
+Index the aligned version    
+`bowtie2-build -f batch_1_filtered_single_record_aligned.fa --threads 6 batch_1_filtered_single_record_aligned`
+
+Map de novo against the aligned version    
+`bowtie2 -x batch_1_filtered_single_record_aligned -f batch_1_filtered_single_record_denovo.fa --end-to-end --threads 6 > denovo_vs_aligned.sam`    
+
+Then obtain the unmapped reads from the sam file
+`samtools view -Sf 4 denovo_vs_aligned.sam > denovo_vs_aligned_unmapped.sam`    
+
+`awk '{ print $1 }' denovo_vs_aligned_unmapped.sam > new_markers_to_add.txt`
+
+Extract these from the denovo fasta file to create a new fasta file. 
+`while read p; do grep -A1 $p ./batch_1_filtered_single_record_denovo.fa ; done < new_markers_to_add.txt > new_markers_to_add.fa`
+
+Concatenate to the fasta file and redo the stacks pipeline with this new reference genome.
+
 
