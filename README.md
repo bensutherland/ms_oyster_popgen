@@ -154,6 +154,8 @@ Once you have run it again, use your final, filtered vcf file in the next stage.
 Follow these steps:    
 * populations module to output batch_1.vcf
 * 05-filter_vcf.py at 50% presence to output batch_1_filt.vcf
+
+### Generate single accession output from total fasta with whitelist    
 * obtain a single SNP per locus with max_maf filter    
 `00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt_p50.vcf 05-stacks/batch_1_filt_p50_max_maf.vcf`
 * obtain the catalog locus IDs from the vcf    
@@ -183,7 +185,24 @@ Extract _de novo_-only loci from the _de novo_ fasta file to create a new fasta 
 
 Concatenate to the genome fasta file, index this for use with bwa, then redo the entire alignment and stacks pipeline with this as the new reference genome.
 
+
 Issues: 
 * too high coverage? Incorporate a screen filter for -C flag in 05-filter_vcf.py
+
+## Final output
+[Follow me](generate-single-accession-output-from-total-fasta-with-whitelist)
+
+Generate a fasta file of all retained loci for your vcf of interest.   
+Make a whitelist containing one SNP per locus from the final filtered vcf
+
+Edit `stacks_4_populations.sh` with the following:
+* turn on fasta output
+* turn on whitelist option and point to the whitelist with final filtered single SNP loci
+
+Use above directions to identify one sample for each locus
+`grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ ' { print $1 } ' - | uniq > 05-stacks/obtain_one_record_per_accn_list.txt`
+
+`while read p ; do grep -A1 -m1 $i".*Allele_0" 05-stacks/batch_1.fa ; done < 05-stacks/obtain_one_record_per_accn_list.txt > 05-stacks/batch_1_filtered_single_record.fa`
+
 
 
