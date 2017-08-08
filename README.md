@@ -190,19 +190,7 @@ Issues:
 * too high coverage? Incorporate a screen filter for -C flag in 05-filter_vcf.py
 
 ## Final output
-[Follow me](#generate-single-accession-output-from-total-fasta-with-whitelist)
-
 Generate a fasta file of all retained loci for your vcf of interest.   
-Make a whitelist containing one SNP per locus from the final filtered vcf
+[Go back to get a single accession with whitelist from vcf](#generate-single-accession-output-from-total-fasta-with-whitelist)
 
-Edit `stacks_4_populations.sh` with the following:
-* turn on fasta output
-* turn on whitelist option and point to the whitelist with final filtered single SNP loci
-
-Use above directions to identify one sample for each locus
-`grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ ' { print $1 } ' - | uniq > 05-stacks/obtain_one_record_per_accn_list.txt`
-
-`while read p ; do grep -A1 -m1 $i".*Allele_0" 05-stacks/batch_1.fa ; done < 05-stacks/obtain_one_record_per_accn_list.txt > 05-stacks/batch_1_filtered_single_record.fa`
-
-
-
+Leaving, you should have a .vcf that has been carefully filtered, as well as a .fasta file with a single record per locus with all loci from your filtered vcf file.
