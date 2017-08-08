@@ -190,7 +190,7 @@ Issues:
 * too high coverage? Incorporate a screen filter for -C flag in 05-filter_vcf.py
 
 ## Final output
-[Follow me](generate-single-accession-output-from-total-fasta-with-whitelist)
+[Follow me](#generate-single-accession-output-from-total-fasta-with-whitelist)
 
 Generate a fasta file of all retained loci for your vcf of interest.   
 Make a whitelist containing one SNP per locus from the final filtered vcf
