@@ -1,5 +1,5 @@
 # MOP oyster population genetics 
-Instruction guide and scripts using Eric Normandeau's stacks_workflow pipeline    
+Instruction guide and scripts for the Moore Oyster Project genotyping using Eric Normandeau's stacks_workflow pipeline    
 https://github.com/enormandeau/stacks_workflow
 
 Requirements:    
@@ -150,20 +150,21 @@ Once you have run it again, use your final, filtered vcf file in the next stage.
 
 
 ## Generate Rapture panel by combining de novo and reference alignment
-**de novo**    
+### de novo    
 Follow these steps:    
 * populations module to output batch_1.vcf
-* filter_vcf.py at 50% presence to output batch_1_filt.vcf
-* obtain a single SNP per locus with max_maf filter `00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt_p50.vcf 05-stacks/batch_1_filt_p50_max_maf.vcf`
-* obtain the catalog locus IDs from the vcf
+* 05-filter_vcf.py at 50% presence to output batch_1_filt.vcf
+* obtain a single SNP per locus with max_maf filter    
+`00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt_p50.vcf 05-stacks/batch_1_filt_p50_max_maf.vcf`
+* obtain the catalog locus IDs from the vcf    
 `grep -vE '^#' 05-stacks/batch_1_filt_p50_max_maf.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 05-stacks/whitelist_denovo_max_maf_p50_SNP.txt`
 * Edit populations script to use -W flag and point towards the whitelist. Turn on .fasta output.    
-* Obtain a single Allele 0 record per locus from the fasta output
+* Obtain a single Allele 0 record per locus from the fasta output    
 `grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 05-stacks/obtain_one_record_per_accn_list.txt`
 * Use this record list to obtain the single record:    
 `while read p; do grep -A1 -m1 $p".*Allele_0" 05-stacks/batch_1.fa ; done < 05-stacks/obtain_one_record_per_accn_list.txt > 05-stacks/batch_1_filtered_single_record.fa`    
 
-**reference-based**
+### reference-based
 Perform all of the above _de novo_ steps but on the output from the reference-based batch_1.vcf. Use a separate 05-stacks folder.    
 
 ### Compare the results
