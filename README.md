@@ -193,4 +193,6 @@ Issues:
 Generate a fasta file of all retained loci for your vcf of interest.   
 [Go back to get a single accession with whitelist from vcf](#generate-single-accession-output-from-total-fasta-with-whitelist)
 
+Also, you can use your final filtered .vcf file to re-run the populations module with -fst on, or whatever else on, to get some summary statistics. Just edit the populations script to point towards your vcf file rather than the directory.
+
 Leaving, you should have a .vcf that has been carefully filtered, as well as a .fasta file with a single record per locus with all loci from your filtered vcf file.
