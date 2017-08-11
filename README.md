@@ -196,3 +196,8 @@ Generate a fasta file of all retained loci for your vcf of interest.
 Also, you can use your final filtered .vcf file to re-run the populations module with -fst on, or whatever else on, to get some summary statistics. Just edit the populations script to point towards your vcf file rather than the directory.
 
 Leaving, you should have a .vcf that has been carefully filtered, as well as a .fasta file with a single record per locus with all loci from your filtered vcf file.
+
+## fineRADstructure
+Use the output in `05-stacks/batch_1.haplotypes.tsv`    
+`cut -f1 --complement batch_1.haplotypes.tsv | cut -f1 --complement - | grep -v 'consensus' | sed 's/-//g' - > batch_1.haplotypes_for_export.tsv`
+
