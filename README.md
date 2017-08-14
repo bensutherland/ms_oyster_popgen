@@ -201,3 +201,7 @@ Leaving, you should have a .vcf that has been carefully filtered, as well as a .
 Use the output in `05-stacks/batch_1.haplotypes.tsv`    
 `cut -f1 --complement batch_1.haplotypes.tsv | cut -f1 --complement - | grep -v 'consensus' | sed 's/-//g' - > batch_1.haplotypes_for_export.tsv`
 
+Need to install `ape` and `XML` 
+ape can be installed within R
+To install XML, need to first do: 
+`sudo apt-get install libxml2-dev`
