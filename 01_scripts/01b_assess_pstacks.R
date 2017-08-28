@@ -19,7 +19,7 @@ scaff.data
 collective <- merge(x = reads.data, y = scaff.data, by = "sample")
 
 # Bring in coverage data from pstacks
-loci.cov <- read.csv(file = "output_pstacks_results.txt")
+loci.cov <- read.csv(file = "output_pstacks_results.csv")
 
 # Merge with other data
 all.data <- merge(x=collective, y = loci.cov, by = "sample")

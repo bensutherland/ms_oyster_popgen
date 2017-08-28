@@ -73,12 +73,9 @@ This produces a graph as well as some summary statistics.
 Adjust the number of threads and launch    
 `./00-scripts/stacks_1b_pstacks.sh`
 
-#todo: next assessment script currently not functional:
 Obtain some info on your pstacks alignment results from the log file:   
 `./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
 Produces output `output_pstacks_results.csv` and graph with num reads per sample and average locus coverage per sample.
-#end:todo
-
 
 ### cstacks
 Edit the following script to use the -g flag (use genomic location) and turn off the -n flag (number mismatches allowed)
