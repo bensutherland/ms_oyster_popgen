@@ -12,12 +12,12 @@ Requirements:
 
 
 ## Setup
-All raw data in `02-raw` using cp or cp -l    
+1. All raw data in `02-raw` using cp or cp -l    
 
-Manually prepare a sample info file (see example file sample_information.csv).   
+2. Manually prepare a sample info file (see example file sample_information.csv).   
 This must be a tab-delimited text file, but the file name is .csv.    
 
-Add the barcodes file that contains all barcodes for the project. This corresponds to the sample information file.    
+3. Add the barcodes file that contains all barcodes for the project. This corresponds to the sample information file.    
 
 ### Cleanup
 
@@ -44,7 +44,7 @@ Trim with process_radtags
 Use automated script to rename and copy samples    
 `./00-scripts/03_rename_samples.sh`
 
-Prepare for Stacks
+Prepare for Stacks    
 Use automated script to prepare the population map file
 `./00-scripts/04_prepare_population_map.sh`
 
@@ -60,8 +60,7 @@ Edit the following script to point to the correct GENOMEFOLDER and GENOME variab
 
 Compare total number of reads to the total number of mappings per sample using the automated script:
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
-This produces files in `04-all_samples`: `reads_per_sample_table.txt` and `mappings_per_sample.txt`.   
-Also produces a graph in the main directory of number reads per sample vs number of mappings.
+This produces files in `04-all_samples`: `reads_per_sample_table.txt` and `mappings_per_sample.txt` and a graph in the main directory of number reads per sample vs number of mappings.
 
 Compare total number of reads per sample to the number of unique scaffolds being mapped against using the script:    
 `./../ms_oyster_popgen/01_scripts/determine_number_unique_scaff_mapped.sh`    
@@ -71,35 +70,52 @@ This produces a graph as well as some summary statistics.
 
 ## Stacks steps
 ### pstacks
+Adjust the number of threads and launch    
 `./00-scripts/stacks_1b_pstacks.sh`
-For unmapped reads, 
 
+#todo: next assessment script currently not functional:
 Obtain some info on your pstacks alignment results from the log file:   
 `./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
 Produces output `output_pstacks_results.csv` and graph with num reads per sample and average locus coverage per sample.
+#end:todo
+
 
 ### cstacks
-For mapped reads, edit following script to use -g to use genomic location instead of seq similarity.    
-For unmapped reads, edit the following script to not use the -g option, and to only use the `*unmapped.bam` files.    
+Edit the following script to use the -g flag (use genomic location) and turn off the -n flag (number mismatches allowed)
 `./00-scripts/stacks_2_cstacks.sh`
 
-For mapped reads, assess results to determine per sample the number of loci matched to the catalog and the number of new loci added. Note: this starts at sample 2.    
-`./../ms_oyster_popgen/02_assess_cstacks.sh`
+Assessment: per sample, number of loci matched to the catalog, number of loci added to catalog (starts at second sample).    
+`./../ms_oyster_popgen/01_scripts/02_assess_cstacks.sh`
+Produces output `cstacks_output_table.csv`
 
 ### sstacks
-Edit following script to use -g flag and use more cores     
-For unmapped reads, edit to not use -g and to only use `*unmapped.bam` files.    
+Edit following script to use -g flag
 `./00-scripts/stacks_3_sstacks.sh`     
 Log file can be viewed to see how many loci are matched against the catalog. 
 
 ### populations
-Basically only to create a .vcf with minimal filtering. Edit script to remove the log-likelihood filter which is not working with alignment based data (--lnl_lim)     
+Create .vcf with minimal filtering.    
+Edit following script to remove the log-likelihood filter which is not working with alignment based data (--lnl_lim)     
 `./00-scripts/stacks_4_populations.sh`
 
+### rxstacks
+Edit the following script to remove the log-likelihood filter (--lnl_filter ; --lnl_lim -10)    
+`00-scripts/stacks_5b_rxstacks.sh`
+
+### cstacks (round 2)
+Edit to add -g flag and remove -n flag    
+`00-scripts/stacks_6_cstacks_rx.sh`
+
+### sstacks (round 2) 
+Edit to add -g flag    
+`00-scripts/stacks_7_sstacks_rx.sh`
+
+### populations (round 2)
+`00-scripts/stacks_8_populations_rx.sh`
 
 ## Filtering
 Use vcf filtering script    
-`00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o 05-stacks/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 70 --use_percent -a 0.01 -A 0.05 -s 20 -H 0.6`
+`00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o 05-stacks/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 50 --use_percent -a 0.01 -A 0.05 -s 20 -H 0.6`
 
 ### Graph output 
 Unfiltered:    
@@ -160,7 +176,7 @@ Follow these steps:
 `00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt_p50.vcf 05-stacks/batch_1_filt_p50_max_maf.vcf`
 * obtain the catalog locus IDs from the vcf    
 `grep -vE '^#' 05-stacks/batch_1_filt_p50_max_maf.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 05-stacks/whitelist_denovo_max_maf_p50_SNP.txt`
-* Edit populations script to use -W flag and point towards the whitelist. Turn on .fasta output.    
+* Edit populations script to use -W flag and point towards the whitelist. Turn on .fasta output and turn off vcf output.    
 * Obtain a single Allele 0 record per locus from the fasta output    
 `grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 05-stacks/obtain_one_record_per_accn_list.txt`
 * Use this record list to obtain the single record:    
@@ -169,12 +185,18 @@ Follow these steps:
 ### reference-based
 Perform all of the above _de novo_ steps but on the output from the reference-based batch_1.vcf. Use a separate 05-stacks folder.    
 
+Rename both of your outputs as the appropriate term (denovo or reference). 
+
+
 ### Compare the results
 Index the aligned fasta output:    
 `bowtie2-build -f batch_1_filtered_single_record_aligned.fa --threads 6 batch_1_filtered_single_record_aligned`
 
 Map de novo against the aligned version    
 `bowtie2 -x batch_1_filtered_single_record_aligned -f batch_1_filtered_single_record_denovo.fa --end-to-end --threads 6 > denovo_vs_aligned.sam`    
+
+#todo: what about the other way around? 
+
 
 Obtain unmapped reads from this sam file     
 `samtools view -Sf 4 denovo_vs_aligned.sam > denovo_vs_aligned_unmapped.sam`    
