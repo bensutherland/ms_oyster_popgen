@@ -146,6 +146,9 @@ Evaluate total number of mappings
 
 
 ## Remove individuals with too few reads     
+Note: first requires that initially the script was run:    
+`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
+
 Identify samples with less than 1.5 M reads    
 `awk '$2 < 1500000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove_under1.5M.txt`
 
@@ -157,6 +160,8 @@ Move bam files into the removed_samples directory
 
 Go back and rerun the Stacks section starting at [pstacks](#stacks-steps)
 Once you have run it again, use your final, filtered vcf file in the next stage.
+
+If you want to know descriptive stats for only the retained samples, re-run the `assess_results.sh` script.   
 
 ## Final output
 `populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt`
