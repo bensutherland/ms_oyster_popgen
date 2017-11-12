@@ -78,7 +78,7 @@ Obtain some info on your pstacks alignment results from the log file:
 Produces output `output_pstacks_results.csv` and graph with num reads per sample and average locus coverage per sample.
 
 ### cstacks
-Edit the following script to use the -g flag (use genomic location) and turn off the -n flag (number mismatches allowed)
+Edit the following script to use the -g flag (use genomic location) and turn off the -n flag (number mismatches allowed), and incr p (threads)   
 `./00-scripts/stacks_2_cstacks.sh`
 
 Assessment: per sample, number of loci matched to the catalog, number of loci added to catalog (starts at second sample).    
