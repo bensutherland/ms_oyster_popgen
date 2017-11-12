@@ -158,6 +158,9 @@ Make directory to remove too few read indiv.
 Move bam files into the removed_samples directory    
 `cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove_under1.5M.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
 
+Also move fq.gz files into the removed_samples directory    
+`cd 04-all_samples/ ;  for i in $(cat samples_to_remove_under1.5M.txt) ; do mv $i removed_samples/ ; done ; cd ..`   
+
 Go back and rerun the Stacks section starting at [pstacks](#stacks-steps)
 Once you have run it again, use your final, filtered vcf file in the next stage.
 
