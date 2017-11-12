@@ -108,6 +108,7 @@ Edit to add -g flag
 `00-scripts/stacks_7_sstacks_rx.sh`
 
 ### populations (round 2)
+Edit to remove lnl_lim   
 `00-scripts/stacks_8_populations_rx.sh`
 
 ## Filtering
