@@ -39,8 +39,10 @@ Trim for adapters and too short reads
 Record the results of the trimming for reference
 
 Run fastqc on trimmed data and summarize results     
-`mkdir 02-raw/trimmed/fastqc_trimmed/`    
-`multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed`       
+```
+mkdir 02-raw/trimmed/fastqc_trimmed/    
+multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed       
+```
 
 ### De-multiplex
 Trim with process_radtags    
@@ -50,7 +52,7 @@ Use automated script to rename and copy samples
 `./00-scripts/03_rename_samples.sh`
 
 Prepare for Stacks    
-Use automated script to prepare the population map file
+Use automated script to prepare the population map file     
 `./00-scripts/04_prepare_population_map.sh`
 
 ### Align samples against reference genome
@@ -71,7 +73,7 @@ This produces a graph as well as some summary statistics.
 
 
 ### Remove individuals with too few reads     
-Note: first requires that initially the script was run:    
+Note: first requires that the following script was run in prev. step:    
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
 
 Identify samples with less than 1.5 M reads    
@@ -86,8 +88,7 @@ Move bam files into the removed_samples directory
 Also move fq.gz files into the removed_samples directory    
 `cd 04-all_samples/ ;  for i in $(cat samples_to_remove_under1.5M.txt) ; do mv $i removed_samples/ ; done ; cd ..`   
 
-Go back and rerun the Stacks section starting at [pstacks](#stacks-steps)
-Once you have run it again, use your final, filtered vcf file in the next stage.
+Proceed to Stacks steps ahead [pstacks](#stacks-steps)
 
 If you want to know descriptive stats for only the retained samples, re-run the `assess_results.sh` script.   
 
@@ -106,7 +107,7 @@ Edit the following script to use the -g flag (use genomic location) and turn off
 `./00-scripts/stacks_2_cstacks.sh`
 
 Assessment: per sample, number of loci matched to the catalog, number of loci added to catalog (starts at second sample).    
-`./../ms_oyster_popgen/01_scripts/02_assess_cstacks.sh`
+`./../ms_oyster_popgen/01_scripts/02_assess_cstacks.sh`     
 Produces output `cstacks_output_table.csv`
 
 ### sstacks
@@ -157,6 +158,7 @@ Proceed to:
 [Final Output](#final-output)    
 
 ## Evaluate number of reads used in output    
+This will provide information on how many of your reads were actually used in the final output.   
 Limit to a single SNP (max_maf) to only count once per locus    
 `00-scripts/utility_scripts/extract_snp_with_max_maf.py 06-stacks_rx/batch_1_filt.vcf 06-stacks_rx/batch_1_filt_max_maf.vcf`
 
@@ -179,10 +181,12 @@ Evaluate total number of mappings
 
 
 ## Final output
-todo: Needs to be updated
+This is used to generate fstats on a filtered vcf.   
+todo: Needs to be updated    
 `populations --in_vcf 06-stacks_rx/1M_filt.vcf --fstats -f p_value --out_path ./06-stacks_rx/re-run_popn_1M/ -M 01-info_files/population_map.txt`
 
 ## Generate Rapture panel
+This is used to generate a set of tags to be provided for RAD capture bait design.   
 Follow these steps:    
 * populations module to output batch_1.vcf
 * 05-filter_vcf.py at 50% presence to output batch_1_filt.vcf
@@ -199,13 +203,6 @@ Follow these steps:
 `while read p; do grep -A1 -m1 $p".*Allele_0" 06-stacks_rx/batch_1.fa ; done < 06-stacks_rx/obtain_one_record_per_accn_list.txt > 06-stacks_rx/batch_1_filtered_single_record.fa`    
 
 
-## Last words 
-Generate a fasta file of all retained loci for your vcf of interest.   
-[Go back to get a single accession with whitelist from vcf](#generate-single-accession-output-from-total-fasta-with-whitelist)
-
-Also, you can use your final filtered .vcf file to re-run the populations module with -fst on, or whatever else on, to get some summary statistics. Just edit the populations script to point towards your vcf file rather than the directory.
-
-Leaving, you should have a .vcf that has been carefully filtered, as well as a .fasta file with a single record per locus with all loci from your filtered vcf file.
 
 ## fineRADstructure
 Use the output in `06-stacks_rx/batch_1.haplotypes.tsv`    
