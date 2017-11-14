@@ -12,7 +12,7 @@ Requirements:
 
 
 ## Setup
-1. All raw data in `02-raw` using cp or cp -l    
+1. Put all raw data in `02-raw` using cp or cp -l    
 
 2. Manually prepare a sample info file (see example file sample_information.csv).   
 This must be a tab-delimited text file, but the file name is .csv.    
@@ -39,7 +39,7 @@ Run fastqc on trimmed data and summarize results
 
 ### De-multiplex
 Trim with process_radtags    
-`./00-scripts/02_process_radtags_2_enzymes.sh 70 nsiI mspI` 
+`./00-scripts/02_process_radtags_2_enzymes.sh 80 nsiI mspI` 
 
 Use automated script to rename and copy samples    
 `./00-scripts/03_rename_samples.sh`
@@ -48,6 +48,27 @@ Prepare for Stacks
 Use automated script to prepare the population map file
 `./00-scripts/04_prepare_population_map.sh`
 
+## Remove individuals with too few reads     
+Note: first requires that initially the script was run:    
+`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
+
+Identify samples with less than 1.5 M reads    
+`awk '$2 < 1500000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove_under1.5M.txt`
+
+Make directory to remove too few read indiv.    
+`mkdir 04-all_samples/removed_samples`
+
+Move bam files into the removed_samples directory    
+`cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove_under1.5M.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
+
+Also move fq.gz files into the removed_samples directory    
+`cd 04-all_samples/ ;  for i in $(cat samples_to_remove_under1.5M.txt) ; do mv $i removed_samples/ ; done ; cd ..`   
+
+Go back and rerun the Stacks section starting at [pstacks](#stacks-steps)
+Once you have run it again, use your final, filtered vcf file in the next stage.
+
+If you want to know descriptive stats for only the retained samples, re-run the `assess_results.sh` script.   
+
 
 ## Reference-based stacks
 ### Align samples against reference genome
@@ -55,7 +76,7 @@ Here use C. gigas assembly from NCBI
 Index the reference genome for use with bwa   
 `bwa index GCA_000297895.1_oyster_v9_genomic.fna.gz`
 
-Edit the following script to point to the correct GENOMEFOLDER and GENOME variables, then run it        
+Edit the following script to point to the correct GENOMEFOLDER (full path!) and GENOME variables, then run it        
 `00-scripts/bwa_mem_align_reads.sh 6`     
 
 Compare total number of reads to the total number of mappings per sample using the automated script:
@@ -108,12 +129,14 @@ Edit to add -g flag
 `00-scripts/stacks_7_sstacks_rx.sh`
 
 ### populations (round 2)
-Edit to remove lnl_lim   
-`00-scripts/stacks_8_populations_rx.sh`
+Edit to remove lnl_lim
+`00-scripts/stacks_8_populations_rx.sh`    
+When creating capture panel, also set: min_maf=0.01, p=<the # of pops>, r = 0.4 or 0.5      
+When going forward to do pop gen work, set the r value above to 0.7   
 
-## Filtering
-Use vcf filtering script    
-`00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o 05-stacks/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 50 --use_percent -a 0.01 -A 0.05 -s 20 -H 0.6`
+## Extra filtering
+`00-scripts/05_filter_vcf.py -i 06-stacks_rx/batch_1.vcf -o 06-stacks_rx/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 40 --use_percent -a 0.01 -s 20 -H 0.5 -C 200`     
+This provides additional filters of allelic imbalance (-I), max SNPs per locus, max heterozygosity (-H), and max depth (-C)     
 
 ### Graph output 
 Unfiltered:    
@@ -142,34 +165,15 @@ Sum reads
 Count how many reads are in read input file    
 `awk '{ print $2 }' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc`
 
+Note (#todo) - make sure this is being done on only the samples that were used after removing samples with too few reads.   
+
 Evaluate total number of mappings    
 `awk '{ print $2 }' 04-all_samples/mappings_per_sample_table.txt | paste -sd+ - | bc`
 
 
-## Remove individuals with too few reads     
-Note: first requires that initially the script was run:    
-`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
-
-Identify samples with less than 1.5 M reads    
-`awk '$2 < 1500000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove_under1.5M.txt`
-
-Make directory to remove too few read indiv.    
-`mkdir 04-all_samples/removed_samples`
-
-Move bam files into the removed_samples directory    
-`cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove_under1.5M.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
-
-Also move fq.gz files into the removed_samples directory    
-`cd 04-all_samples/ ;  for i in $(cat samples_to_remove_under1.5M.txt) ; do mv $i removed_samples/ ; done ; cd ..`   
-
-Go back and rerun the Stacks section starting at [pstacks](#stacks-steps)
-Once you have run it again, use your final, filtered vcf file in the next stage.
-
-If you want to know descriptive stats for only the retained samples, re-run the `assess_results.sh` script.   
-
 ## Final output
+todo: Needs to be updated
 `populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt`
-
 
 ## Generate Rapture panel by combining de novo and reference alignment
 ### de novo    
