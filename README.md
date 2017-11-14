@@ -150,9 +150,9 @@ Combine:
 `00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
 
 Proceed to:   
-[Evaluate number of reads used in output](#Evaluate-number-of-reads-used-in-output)    
-[RAD Capture panel](#Generate-Rapture-panel)    
-[Final Output](#Final-output)    
+[Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)
+[RAD Capture panel](#generate-rapture-panel)    
+[Final Output](#final-output)    
 
 ## Evaluate number of reads used in output    
 Limit to a single SNP (max_maf) to only count once per locus    
