@@ -25,9 +25,11 @@ This must be a tab-delimited text file, but the file name is .csv.
 ### Cleanup
 
 Run fastqc and summarize results    
-`mkdir 02-raw/fastqc_raw`    
-`fastqc 02-raw/*.fastq.gz -o 02-raw/fastqc_raw/ -t 5`    
-`multiqc -o 02-raw/fastqc_raw/ 02-raw/fastqc_raw`   
+```
+mkdir 02-raw/fastqc_raw    
+fastqc 02-raw/*.fastq.gz -o 02-raw/fastqc_raw/ -t 5    
+multiqc -o 02-raw/fastqc_raw/ 02-raw/fastqc_raw   
+```
 
 Use automated script to prep lane_info.txt file    
 `./00-scripts/00_prepare_lane_info.sh`
