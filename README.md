@@ -154,8 +154,15 @@ Combine:
 
 Proceed to:   
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
+[Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)
 [RAD Capture panel](#generate-rapture-panel)    
 [Final Output](#final-output)    
+
+## Evaluate position of SNPs in tags
+Curious as to where the SNPs are in your tags?    
+`grep -vE '^#' 06-stacks_rx/batch_1_filt.vcf | awk '{ print $3 }' - | awk -F_ '{ print $2 }' - | sort -n > snp_positions_only_positions.txt`    
+Then use the script `snp_position_plot.R` to plot a histogram of your data.   
+
 
 ## Evaluate number of reads used in output    
 This will provide information on how many of your reads were actually used in the final output.   
