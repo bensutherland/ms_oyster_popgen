@@ -1,0 +1,27 @@
+The following is an excerpt when was attempting to identify loci not present in the reference genome.  
+### reference-based
+Perform all of the above _de novo_ steps but on the output from the reference-based batch_1.vcf. Use a separate 05-stacks folder.
+
+Rename both of your outputs as the appropriate term (denovo or reference).
+
+
+### Compare the results
+Index the aligned fasta output:
+`bowtie2-build -f batch_1_filtered_single_record_aligned.fa --threads 6 batch_1_filtered_single_record_aligned`
+
+Map de novo against the aligned version
+`bowtie2 -x batch_1_filtered_single_record_aligned -f batch_1_filtered_single_record_denovo.fa --end-to-end --threads 6 > denovo_vs_aligned.sam`
+
+#todo: what about the other way around?
+
+
+Obtain unmapped reads from this sam file
+`samtools view -Sf 4 denovo_vs_aligned.sam > denovo_vs_aligned_unmapped.sam`
+`awk '{ print $1 }' denovo_vs_aligned_unmapped.sam > new_markers_to_add.txt`
+
+Extract _de novo_-only loci from the _de novo_ fasta file to create a new fasta file.   
+`while read p; do grep -A1 $p ./batch_1_filtered_single_record_denovo.fa ; done < new_markers_to_add.txt > new_markers_to_add.fa`
+
+Concatenate to the genome fasta file, index this for use with bwa, then redo the entire alignment and stacks pipeline with this as the new reference genome.
+
+
