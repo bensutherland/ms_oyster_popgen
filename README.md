@@ -150,22 +150,22 @@ Combine:
 `00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
 
 Proceed to:   
-[Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)
+[Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
 [RAD Capture panel](#generate-rapture-panel)    
 [Final Output](#final-output)    
 
 ## Evaluate number of reads used in output    
 Limit to a single SNP (max_maf) to only count once per locus    
-`00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt.vcf 05-stacks/batch_1_filt_max_maf.vcf`
+`00-scripts/utility_scripts/extract_snp_with_max_maf.py 06-stacks_rx/batch_1_filt.vcf 06-stacks_rx/batch_1_filt_max_maf.vcf`
 
 Count number of loci in vcf    
-`grep -vE '^#' 05-stacks/batch_1_filt_max_maf.vcf  | wc -l`
+`grep -vE '^#' 06-stacks_rx/batch_1_filt_max_maf.vcf  | wc -l`
 
 Count how many reads are being used in your single SNP vcf     
-`vcftools --vcf ./05-stacks/batch_1_filt_max_maf.vcf --site-depth --out 05-stacks/batch_1_filt_max_maf_site-depth`
+`vcftools --vcf ./06-stacks_rx/batch_1_filt_max_maf.vcf --site-depth --out 06-stacks_rx/batch_1_filt_max_maf_site-depth`
 
 Sum reads     
-`grep -vE '^CHROM' 05-stacks/batch_1_filt_max_maf_site-depth.ldepth | awk '{ print $3 }' - | paste -sd+ - | bc`
+`grep -vE '^CHROM' 06-stacks_rx/batch_1_filt_max_maf_site-depth.ldepth | awk '{ print $3 }' - | paste -sd+ - | bc`
 
 Count how many reads are in read input file    
 `awk '{ print $2 }' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc`
@@ -178,26 +178,26 @@ Evaluate total number of mappings
 
 ## Final output
 todo: Needs to be updated
-`populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt`
+`populations --in_vcf 06-stacks_rx/1M_filt.vcf --fstats -f p_value --out_path ./06-stacks_rx/re-run_popn_1M/ -M 01-info_files/population_map.txt`
 
 ## Generate Rapture panel
-### de novo    
 Follow these steps:    
 * populations module to output batch_1.vcf
 * 05-filter_vcf.py at 50% presence to output batch_1_filt.vcf
 
 ### Generate single accession output from total fasta with whitelist    
-* obtain a single SNP per locus with max_maf filter    
-`00-scripts/utility_scripts/extract_snp_with_max_maf.py 05-stacks/batch_1_filt_p50.vcf 05-stacks/batch_1_filt_p50_max_maf.vcf`
-* obtain the catalog locus IDs from the vcf    
-`grep -vE '^#' 05-stacks/batch_1_filt_p50_max_maf.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 05-stacks/whitelist_denovo_max_maf_p50_SNP.txt`
+* Obtain a single SNP per locus with max_maf filter    
+`00-scripts/utility_scripts/extract_snp_with_max_maf.py 06-stacks_rx/batch_1_filt_p50.vcf 06-stacks_rx/batch_1_filt_p50_max_maf.vcf`
+* Identify the catalog locus IDs from the max_maf.vcf    
+`grep -vE '^#' 06-stacks_rx/batch_1_filt_p50_max_maf.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 06-stacks_rx/whitelist_denovo_max_maf_p50_SNP.txt`
 * Edit populations script to use -W flag and point towards the whitelist. Turn on .fasta output and turn off vcf output.    
 * Obtain a single Allele 0 record per locus from the fasta output    
-`grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 05-stacks/obtain_one_record_per_accn_list.txt`
+`grep -E '^>' 06-stacks_rx/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 06-stacks_rx/obtain_one_record_per_accn_list.txt`
 * Use this record list to obtain the single record:    
-`while read p; do grep -A1 -m1 $p".*Allele_0" 05-stacks/batch_1.fa ; done < 05-stacks/obtain_one_record_per_accn_list.txt > 05-stacks/batch_1_filtered_single_record.fa`    
+`while read p; do grep -A1 -m1 $p".*Allele_0" 06-stacks_rx/batch_1.fa ; done < 06-stacks_rx/obtain_one_record_per_accn_list.txt > 06-stacks_rx/batch_1_filtered_single_record.fa`    
 
-## Final output
+
+## Last words 
 Generate a fasta file of all retained loci for your vcf of interest.   
 [Go back to get a single accession with whitelist from vcf](#generate-single-accession-output-from-total-fasta-with-whitelist)
 
@@ -206,7 +206,7 @@ Also, you can use your final filtered .vcf file to re-run the populations module
 Leaving, you should have a .vcf that has been carefully filtered, as well as a .fasta file with a single record per locus with all loci from your filtered vcf file.
 
 ## fineRADstructure
-Use the output in `05-stacks/batch_1.haplotypes.tsv`    
+Use the output in `06-stacks_rx/batch_1.haplotypes.tsv`    
 `cut -f1 --complement batch_1.haplotypes.tsv | cut -f1 --complement - | grep -v 'consensus' | sed 's/-//g' - > batch_1.haplotypes_for_export.tsv`
 
 Need to install `ape` and `XML` 
