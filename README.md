@@ -11,7 +11,10 @@ Requirements:
 `stacks`    
 
 
-## Setup
+## Prepare Data
+
+### Setup 
+
 1. Put all raw data in `02-raw` using cp or cp -l    
 
 2. Manually prepare a sample info file (see example file sample_information.csv).   
@@ -48,7 +51,24 @@ Prepare for Stacks
 Use automated script to prepare the population map file
 `./00-scripts/04_prepare_population_map.sh`
 
-## Remove individuals with too few reads     
+### Align samples against reference genome
+Here use C. gigas assembly from NCBI    
+Index the reference genome for use with bwa   
+`bwa index GCA_000297895.1_oyster_v9_genomic.fna.gz`
+
+Edit the following script to point to the correct GENOMEFOLDER (full path!) and GENOME variables, then run it        
+`00-scripts/bwa_mem_align_reads.sh 6`     
+
+Compare total number of reads to the total number of mappings per sample using the automated script:
+`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
+This produces files in `04-all_samples`: `reads_per_sample_table.txt` and `mappings_per_sample.txt` and a graph in the main directory of number reads per sample vs number of mappings.
+
+Compare total number of reads per sample to the number of unique scaffolds being mapped against using the script:    
+`./../ms_oyster_popgen/01_scripts/determine_number_unique_scaff_mapped.sh`    
+This produces a graph as well as some summary statistics.   
+
+
+### Remove individuals with too few reads     
 Note: first requires that initially the script was run:    
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
 
@@ -69,25 +89,6 @@ Once you have run it again, use your final, filtered vcf file in the next stage.
 
 If you want to know descriptive stats for only the retained samples, re-run the `assess_results.sh` script.   
 
-
-## Reference-based stacks
-### Align samples against reference genome
-Here use C. gigas assembly from NCBI    
-Index the reference genome for use with bwa   
-`bwa index GCA_000297895.1_oyster_v9_genomic.fna.gz`
-
-Edit the following script to point to the correct GENOMEFOLDER (full path!) and GENOME variables, then run it        
-`00-scripts/bwa_mem_align_reads.sh 6`     
-
-Compare total number of reads to the total number of mappings per sample using the automated script:
-`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
-This produces files in `04-all_samples`: `reads_per_sample_table.txt` and `mappings_per_sample.txt` and a graph in the main directory of number reads per sample vs number of mappings.
-
-Compare total number of reads per sample to the number of unique scaffolds being mapped against using the script:    
-`./../ms_oyster_popgen/01_scripts/determine_number_unique_scaff_mapped.sh`    
-This produces a graph as well as some summary statistics.   
-
-#todo: retain summary statistics for both above in a log file     
 
 ## Stacks steps
 ### pstacks
@@ -134,7 +135,7 @@ Edit to remove lnl_lim
 When creating capture panel, also set: min_maf=0.01, p=<the # of pops>, r = 0.4 or 0.5      
 When going forward to do pop gen work, set the r value above to 0.7   
 
-## Extra filtering
+### Extra filtering
 `00-scripts/05_filter_vcf.py -i 06-stacks_rx/batch_1.vcf -o 06-stacks_rx/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 40 --use_percent -a 0.01 -s 20 -H 0.5 -C 200`     
 This provides additional filters of allelic imbalance (-I), max SNPs per locus, max heterozygosity (-H), and max depth (-C)     
 
@@ -148,6 +149,10 @@ Filtered:
 Combine:    
 `00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
 
+Proceed to:   
+[Evaluate number of reads used in output](#Evaluate-number-of-reads-used-in-output)    
+[RAD Capture panel](#Generate-Rapture-panel)    
+[Final Output](#Final-output)    
 
 ## Evaluate number of reads used in output    
 Limit to a single SNP (max_maf) to only count once per locus    
@@ -191,6 +196,7 @@ Follow these steps:
 `grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 05-stacks/obtain_one_record_per_accn_list.txt`
 * Use this record list to obtain the single record:    
 `while read p; do grep -A1 -m1 $p".*Allele_0" 05-stacks/batch_1.fa ; done < 05-stacks/obtain_one_record_per_accn_list.txt > 05-stacks/batch_1_filtered_single_record.fa`    
+
 ## Final output
 Generate a fasta file of all retained loci for your vcf of interest.   
 [Go back to get a single accession with whitelist from vcf](#generate-single-accession-output-from-total-fasta-with-whitelist)
