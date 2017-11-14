@@ -175,7 +175,7 @@ Evaluate total number of mappings
 todo: Needs to be updated
 `populations --in_vcf 05-stacks/1M_filt.vcf --fstats -f p_value --out_path ./05-stacks/re-run_popn_1M/ -M 01-info_files/population_map.txt`
 
-## Generate Rapture panel by combining de novo and reference alignment
+## Generate Rapture panel
 ### de novo    
 Follow these steps:    
 * populations module to output batch_1.vcf
@@ -191,35 +191,6 @@ Follow these steps:
 `grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 05-stacks/obtain_one_record_per_accn_list.txt`
 * Use this record list to obtain the single record:    
 `while read p; do grep -A1 -m1 $p".*Allele_0" 05-stacks/batch_1.fa ; done < 05-stacks/obtain_one_record_per_accn_list.txt > 05-stacks/batch_1_filtered_single_record.fa`    
-
-### reference-based
-Perform all of the above _de novo_ steps but on the output from the reference-based batch_1.vcf. Use a separate 05-stacks folder.    
-
-Rename both of your outputs as the appropriate term (denovo or reference). 
-
-
-### Compare the results
-Index the aligned fasta output:    
-`bowtie2-build -f batch_1_filtered_single_record_aligned.fa --threads 6 batch_1_filtered_single_record_aligned`
-
-Map de novo against the aligned version    
-`bowtie2 -x batch_1_filtered_single_record_aligned -f batch_1_filtered_single_record_denovo.fa --end-to-end --threads 6 > denovo_vs_aligned.sam`    
-
-#todo: what about the other way around? 
-
-
-Obtain unmapped reads from this sam file     
-`samtools view -Sf 4 denovo_vs_aligned.sam > denovo_vs_aligned_unmapped.sam`    
-`awk '{ print $1 }' denovo_vs_aligned_unmapped.sam > new_markers_to_add.txt`
-
-Extract _de novo_-only loci from the _de novo_ fasta file to create a new fasta file.     
-`while read p; do grep -A1 $p ./batch_1_filtered_single_record_denovo.fa ; done < new_markers_to_add.txt > new_markers_to_add.fa`
-
-Concatenate to the genome fasta file, index this for use with bwa, then redo the entire alignment and stacks pipeline with this as the new reference genome.
-
-
-Issues: 
-* too high coverage? Incorporate a screen filter for -C flag in 05-filter_vcf.py
 
 ## Final output
 Generate a fasta file of all retained loci for your vcf of interest.   
