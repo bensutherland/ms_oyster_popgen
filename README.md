@@ -191,7 +191,6 @@ Follow these steps:
 `grep -E '^>' 05-stacks/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 05-stacks/obtain_one_record_per_accn_list.txt`
 * Use this record list to obtain the single record:    
 `while read p; do grep -A1 -m1 $p".*Allele_0" 05-stacks/batch_1.fa ; done < 05-stacks/obtain_one_record_per_accn_list.txt > 05-stacks/batch_1_filtered_single_record.fa`    
-
 ## Final output
 Generate a fasta file of all retained loci for your vcf of interest.   
 [Go back to get a single accession with whitelist from vcf](#generate-single-accession-output-from-total-fasta-with-whitelist)
