@@ -41,6 +41,7 @@ Record the results of the trimming for reference
 Run fastqc on trimmed data and summarize results     
 ```
 mkdir 02-raw/trimmed/fastqc_trimmed/    
+fastqc 02-raw/trimmed/*.fastq.gz -o 02-raw/trimmed/fastqc_trimmed/
 multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed       
 ```
 
@@ -154,7 +155,7 @@ Combine:
 
 Proceed to:   
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
-[Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)
+[Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
 [RAD Capture panel](#generate-rapture-panel)    
 [Final Output](#final-output)    
 
@@ -181,7 +182,7 @@ Sum reads
 Count how many reads are in read input file    
 `awk '{ print $2 }' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc`
 
-Note (#todo) - make sure this is being done on only the samples that were used after removing samples with too few reads.   
+Note: make sure to calculate this on only the samples used after removing those with too few reads.   
 
 Evaluate total number of mappings    
 `awk '{ print $2 }' 04-all_samples/mappings_per_sample_table.txt | paste -sd+ - | bc`
@@ -201,7 +202,7 @@ Follow these steps:
 ### Generate single accession output from total fasta with whitelist    
 * Obtain a single SNP per locus with max_maf filter    
 `00-scripts/utility_scripts/extract_snp_with_max_maf.py 06-stacks_rx/batch_1_filt_p50.vcf 06-stacks_rx/batch_1_filt_p50_max_maf.vcf`
-* Identify the catalog locus IDs from the max_maf.vcf    
+* Identify the catalog locus IDs from the max_maf.vcf (third column, first unit (second unit is the position of the SNP in the tag))    
 `grep -vE '^#' 06-stacks_rx/batch_1_filt_p50_max_maf.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 06-stacks_rx/whitelist_denovo_max_maf_p50_SNP.txt`
 * Edit populations script to use -W flag and point towards the whitelist. Turn on .fasta output and turn off vcf output.    
 * Obtain a single Allele 0 record per locus from the fasta output    
