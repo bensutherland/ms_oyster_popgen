@@ -162,8 +162,7 @@ Combine:
 Proceed to:   
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
-[Single fasta accession per marker](#obtain-a-single-read-per-locus)    
-[Final Output](#final-output)    
+[Obtain a single read per locus](#obtain-a-single-read-per-locus)    
 
 ## Evaluate position of SNPs in tags
 Curious as to where the SNPs are in your tags?    
@@ -193,12 +192,6 @@ Note: make sure to calculate this on only the samples used after removing those 
 Evaluate total number of mappings    
 `awk '{ print $2 }' 04-all_samples/mappings_per_sample_table.txt | paste -sd+ - | bc`
 
-
-## Final output
-This is used to generate fstats on a filtered vcf.   
-todo: Needs to be updated    
-`populations --in_vcf 06-stacks_rx/1M_filt.vcf --fstats -f p_value --out_path ./06-stacks_rx/re-run_popn_1M/ -M 01-info_files/population_map.txt`
-
 ## Obtain a single read per locus
 Use a whitelist to generate a single accession per locus fasta file
 * Obtain a single SNP per locus with max_maf filter    
@@ -210,7 +203,6 @@ Use a whitelist to generate a single accession per locus fasta file
 `grep -E '^>' 06-stacks_rx/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 06-stacks_rx/obtain_one_record_per_accn_list.txt`
 * Obtain the single record:    
 `while read p; do grep -A1 -m1 $p".*Allele_0" 06-stacks_rx/batch_1.fa ; done < 06-stacks_rx/obtain_one_record_per_accn_list.txt > 06-stacks_rx/batch_1_filtered_single_record.fa`    
-
 
 
 ## fineRADstructure
