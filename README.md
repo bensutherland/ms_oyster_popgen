@@ -177,10 +177,10 @@ Note: the output file must be renamed from `*.genepop` to `*.gen`
 `mv 06-stacks_rx/batch_1.genepop 06-stacks_rx/batch_1.gen`   
 
 To move genomic SNP data into adegenet, use plink.    
-# Generate input file for adegenet:
+Generate input file for adegenet:
 `plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.05 --recodeA --noweb --out 06-stacks_rx/batch_1`
 
-# Also, an example generate allele frequencies:
+Also, an example generate allele frequencies:
 `plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --freq`
 
 
