@@ -162,7 +162,7 @@ Combine:
 Proceed to:   
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
-[RAD Capture panel](#generate-rapture-panel)    
+[Single fasta accession per marker](#obtain-a-single-read-per-locus)    
 [Final Output](#final-output)    
 
 ## Evaluate position of SNPs in tags
