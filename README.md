@@ -199,21 +199,16 @@ This is used to generate fstats on a filtered vcf.
 todo: Needs to be updated    
 `populations --in_vcf 06-stacks_rx/1M_filt.vcf --fstats -f p_value --out_path ./06-stacks_rx/re-run_popn_1M/ -M 01-info_files/population_map.txt`
 
-## Generate Rapture panel
-This is used to generate a set of tags to be provided for RAD capture bait design.   
-Follow these steps:    
-* populations module to output batch_1.vcf
-* 05-filter_vcf.py at 50% presence to output batch_1_filt.vcf
-
-### Generate single accession output from total fasta with whitelist    
+## Obtain a single read per locus
+Use a whitelist to generate a single accession per locus fasta file
 * Obtain a single SNP per locus with max_maf filter    
-`00-scripts/utility_scripts/extract_snp_with_max_maf.py 06-stacks_rx/batch_1_filt_p50.vcf 06-stacks_rx/batch_1_filt_p50_max_maf.vcf`
-* Identify the catalog locus IDs from the max_maf.vcf (third column, first unit (second unit is the position of the SNP in the tag))    
-`grep -vE '^#' 06-stacks_rx/batch_1_filt_p50_max_maf.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 06-stacks_rx/whitelist_denovo_max_maf_p50_SNP.txt`
-* Edit populations script to use -W flag and point towards the whitelist. Turn on .fasta output and turn off vcf output.    
+`00-scripts/utility_scripts/extract_snp_with_max_maf.py 06-stacks_rx/batch_1.vcf 06-stacks_rx/batch_1_max_maf.vcf`
+* Identify the catalog locus IDs from the vcf (3rd column, first unit (second unit is the position of the SNP in the tag))    
+`grep -vE '^#' 06-stacks_rx/batch_1_max_maf.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 06-stacks_rx/whitelist_max_maf.txt`
+* Edit populations to use -W flag and point towards the whitelist. Turn on .fasta output and turn off vcf output. (todo: give a one-liner for this instead of using script)    
 * Obtain a single Allele 0 record per locus from the fasta output    
 `grep -E '^>' 06-stacks_rx/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 06-stacks_rx/obtain_one_record_per_accn_list.txt`
-* Use this record list to obtain the single record:    
+* Obtain the single record:    
 `while read p; do grep -A1 -m1 $p".*Allele_0" 06-stacks_rx/batch_1.fa ; done < 06-stacks_rx/obtain_one_record_per_accn_list.txt > 06-stacks_rx/batch_1_filtered_single_record.fa`    
 
 
