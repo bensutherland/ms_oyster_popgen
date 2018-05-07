@@ -68,6 +68,12 @@ Compare total number of reads to the total number of mappings per sample using t
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
 This produces files in `04-all_samples`: `reads_per_sample_table.txt` and `mappings_per_sample.txt` and a graph in the main directory of number reads per sample vs number of mappings.
 
+Want to see how many reads are present in total?    
+`awk '{ print $2 } ' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc`
+
+And before assigning (must divide by 4) :   
+`for i in $(ls 02-raw/*.fastq.gz) ; do echo $i ; gunzip -c $i | wc -l ; done`
+
 Compare total number of reads per sample to the number of unique scaffolds being mapped against using the script:    
 `./../ms_oyster_popgen/01_scripts/determine_number_unique_scaff_mapped.sh`    
 This produces a graph as well as some summary statistics.   
@@ -140,7 +146,7 @@ When creating capture panel, also set: min_maf=0.01, p=<the # of pops>, r = 0.4 
 When going forward to do pop gen work, set the r value above to 0.7   
 
 ### Extra filtering
-`00-scripts/05_filter_vcf.py -i 06-stacks_rx/batch_1.vcf -o 06-stacks_rx/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 40 --use_percent -a 0.01 -s 20 -H 0.5 -C 200`     
+`00-scripts/05_filter_vcf.py -i 06-stacks_rx/batch_1.vcf -o 06-stacks_rx/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 40 --use_percent -a 0.05 -s 20 -H 0.5 -C 200`     
 This provides additional filters of allelic imbalance (-I), max SNPs per locus, max heterozygosity (-H), and max depth (-C)     
 
 ### Graph output 
