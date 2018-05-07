@@ -172,8 +172,8 @@ To install XML, need to first do:
 
 
 Proceed to:   
-[Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
+[Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
 [Obtain a single read per locus](#obtain-a-single-read-per-locus)    
 
 ## Evaluate position of SNPs in tags
