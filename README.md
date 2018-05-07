@@ -159,6 +159,18 @@ Filtered:
 Combine:    
 `00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
 
+
+## fineRADstructure
+Use the output in `06-stacks_rx/batch_1.haplotypes.tsv`    
+`cut -f1 --complement batch_1.haplotypes.tsv | cut -f1 --complement - | grep -v 'consensus' | sed 's/-//g' - > batch_1.haplotypes_for_export.tsv`
+
+Need to install `ape` and `XML` 
+ape can be installed within R
+To install XML, need to first do: 
+`sudo apt-get install libxml2-dev`
+
+
+
 Proceed to:   
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
@@ -205,11 +217,3 @@ Use a whitelist to generate a single accession per locus fasta file
 `while read p; do grep -A1 -m1 $p".*Allele_0" 06-stacks_rx/batch_1.fa ; done < 06-stacks_rx/obtain_one_record_per_accn_list.txt > 06-stacks_rx/batch_1_filtered_single_record.fa`    
 
 
-## fineRADstructure
-Use the output in `06-stacks_rx/batch_1.haplotypes.tsv`    
-`cut -f1 --complement batch_1.haplotypes.tsv | cut -f1 --complement - | grep -v 'consensus' | sed 's/-//g' - > batch_1.haplotypes_for_export.tsv`
-
-Need to install `ape` and `XML` 
-ape can be installed within R
-To install XML, need to first do: 
-`sudo apt-get install libxml2-dev`
