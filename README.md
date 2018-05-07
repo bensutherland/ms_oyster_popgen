@@ -169,8 +169,22 @@ ape can be installed within R
 To install XML, need to first do: 
 `sudo apt-get install libxml2-dev`
 
+(#todo: complete this section)
+
+## hierfstat and adegenet
+This requires that you have exported a genpop file from stacks populations module.    
+Note: the output file must be renamed from `*.genepop` to `*.gen`      
+`mv 06-stacks_rx/batch_1.genepop 06-stacks_rx/batch_1.gen`   
+
+To move genomic SNP data into adegenet, use plink.    
+# Generate input file for adegenet:
+`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.05 --recodeA --noweb --out 06-stacks_rx/batch_1`
+
+# Also, an example generate allele frequencies:
+`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --freq`
 
 
+## Other Methods 
 Proceed to:   
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
