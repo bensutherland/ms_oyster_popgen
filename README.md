@@ -172,7 +172,7 @@ To install XML, need to first do:
 (#todo: complete this section)
 
 ## hierfstat and adegenet
-This requires that you have exported a genpop file from stacks populations module.    
+This requires that you have exported a genpop file from the stacks populations module.    
 Note: the output file must be renamed from `*.genepop` to `*.gen`      
 `mv 06-stacks_rx/batch_1.genepop 06-stacks_rx/batch_1.gen`   
 
