@@ -183,6 +183,9 @@ Generate input file for adegenet:
 Also, an example generate allele frequencies:
 `plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --freq`
 
+(#todo: include a single snp only for non-haplotype methods)   
+
+Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
 
 ## Other Methods 
 Proceed to:   
