@@ -171,6 +171,15 @@ exp.v.obs.test <- bartlett.test(list(div$Hexp, div$Hobs))
 exp.v.obs.test
 text(x = 0.6, y = 0.9, labels = paste("pval =", exp.v.obs.test$p.value, sep = ""))
 
+
+### Test for significance on genind file ###
+test <- 
+
+
+
+
+
+
 ##### 7. enter HIERFSTAT ####
 # Create a hierfstat object (nloci+1 = columns; ninds = rows)
 my.data.hfs <- genind2hierfstat(my.data.gid)
@@ -183,10 +192,27 @@ rownames(my.data.hfs) <- indNames(my.data.gid)
 #dim(my.data.mini)
 # ### CHOOSE DATASET For testing
 # data <- my.data.mini #mini
+
+### Working w/ hierfstat obj
 data <- my.data.hfs
+
+# define populations for this data
+pops <- gsub(x = rownames(data), pattern = "\\_.*", replacement = "", perl = T)
 
 # Calculate genetic distance using Weir & Cockerham Fst
 genet.dist(dat = data, method = "WC84")
+
+# Test signif of fx of test.lev on genetic diffn
+test.between(data = data, test.lev = pops, nperm = 2, rand.unit = )
+
+# Test the significance of the effect of level on genetic differentiation
+test.g(data = data, level = pops, nperm = 2)
+
+# 
+my.obj <- boot.ppfst(dat = data, nboot = 2)
+
+
+
 
 # Provides Hobs (Ho), mean gene diversities w/in pops (Hs), Fis, Fst
 basicstat <- basic.stats(data, diploid=T, digits=2)
@@ -197,7 +223,7 @@ summary(basicstat$perloc[, "Fst"]) # doesn't really work
 
 plot(basicstat$perloc[,"Fst"]) # plot Fst by index
 
-wc(data)
+# wc(data)
 # Fst following Weir and Cockerham's estimate
 
 
@@ -233,6 +259,17 @@ compoplot(dapc1
 
 # Loading plot
 loadingplot(dapc1$var.contr, thres=1e-3)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
