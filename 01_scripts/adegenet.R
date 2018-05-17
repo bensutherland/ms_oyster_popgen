@@ -4,7 +4,11 @@
 # rm(list=ls())
 
 # Set working directory
+# Xavier
 setwd("~/Documents/01_moore_oyster_project/stacks_workflow_2018-05-03/")
+
+# Wayne
+setwd("~/Documents/miller/00_Moore_oyster_project/04_analysis/stacks_workflow")
 
 # Resource packages required:
 #install.packages("purrr")
@@ -127,22 +131,27 @@ loadingplot(dapc1$var.contr, thres=1e-3)
 
 
 ####6. Convert genlight to genind object ####
+# Make into a matrix first
 my.data.mat <- as.matrix(my.data)
 my.data.mat[1:5,1:5]
+
+# Then translate the number of minor allele to genind format
 my.data.mat[my.data.mat == 0] <- "1/1" #homozygote reference
 my.data.mat[my.data.mat == 1] <- "1/2" #heterozygote
 my.data.mat[my.data.mat == 2] <- "2/2" #homozygote alternate
 #my.data.mat[my.data.mat == "NA"] <- "NA" # NA
 my.data.mat[1:5,1:5]
+
+# Convert matrix to genind
 my.data.gid <- df2genind(my.data.mat, sep = "/", ploidy = 2) # convert df to genind
 
-# Generate genind population IDs
-indNames(my.data.gid)
+# Generate populations for genind
 pop(my.data.gid) # currently null
+indNames(my.data.gid) # this contains the pop IDs
 pop(my.data.gid) <- gsub(x = indNames(my.data.gid), pattern = "\\_.*", replacement = "") # create pop ID
 pop(my.data.gid)
 
-# How many alleles?
+# How many alleles? (should all be 2)
 table(nAll(my.data.gid))
 
 # Descriptive Statistics on genind file
@@ -172,10 +181,28 @@ exp.v.obs.test
 text(x = 0.6, y = 0.9, labels = paste("pval =", exp.v.obs.test$p.value, sep = ""))
 
 
-### Test for significance on genind file ###
-test <- 
+#### Test for significance on genind file ####
+# Show populations
+table(pop(my.data.gid))
+barplot(table(pop(my.data.gid)), col=funky(17), las=3,
+        xlab="Population", ylab="Sample size")
 
+# Obtain summary info (% missing data, obs, exp.het)
+summary.info <- summary(my.data.gid)
+summary.info
 
+# Plot Hobs vs Hexp
+plot(summary.info$Hexp, summary.info$Hobs
+     , pch=20, cex=3, xlim=c(.4,1), ylim=c(.4,1)
+     , main = paste("nLoc: ", nLoc(my.data.gid),"nInd: "
+                    , nInd(my.data.gid), "nPop: ", nPop(my.data.gid)))
+abline(0,1,lty=2)
+# Note that we have many loci that deviate from elevated heterozygosity
+
+#
+#### HWE ####
+# allpval <- hw.test(my.data.gid, res="matrix") # very long test!
+dim(allpval)
 
 
 
