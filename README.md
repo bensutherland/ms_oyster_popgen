@@ -20,8 +20,6 @@ Requirements:
 2. Manually prepare a sample info file (see example file sample_information.csv).   
 This must be a tab-delimited text file, but the file name is .csv.    
 
-3. Add the barcodes file that contains all barcodes for the project. This corresponds to the sample information file.    
-
 ### Cleanup
 
 Run fastqc and summarize results    
@@ -41,7 +39,7 @@ Record the results of the trimming for reference
 Run fastqc on trimmed data and summarize results     
 ```
 mkdir 02-raw/trimmed/fastqc_trimmed/    
-fastqc 02-raw/trimmed/*.fastq.gz -o 02-raw/trimmed/fastqc_trimmed/
+fastqc -t 5 02-raw/trimmed/*.fastq.gz -o 02-raw/trimmed/fastqc_trimmed/
 multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed       
 ```
 
