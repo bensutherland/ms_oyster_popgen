@@ -1,5 +1,4 @@
-# This script is used to import data from plink, conduct basic analyses, create a neighbour-joining tree, PCA, DAPC
-# then 
+# Import data from PLINK, conduct basic pop gen analyses, create a neighbour-joining tree, PCA, DAPC
 
 #### Front Matter ####
 # Clean space
@@ -7,7 +6,7 @@
 
 # Set working directory
 # Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_2018-05-03/")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow")
 
 # Wayne
 # setwd("~/Documents/miller/00_Moore_oyster_project/04_analysis/stacks_workflow")
@@ -17,7 +16,9 @@ setwd("~/Documents/01_moore_oyster_project/stacks_workflow_2018-05-03/")
 library("purrr")
 #install.packages("dplyr")
 library("dplyr")
-# install.packages("hierfstat")
+
+library(devtools)
+install_github("jgx65/hierfstat") # always use newest version
 library(hierfstat)
 library("ape")
 library("pegas")
@@ -26,7 +27,7 @@ library("ggplot2")
 library("adegenet")
 
 #### 1. Import Genomics (genlight) ####
-my.data <- read.PLINK(file = "06-stacks_rx/batch_1.raw")
+my.data <- read.PLINK(file = "07-filtered_vcfs/batch_1.raw")
 my.data
 
 ## Explore data attributes
@@ -42,7 +43,7 @@ pop(my.data) <- gsub(x = indNames(my.data), pattern = "\\_.*", replacement = "")
 pop(my.data) # what are the pop names?
 
 #### 1.b. Additional filtering ####
-# Todo: how to remove populations from the analysis?
+# Apply here if needed (e.g. remove samples, populations etc.)
 
 #### 2. Basic Analysis (adegenet) ####
 # genlight plot to visualize the number of second alleles across individuals and SNPs
@@ -57,7 +58,6 @@ hist(myFreq, proba=T, col="gold", xlab = "Allele frequencies"
 text(x = 0.4, y = 7, labels = paste(nLoc(my.data), " loci", sep = "" ))
 temp <- density(myFreq)
 lines(temp$x, temp$y, lwd=3)
-
 
 #### 3. Neighbour-joining tree, all loci ####
 par(mfrow=c(1,1), mar=c(3,3,2,3))
@@ -107,8 +107,8 @@ for(i in 1:num.retained.pcs){
 par(mfrow=c(1,1))
 myCol <- colorplot(pca1$scores, pca1$scores, transp=T, cex=4)
 abline(h=0,v=0, col = "grey")
-text(x = -2, y = 15, paste(labels=nLoc(my.data), "loci", sep = " "))
-text(x = -2, y = 12, labels=paste("PC1=Red", "\n", "PC2=Green", "\n", "PC3=Blue"))
+text(x = -2, y = 11, paste(labels=nLoc(my.data), "loci", sep = " "))
+text(x = -2, y = 9, labels=paste("PC1=Red", "\n", "PC2=Green", "\n", "PC3=Blue"))
 
 # Bring colorplot colors into the samples of the Neighbour-joining tree
 plot(nj(D), type="fan", show.tip=T, cex =  0.8)
@@ -134,24 +134,30 @@ dapc1 <- dapc(my.data, n.pca = 10, n.da = 1) # n.pca = number axes to be retaine
 dapc1 # variance = 0.16
 
 # Density plot of samples along discriminant function 1
-scatter(dapc1, scree.da = F, bg = "white", posi.pca = "topright", legend = T
-        , txt.leg=c("Pipestem","Pendrell","DeepBay","Rosewall","BayneSpat","PendrellFarm")
+scatter(dapc1, scree.da = F, bg = "white", legend = T
+        , txt.leg=rownames(dapc1$means)
+        , posi.leg = "topleft"
         )
 
-# Composition plot
+# assignplot hasn't been explored/implemented here yet
+#assignplot(x = dapc1)
+
+# Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
 par(mar=c(10,3,3,3))
 compoplot(dapc1
           #, lab="" # comment out if you want sample labels
-          , txt.leg=c("Pipestem","Pendrell","DeepBay","Rosewall","BayneSpat","PendrellFarm")
+          , txt.leg = rownames(dapc1$means)
           , posi = "topright"
-          #, cex.lab = 0.7 #doesn't seem to work unfortunately
+#          , cex = 0.7
+          , cex.names = 0.6 
           )
 
 # Loading plot # Plot marker variance contribution to DAPC
 par(mfrow=c(1,1), mar=c(3,4,3,3))
 
-# Plot the loading values of the different markers into the PCA
+# Plot the loading values of the different markers into the DAPC
 loadingplot(dapc1$var.contr, thres=1e-3)
+
 
 
 ####6. Convert genlight to genind object (indiv. genotypes) ####
@@ -186,78 +192,135 @@ barplot(table(pop(my.data.gid)), col=funky(17), las=3, las = 1
 table(nAll(my.data.gid))
 
 
-##### Separate Populations and do some PCA #####
+#### 7. Investigate Wild Populations Only ####
 sep.obj <- seppop(x = my.data.gid)
 names(sep.obj)
 
-# WILD BC AND MOVED TO FARM
-wild.bc.gid <- repool(sep.obj$BayneSpat, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem)
+# Wild populations (and moved to farm)
+wild.bc.gid <- repool(sep.obj$BayneSpat, sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine)
 nPop(wild.bc.gid)
 nInd(wild.bc.gid)
 indNames(wild.bc.gid)
-#change to hf
+
+# Change from genind file to hfstat
 wild.bc.hf <- genind2hierfstat(wild.bc.gid)
 rownames(wild.bc.hf) <- indNames(wild.bc.gid)
 
+# Perform PCA on a matrix of individual genotype frequencies (hierfstat)
 y <- indpca(wild.bc.hf, ind.labels = rownames(wild.bc.hf))
 plot(y, cex = 0.7)
 
-# WILD BC NO FARM
-wild.bc.nofarm.gid <- repool(sep.obj$BayneSpat, sep.obj$Pendrell, sep.obj$Pipestem)
-nPop(wild.bc.nofarm.gid)
-nInd(wild.bc.nofarm.gid)
-indNames(wild.bc.nofarm.gid)
-#change to hf
-wild.bc.nofarm.hf <- genind2hierfstat(wild.bc.nofarm.gid)
-rownames(wild.bc.nofarm.hf) <- indNames(wild.bc.nofarm.gid)
+# Perform dapc on the wild only individuals
+dapc2 <- dapc(wild.bc.gid, n.pca = 10, n.da = 1)
+scatter(dapc2, scree.da = F, bg = "white", legend = T
+        , txt.leg=rownames(dapc2$means)
+        , posi.leg = "topleft"
+        )
 
-z <- indpca(wild.bc.nofarm.hf, ind.labels = rownames(wild.bc.nofarm.hf))
+# Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
+par(mar=c(10,3,3,3))
+compoplot(dapc2
+          #, lab="" # comment out if you want sample labels
+          , txt.leg = rownames(dapc2$means)
+          , posi = "topright"
+          #          , cex = 0.7
+          , cex.names = 0.6 
+)
+
+# Loading plot # Plot marker variance contribution to DAPC
+par(mfrow=c(1,1), mar=c(3,4,3,3))
+
+# Plot the loading values of the different markers into the DAPC
+loadingplot(dapc2$var.contr, thres=1e-3)
+
+# Identify the top loading marker names
+toploading.markers <- dimnames(dapc2$var.contr)[[1]][which(dapc2$var.contr > 0.0005)]
+toploading.markers <- gsub(pattern = "\\..*", replacement = "", toploading.markers) # match the genlight name format (remove .1 or .2)
+toploading.markers
+
+# # subset the gid file w/ toploading markers
+# locNames(wild.bc.gid)
+# 
+# wild.bc.gid.toploading <- wild.bc.gid[, loc=toploading.markers]
+# wild.bc.gid.toploading
+
+# Subset the original my.data genlight file with the toploading markers and convert back to a genlight file
+my.data.mat <- as.matrix(my.data)
+my.data.mat[1:5,1:5]
+# retain only top loading markers
+my.data.mat.toploading <- my.data.mat[,toploading.markers]
+# retain only wild samples (removing DeepBay only currently)
+samples.to.keep <- rownames(my.data.mat)[grep(pattern = "DeepBay", x = rownames(my.data.mat), invert = T)]
+my.data.mat.toploading.wild <- my.data.mat.toploading[samples.to.keep,]
+
+# Convert back to genlight format
+my.data.toploading.gl  <- as.genlight(my.data.mat.toploading.wild)
+
+# Determine distance between individuals
+# First use seploc to create a list of ten blocks of loci, each to be computed in parallel
+x <- seploc(my.data.toploading.gl, n.block=10, parallel=F)
+
+## Use dist in a lapply loop to compute pairwise distances between individuals for each block
+lD <- lapply(x, function(e) dist(as.matrix(e)))
+
+# Obtain general distance matrix by summing these
+D <- Reduce("+", lD)
+
+# Plot a neighbor-joining tree using ape's nj function on the distance matrix
+plot(nj(D), type="fan", cex=0.7)
+# this fails if there are too few markers
+
+# Pairwise Fst
+pairwise.WCfst(wild.bc.hf)
+
+# Bootstrapping
+boot.fst.wild.bc <- boot.ppfst(dat = wild.bc.hf, nboot = 100, quant = c(0.025,0.975))
+
+
+
+#### 8. BC Seq Facility (Hisnit, Pendrell) ####
+bc.gid <- repool(sep.obj$Pendrell, sep.obj$Hisnit)
+# could also use # sep.obj$Serpentine
+nPop(bc.gid)
+nInd(bc.gid)
+indNames(bc.gid)
+pop(bc.gid)
+
+## If you want to edit the population variable, do it here
+# indiv.used <- as.numeric(gsub(pattern = "*.*\\_", replacement = "", indNames(bc.gid)))
+# indiv.used <- as.data.frame(indiv.used)
+# indNames(bc.gid)
+# refined.pop <- c(rep("Pen_2", times = 12), rep("Pen_3", times = 13), rep("His_3", times = 5), rep("His_6", times = 11)
+#                  , rep("His_3", times = 5))
+# length(indNames(bc.gid))
+# length(refined.pop)
+# 
+# pop(bc.gid) <- refined.pop
+# pop(bc.gid)
+
+# Change to hierfstat
+bc.hf <- genind2hierfstat(bc.gid)
+rownames(bc.hf) <- indNames(bc.gid)
+
+# PCA
+z <- indpca(bc.hf, ind.labels = rownames(bc.hf))
+# z <- indpca(bc.hf, ind.labels = rownames(refined.pop)) # use this if want to see the refined pop
+# plot PCA
 plot(z, cex = 0.7)
 
+# Basic stats (gives per loc and overall, but only one value, not one for each comparison)
+bc.stats <- basic.stats(bc.hf, diploid = T, digits = 4)
+plot(bc.stats$perloc$Fst, ylab = "Fst") # Plot Fst
+
+pairwise.WCfst(dat = bc.hf)
+boot.fst.obj <- boot.ppfst(dat = bc.hf, nboot = 1000, quant = c(0.025,0.975))
+boot.fst.obj
+
+# Todo, investigate age classes
 
 
 
-
-
-## PENDRELL AND PIPESTEM ONLY
-pendrell.pipestem.gid <- repool(sep.obj$Pendrell, sep.obj$Pipestem) # make a pendrell pipestem only dataset
-# note: expect warning message that non-type markers are deleted
-nPop(pendrell.pipestem.gid)
-nInd(pendrell.pipestem.gid)
-
-basicstat.pendrell.pipestem <- basic.stats(pendrell.pipestem.gid, diploid = T, digits = 4)
-names(basicstat.pendrell.pipestem) #n indiv, pop freq, Ho, Hs, Fis, perloc, overall
-str(basicstat.pendrell.pipestem)
-
-plot(basicstat.pendrell.pipestem$perloc$Fst)
-
-# #bootstrapping NOT WORKING
-# bootstrap.pipestem.pendrell <- boot.ppfst(pendrell.pipestem.gid)
-
-indNames(pendrell.pipestem.gid)
-pendrell.pipestem.hf <- genind2hierfstat(pendrell.pipestem.gid)
-dim(pendrell.pipestem.hf)
-rownames(pendrell.pipestem.hf) <- indNames(pendrell.pipestem.gid)
-
-x <- indpca(pendrell.pipestem.hf, ind.labels = rownames(pendrell.pipestem.hf))
-plot(x, cex = 0.7)
-
-
-
-
-#
-
-
-
-
-
-
-
-
-
-
-#### 7. Hobs vs Hexp ####
-
+#### 9. Hobs vs Hexp ####
 # Descriptive Statistics on genind file
 div <- summary(my.data.gid) # genetic diversity w/ adegenet
 str(div) # What is contained within this summary object
