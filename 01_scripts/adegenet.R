@@ -376,7 +376,7 @@ abline(0, 1, lty=2)
 # text(x = 0.6, y = 0.9, labels = paste("pval =", exp.v.obs.test$p.value, sep = ""))
 
 
-# #### Hardy-Weinberg Equilibrium ####
+# #### 10. Hardy-Weinberg Equilibrium ####
 # # Choose the dataset to test
 # #dataset.for.hwt <- my.data.gid
 # dataset.for.hwt <- wild.bc.nofarm.gid
@@ -393,78 +393,16 @@ abline(0, 1, lty=2)
 
 
 
-##### 7. Other Fstats ####
+##### 11. Other Fstats ####
 # May also try diveRsity or StAMPP
 
-# Conduct pairwise fst on the data (using Nei's estimator)
+# Another method, conduct pairwise fst on the data (using Nei's estimator)
 my.data.fst <- pairwise.fst(x = my.data.gid, pop = pop(my.data.gid))
 my.data.fst
 is.euclid(my.data.fst) # False, there are zero distances (probably the negative values!)
 
 # Provide three F statistics (Fst (pop/total), Fit (Ind/total), Fis (ind/pop))
-fstat(my.data.gid)
-
-
-
-
-
-
-
-
-# Create a hierfstat object (nloci+1 = columns; ninds = rows)
-my.data.hfs <- genind2hierfstat(my.data.gid)
-class(my.data.hfs) # is a dataframe
-dim(my.data.hfs) # with 95 indiv and 11,271 loci
-
-# Name the rows with the sample IDs
-rownames(my.data.hfs) <- indNames(my.data.gid)
-
-# OPTIONAL TO LIMIT DATA
-#my.data.mini <- my.data.hfs[, 1:400]
-#dim(my.data.mini)
-# ### CHOOSE DATASET For testing
-# data <- my.data.mini #mini
-
-### Working w/ hierfstat obj
-data <- my.data.hfs
-
-# define populations for this data
-pops <- gsub(x = rownames(data), pattern = "\\_.*", replacement = "", perl = T)
-
-
-
-
-
-
-
-## OLDER ##
-# Calculate genetic distance using Weir & Cockerham Fst
-genet.dist(dat = data, method = "WC84")
-
-# Test signif of fx of test.lev on genetic diffn
-test.between(data = data, test.lev = pops, nperm = 2, rand.unit = )
-
-# Test the significance of the effect of level on genetic differentiation
-test.g(data = data, level = pops, nperm = 2)
-
-# 
-my.obj <- boot.ppfst(dat = data, nboot = 2)
-
-
-
-
-# Provides Hobs (Ho), mean gene diversities w/in pops (Hs), Fis, Fst
-basicstat <- basic.stats(data, diploid=T, digits=2)
-names(basicstat) 
-
-# lots of great data and info here
-summary(basicstat$perloc[, "Fst"]) # doesn't really work
-
-plot(basicstat$perloc[,"Fst"]) # plot Fst by index
-
-# wc(data)
-# Fst following Weir and Cockerham's estimate
-
+# fstat(my.data.gid)
 
 # which markers are greater than a specific Fst value?
 val <- 0.1
@@ -472,7 +410,7 @@ rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
 high.fst.markers <- rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
 length(high.fst.markers)
 
-# extract these from the genlight object and re-run nj
+# extract these from the genlight object
 head(locNames(my.data.gid))
 high.fst.markers.true <- gsub(x = high.fst.markers, pattern = "^X", replacement = "", perl = T)
 
@@ -480,86 +418,5 @@ my.data.high.fst <- my.data.gid[, loc=high.fst.markers.true]
 my.data.high.fst
 
 
-# Try dapc now
-dapc1 <- dapc(my.data.high.fst, n.pca = 10, n.da = 1) 
-# n.pca = number axes to be retained; n.da = number of axes retained in Discriminant Analysis step
-dapc1 # variance = 0.3
-
-# Density plot of samples along discriminant function 1
-scatter(dapc1, scree.da = F, bg = "white", posi.pca = "topright", legend = T
-        #, txt.leg=c("Pipestem","Pendrell","DeepBay","Rosewall","BayneSpat","PendrellFarm")
-)
-
-# Composition plot
-compoplot(dapc1
-          #, lab="" # comment out if you want sample labels
-          , txt.leg=c("Pipestem","Pendrell","DeepBay","Rosewall","BayneSpat","PendrellFarm")
-)
-
-# Loading plot
-loadingplot(dapc1$var.contr, thres=1e-3)
-
-
-
-
-
-
-
-
-
-
-
-
-
 #### TODO ####
-# 1. Use seppop to separate populations then compare (e.g. pendrell vs pendrell farm; pipestem vs pendrell)
-# 2. How to get statistics on Fst?
 # 3. How to calculate pi across genome?
-# 4. How to best incorporate aligned markers against the Pacific Oyster chromosome genome assembly here? 
-# 5. How to best calculate population-specific metrics, should I just use Stacks output?
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### DEAD CODE ###
-
-# seploc returns a list of objects, each corresp. to a marker
-
-# sep.gid <- seploc(my.data.gid)
-# class(sep.gid)
-# head(names(sep.gid))
-# 
-# # can repool this way:
-# new.obj <- NULL
-# for(i in 1:length(high.fst.markers)){
-#   high.fst.markers[i]
-# }
-# 
-# repool()
-# 
-# 
-
-# ### NOT WORKING ###
-# # Hierarchical Fst tests (AMOVA for SNP datasets)
-# loci <- data[,-1] # remove the population column
-# populations <- as.character(data[,1]) # select only the population column
-# 
-# ### The following use hierarchies, so we need more than one distinguisher
-# # not working: varcomp.glob(levels = data.frame(populations), loci = loci, diploid = T)
-# 
-# # not working: varcomp.glob(loci=data) # return multilocus estimators of variance components and Fstats
-# 
-# # not working: test.g(loci, level = populations)
-#
