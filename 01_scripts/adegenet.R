@@ -17,17 +17,25 @@ library("purrr")
 #install.packages("dplyr")
 library("dplyr")
 
-library(devtools)
-install_github("jgx65/hierfstat") # always use newest version
+require(devtools)
+# install_version("hierfstat", version = "0.04-22", repos = "http://cran.us.r-project.org") # compoplot functional
+# install_github("jgx65/hierfstat") # compoplot not functional
 library(hierfstat)
+
 library("ape")
 library("pegas")
 library("seqinr")
 library("ggplot2")
+
+# install_version("adegenet", version = "2.0.1", repos = "http://cran.us.r-project.org") # compoplot functional
+# install.packages("adegenet") # compoplot not functional
 library("adegenet")
 
+sessionInfo()
+
 #### 1. Import Genomics (genlight) ####
-my.data <- read.PLINK(file = "07-filtered_vcfs/batch_1.raw")
+my.data <- read.PLINK(file = "06-stacks_rx/batch_1.raw")
+# my.data <- read.PLINK(file = "07-filtered_vcfs/batch_1_0.5Mreads_r70_p7_maf0.05.raw")
 my.data
 
 ## Explore data attributes
@@ -144,6 +152,7 @@ scatter(dapc1, scree.da = F, bg = "white", legend = T
 
 # Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
 par(mar=c(10,3,3,3))
+#pdf(file = "test", width = 10, height = 10)
 compoplot(dapc1
           #, lab="" # comment out if you want sample labels
           , txt.leg = rownames(dapc1$means)
@@ -151,6 +160,7 @@ compoplot(dapc1
 #          , cex = 0.7
           , cex.names = 0.6 
           )
+#dev.off()
 
 # Loading plot # Plot marker variance contribution to DAPC
 par(mfrow=c(1,1), mar=c(3,4,3,3))
@@ -274,6 +284,7 @@ plot(nj(D), type="fan", cex=0.7)
 pairwise.WCfst(wild.bc.hf)
 
 # Bootstrapping
+# requires latest hierfstat (v0.04-29)
 boot.fst.wild.bc <- boot.ppfst(dat = wild.bc.hf, nboot = 100, quant = c(0.025,0.975))
 
 
@@ -286,17 +297,17 @@ nInd(bc.gid)
 indNames(bc.gid)
 pop(bc.gid)
 
-## If you want to edit the population variable, do it here
-# indiv.used <- as.numeric(gsub(pattern = "*.*\\_", replacement = "", indNames(bc.gid)))
-# indiv.used <- as.data.frame(indiv.used)
-# indNames(bc.gid)
-# refined.pop <- c(rep("Pen_2", times = 12), rep("Pen_3", times = 13), rep("His_3", times = 5), rep("His_6", times = 11)
-#                  , rep("His_3", times = 5))
-# length(indNames(bc.gid))
-# length(refined.pop)
-# 
-# pop(bc.gid) <- refined.pop
-# pop(bc.gid)
+# If you want to edit the population variable, do it here
+indiv.used <- as.numeric(gsub(pattern = "*.*\\_", replacement = "", indNames(bc.gid)))
+indiv.used <- as.data.frame(indiv.used)
+indNames(bc.gid)
+refined.pop <- c(rep("Pen_2", times = 12), rep("Pen_3", times = 13), rep("His_3", times = 5), rep("His_6", times = 11)
+                 , rep("His_3", times = 5))
+length(indNames(bc.gid))
+length(refined.pop)
+
+pop(bc.gid) <- refined.pop
+pop(bc.gid)
 
 # Change to hierfstat
 bc.hf <- genind2hierfstat(bc.gid)
@@ -310,14 +321,25 @@ plot(z, cex = 0.7)
 
 # Basic stats (gives per loc and overall, but only one value, not one for each comparison)
 bc.stats <- basic.stats(bc.hf, diploid = T, digits = 4)
-plot(bc.stats$perloc$Fst, ylab = "Fst") # Plot Fst
 
+par(mar=c(5,5,2.5,3))
+plot(bc.stats$perloc$Fst, ylab = "Fst", las = 1) # Plot Fst
+text(x = 2000, y = 0.2, labels = paste(nLoc(my.data),"loci" ))
+text(x = 2000, y = 0.19, labels = paste(nInd(my.data),"ind" ))
+text(x = 2000, y = 0.18, labels = "Size class, Hisnit-Serp")
+text(x = 2000, y = 0.17, labels = "Max. Fst")
+
+# Save out these Fst values per locus to match to location in the genome
+perloc.stats.df <- bc.stats$perloc # save df w/ Ho, Hs, Ht, Dst, Htp, Dstp, Fst, Fstp, Fis, Dest (from hierfstat)
+write.csv(x = perloc.stats.df, file = "../ms_oyster_popgen/perloc.stats.csv")
+# match these to their genomic location and plot in Rscript (#todo)
+
+# Weir-Cockerham
 pairwise.WCfst(dat = bc.hf)
+
+# Bootstrapping
 boot.fst.obj <- boot.ppfst(dat = bc.hf, nboot = 1000, quant = c(0.025,0.975))
 boot.fst.obj
-
-# Todo, investigate age classes
-
 
 
 #### 9. Hobs vs Hexp ####
@@ -346,13 +368,6 @@ plot(div$Hobs, div$Hexp
 abline(0, 1, lty=2)
 
 
-# # Plot inverse to above
-# plot(div$Hexp, div$Hobs
-#      , pch=20, cex=3, xlim=c(0, 0.6), ylim=c(0, 1)
-#      , main = paste("nLoc: ", nLoc(my.data.gid),"nInd: "
-#                     , nInd(my.data.gid), "nPop: ", nPop(my.data.gid)))
-# abline(0,1,lty=2)
-
 # The following can be used to test for significant difference between Hobs and Hexp
 # # test : H0: Hexp = Hobs (using Bartlett test of homogeneity of variances)
 # exp.v.obs.test <- bartlett.test(list(div$Hexp, div$Hobs))
@@ -361,35 +376,32 @@ abline(0, 1, lty=2)
 # text(x = 0.6, y = 0.9, labels = paste("pval =", exp.v.obs.test$p.value, sep = ""))
 
 
-#### Test for significance on genind file ####
-
-#### Hardy-Weinberg Equilibrium ####
-# Choose the dataset to test
-#dataset.for.hwt <- my.data.gid
-dataset.for.hwt <- wild.bc.nofarm.gid
-
-# run the test
-my.data.hwt <- hw.test(dataset.for.hwt, B=0) 
-head(my.data.hwt)
-table(my.data.hwt[,3] < 0.01) 
-# for all samples (95) incl. farms  = False 4906; True 6364
-# for wild.bc.nofarm.gid            = False 6270; True 4998
-# Note, this looks as though it is being tested regardless of population, and remember
-# When there is population structure, there is often loci out of hwt
-# However, even when looking at samples without pop structure, it appears that many loci are out of HWE
+# #### Hardy-Weinberg Equilibrium ####
+# # Choose the dataset to test
+# #dataset.for.hwt <- my.data.gid
+# dataset.for.hwt <- wild.bc.nofarm.gid
+# 
+# # run the test
+# my.data.hwt <- hw.test(dataset.for.hwt, B=0) 
+# head(my.data.hwt)
+# table(my.data.hwt[,3] < 0.01) 
+# # for all samples (95) incl. farms  = False 4906; True 6364
+# # for wild.bc.nofarm.gid            = False 6270; True 4998
+# # Note, this looks as though it is being tested regardless of population, and remember
+# # When there is population structure, there is often loci out of hwt
+# # However, even when looking at samples without pop structure, it appears that many loci are out of HWE
 
 
 
-##### 7. Fstats ####
+##### 7. Other Fstats ####
 # May also try diveRsity or StAMPP
 
 # Conduct pairwise fst on the data (using Nei's estimator)
 my.data.fst <- pairwise.fst(x = my.data.gid, pop = pop(my.data.gid))
 my.data.fst
-is.euclid(my.data.fst) # Flase, there are zero distances (probably the negative values!)
+is.euclid(my.data.fst) # False, there are zero distances (probably the negative values!)
 
-
-# Provde three F statistics (Fst (pop/total), Fit (Ind/total), Fis (ind/pop))
+# Provide three F statistics (Fst (pop/total), Fit (Ind/total), Fis (ind/pop))
 fstat(my.data.gid)
 
 
