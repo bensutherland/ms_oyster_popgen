@@ -204,6 +204,35 @@ Also, an example generate allele frequencies:
 
 Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
 
+
+## Nucleotide diversity
+Make a new directory:   
+`mkdir 09-diversity_stats`
+Rerun populations to output a vcf only retaining a single SNP, then move this file to the new directory.   
+`cp 06-stacks_rx/batch_1.vcf 09-diversity_stats/`
+
+Get sample names and then calculate genetic diversity for the hatchery and the wild samples:   
+```
+vcf-query -l 09-diversity_stats/batch_1.vcf | grep 'DeepBay' - > 09-diversity_stats/hatchery_samples.txt
+vcf-query -l 09-diversity_stats/batch_1.vcf | grep 'PendrellFarm' - > 09-diversity_stats/wild_to_farm_samples.txt
+vcf-query -l 09-diversity_stats/batch_1.vcf | grep -vE 'DeepBay|PendrellFarm' - > 09-diversity_stats/wild_samples.txt
+
+vcftools --vcf 09-diversity_stats/batch_1.vcf --site-pi --keep 09-diversity_stats/hatchery_samples.txt
+mv out.sites.pi 09-diversity_stats/hatchery_out.sites.pi
+vcftools --vcf 09-diversity_stats/batch_1.vcf --site-pi --keep 09-diversity_stats/wild_to_farm_samples.txt
+mv out.sites.pi 09-diversity_stats/wild_to_farm_out.sites.pi
+
+vcftools --vcf 09-diversity_stats/batch_1.vcf --site-pi --keep 09-diversity_stats/wild_samples.txt
+mv out.sites.pi 09-diversity_stats/wild_out.sites.pi
+```
+
+Also obtain Fis per individual:    
+`vcftools --vcf 09-diversity_stats/batch_1.vcf --het`
+`mv out.het 09-diversity_stats/batch_1.het`
+
+
+Then use the RScript `diversity_comparison.R`    
+
 ## Other Methods 
 Proceed to:   
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
