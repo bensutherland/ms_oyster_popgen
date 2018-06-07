@@ -178,15 +178,14 @@ In general, follow instructions from the fineRADstructure tutorial (http://cichl
 1) Calculate co-ancestry matrix:     
 ` RADpainter paint 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt.txt`
 2) Assign individuals to populations:     
-`finestructure -x 100000 -y 100000 08-fineRADstructure/batch_1.haplotypes_for_export_chunks.out 08-fineRADstructure/batch_1.haplotypes_for_export_chunks.mcmc.xml` 
+`finestructure -x 100000 -y 100000 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml`     
 note: this uses by default a Markov chain Monte Carlo (mcmc) without a tree. By default it assumes the data comes from one population (-I 1), and uses 100000 burn in (-x) and sample iterations (-y) for the MCMC.    
-3) Build tree: 
+3) Build tree: `finestructure -m T -x 10000 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmcTree.xml`     
 
-Then plot using the Rscripts available from the following website:    
-fineRADstructurePlot.R (follow instructions here)
-FinestructureLibrary.R
-
-
+Then plot using the Rscripts available from the following website shown above:    
+`fineRADstructurePlot.R` (follow instructions here)
+`FinestructureLibrary.R`
+This will produce plots in the working directory.    
 
 
 ## hierfstat and adegenet
