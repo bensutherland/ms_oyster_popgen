@@ -9,6 +9,10 @@ Requirements:
 `bwa`   
 `samtools`    
 `stacks`    
+`fineRADstructure`    http://cichlid.gurdon.cam.ac.uk/fineRADstructure.html
+`ape`   (install within R)   
+`libxml2-dev`   (req'd for XML) `sudo apt-get install libxml2-dev`
+`XML`    
 
 
 ## Prepare Data
@@ -159,15 +163,36 @@ Combine:
 
 
 ## fineRADstructure
-Use the output in `06-stacks_rx/batch_1.haplotypes.tsv`    
-`cut -f1 --complement batch_1.haplotypes.tsv | cut -f1 --complement - | grep -v 'consensus' | sed 's/-//g' - > batch_1.haplotypes_for_export.tsv`
+For fineRADstructure input (`06-stacks_rx/batch_1.haplotypes.tsv`), make sure to turn off the option to write only a single snp, as it can use haplotypes.     
+HOWEVER, currently the data has ploidy issues, which are output by stacks in triploid, and this causes the paint to fail, so for now, we have to use single SNPs. This may have been corrected in new versions of stacks.    
 
-Need to install `ape` and `XML` 
-ape can be installed within R
-To install XML, need to first do: 
-`sudo apt-get install libxml2-dev`
+Make a new directory, move the haplotypes text file to this new directory, and format the file as an input to fineRADstructure:    
+```
+mkdir 08-fineRADstructure
+cp 06-stacks_rx/batch_1.haplotypes.tsv 08-fineRADstructure
+cut -f1 --complement 08-fineRADstructure/batch_1.haplotypes.tsv | cut -f1 --complement - | grep -v 'consensus' | sed 's/-//g' - > 08-fineRADstructure/batch_1.haplotypes_for_export.tsv
+# note: --complement takes the complementary section to the cut segment
+#       and grep removes invariant sites from the haplotype vcf    
+```
 
-(#todo: complete this section)
+Alternately, can use the provided script:    
+`python /home/ben/Programs/fineRADstructure/Stacks2fineRAD.py -i 06-stacks_rx/batch_1.haplotypes.tsv -n 10 -m 30`
+
+
+In general, follow instructions from the fineRADstructure tutorial (http://cichlid.gurdon.cam.ac.uk/fineRADstructure.html), but in brief:  
+1) Calculate co-ancestry matrix:     
+`RADpainter paint 08-fineRADstructure/batch_1.haplotypes_for_export.tsv`     
+2) Assign individuals to populations:     
+`finestructure -x 100000 -y 100000 08-fineRADstructure/batch_1.haplotypes_for_export_chunks.out 08-fineRADstructure/batch_1.haplotypes_for_export_chunks.mcmc.xml` 
+note: this uses by default a Markov chain Monte Carlo (mcmc) without a tree. By default it assumes the data comes from one population (-I 1), and uses 100000 burn in (-x) and sample iterations (-y) for the MCMC.    
+3) Build tree: 
+
+Then plot using the Rscripts available from the following website:    
+fineRADstructurePlot.R (follow instructions here)
+FinestructureLibrary.R
+
+
+
 
 ## hierfstat and adegenet
 This requires that you have exported a genpop file from the stacks populations module.    
