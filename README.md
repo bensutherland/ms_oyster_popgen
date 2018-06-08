@@ -190,8 +190,6 @@ This will produce plots in the working directory.
 
 ## hierfstat and adegenet
 This requires that you have exported a genpop file from the stacks populations module.    
-Note: the output file must be renamed from `*.genepop` to `*.gen`      
-`mv 06-stacks_rx/batch_1.genepop 06-stacks_rx/batch_1.gen`   
 
 To move genomic SNP data into adegenet, use plink.    
 Generate input file for adegenet:
