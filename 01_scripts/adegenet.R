@@ -17,7 +17,7 @@ library("purrr")
 #install.packages("dplyr")
 library("dplyr")
 
-require(devtools)
+# require(devtools)
 # install_version("hierfstat", version = "0.04-22", repos = "http://cran.us.r-project.org") # compoplot functional
 # install_github("jgx65/hierfstat") # compoplot not functional
 library(hierfstat)
@@ -168,6 +168,19 @@ par(mfrow=c(1,1), mar=c(3,4,3,3))
 # Plot the loading values of the different markers into the DAPC
 loadingplot(dapc1$var.contr, thres=1e-3)
 
+# Save out the loading values for the dapc linked to the marker names
+par(mar=c(5,5,4,4))
+dapc1$pca.loadings[1:5,]
+max(dapc1$pca.loadings[,1])
+max(dapc1$var.contr) # this is what's being plotted
+plot(dapc1$pca.loadings[,1], dapc1$var.contr ) # absolute value of pca loadings are 
+plot(abs(dapc1$pca.loadings[,1]), dapc1$var.contr ) # absolute value of pca loadings are highly correlated to the 'var.contrib'
+# Where are the locus names? They aren't included in this, which seems to just take the 'index' of the locus. 
+# Therefore, we have to currently assume that the order is the same as in my.data
+locus.and.dapc1.var.contrib <- as.data.frame(cbind(locNames(my.data), dapc1$var.contr))
+colnames(locus.and.dapc1.var.contrib) <- c("mname","dapc1.var.contr")
+write.csv(x = locus.and.dapc1.var.contrib, file = "11-other_stats/locus_and_dapc1_var_contrib.csv"
+          , quote = F, row.names = F)
 
 
 ####6. Convert genlight to genind object (indiv. genotypes) ####
