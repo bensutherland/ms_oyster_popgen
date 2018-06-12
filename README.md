@@ -48,8 +48,8 @@ multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed
 ```
 
 ### De-multiplex
-Trim with process_radtags    
-`./00-scripts/02_process_radtags_2_enzymes.sh 80 nsiI mspI` 
+Trim with process_radtags in parallel (here 8 cores)     
+`00-scripts/02_process_radtags_2_enzymes_parallel.sh 80 nsiI mspI 8`    
 
 Use automated script to rename and copy samples    
 `./00-scripts/03_rename_samples.sh`
