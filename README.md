@@ -101,6 +101,8 @@ Proceed to Stacks steps ahead [pstacks](#stacks-steps)
 
 If you want to know descriptive stats for only the retained samples, re-run the `assess_results.sh` script.   
 
+If you want to see how many individuals per population were retained:     
+`ls -1 04-all_samples/*.fq.gz | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c`
 
 ## Stacks steps
 ### pstacks
@@ -163,7 +165,7 @@ Combine:
 
 
 ## fineRADstructure
-For fineRADstructure input (`06-stacks_rx/batch_1.haplotypes.tsv`), make sure to turn off the option to write only a single snp, as it can use haplotypes.     
+Use multiple SNP per locus for fineRADstructure input (`06-stacks_rx/batch_1.haplotypes.tsv`)
 
 Make a new directory, move the haplotypes text file to this new directory, and format the file as an input to fineRADstructure:    
 ```
@@ -189,31 +191,26 @@ This will produce plots in the working directory.
 
 
 ## hierfstat and adegenet
-This requires that you have exported a genpop file from the stacks populations module.    
+Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
 
-To move genomic SNP data into adegenet, use plink.    
 Generate input file for adegenet:
 `plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.05 --recodeA --noweb --out 06-stacks_rx/batch_1`
-
-Also, an example generate allele frequencies:
-`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --freq`
-
-(#todo: include a single snp only for non-haplotype methods)   
 
 Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
 
 
 ## Nucleotide diversity
-Make a new directory:   
-`mkdir 09-diversity_stats`
-Rerun populations to output a vcf only retaining a single SNP, then move this file to the new directory.   
-`cp 06-stacks_rx/batch_1.vcf 09-diversity_stats/`
+Use a single SNP per locus for this, and move the output vcf to a new directory.     
+```
+mkdir 09-diversity_stats
+cp 06-stacks_rx/batch_1.vcf 09-diversity_stats/
+```
 
 Get sample names and then calculate genetic diversity for the hatchery and the wild samples:   
 ```
 vcf-query -l 09-diversity_stats/batch_1.vcf | grep 'DeepBay' - > 09-diversity_stats/hatchery_samples.txt
 vcf-query -l 09-diversity_stats/batch_1.vcf | grep 'PendrellFarm' - > 09-diversity_stats/wild_to_farm_samples.txt
-vcf-query -l 09-diversity_stats/batch_1.vcf | grep -vE 'DeepBay|PendrellFarm' - > 09-diversity_stats/wild_samples.txt
+vcf-query -l 09-diversity_stats/batch_1.vcf | grep -vE 'DeepBay|PendrellFarm|China|Rosewall' - > 09-diversity_stats/wild_samples.txt
 
 vcftools --vcf 09-diversity_stats/batch_1.vcf --site-pi --keep 09-diversity_stats/hatchery_samples.txt
 mv out.sites.pi 09-diversity_stats/hatchery_out.sites.pi
