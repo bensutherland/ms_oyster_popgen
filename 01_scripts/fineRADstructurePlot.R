@@ -1,4 +1,8 @@
-##################################################################
+#### Front Matter ####
+# Clean space
+# rm(list=ls())
+
+
 ## A simple R example for plotting fineRADstructure output
 ## Author: Milan Malinsky (millanek@gmail.com), adapted from a Finestructure R Example by Daniel Lawson (dan.lawson@bristol.ac.uk) and using his library of R functions
 ## Date: 04/04/2016
@@ -26,7 +30,7 @@
 
 
 ### 1) EDIT THE FOLLOWING THREE LINES TO PROVIDE PATHS TO THE fineRADstructure OUTPUT 
-setwd("Documents/01_moore_oyster_project/stacks_workflow/08-fineRADstructure/") ## The directory where the files are located
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow/08-fineRADstructure") ## The directory where the files are located
 chunkfile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out" ## RADpainter output file
 mcmcfile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml" ## finestructure mcmc file
 treefile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmcTree.xml" ## finestructure tree file
