@@ -84,7 +84,8 @@ D <- Reduce("+", lD)
 
 # Plot a neighbor-joining tree using ape's nj function on the distance matrix
 plot(nj(D), type="fan", cex=0.7)
-
+# or, if missing data:
+# plot(njs(D), type ="fan", cex = 0.7)
 
 #### 4. Principle Components Analysis ####
 pca1 <- glPca(my.data, nf = 3)
@@ -120,6 +121,8 @@ text(x = -2, y = 9, labels=paste("PC1=Red", "\n", "PC2=Green", "\n", "PC3=Blue")
 
 # Bring colorplot colors into the samples of the Neighbour-joining tree
 plot(nj(D), type="fan", show.tip=T, cex =  0.8)
+# or
+# plot(njs(D), type="fan", show.tip=T, cex =  0.8)
 tiplabels(pch=20, col=myCol, cex=4)
 
 
@@ -292,6 +295,7 @@ D <- Reduce("+", lD)
 # Plot a neighbor-joining tree using ape's nj function on the distance matrix
 plot(nj(D), type="fan", cex=0.7)
 # this fails if there are too few markers
+# plot(njs(D), type="fan", cex=0.7)
 
 # Pairwise Fst
 pairwise.WCfst(wild.bc.hf)
