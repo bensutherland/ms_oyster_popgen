@@ -274,4 +274,14 @@ Use a whitelist to generate a single accession per locus fasta file
 * Obtain the single record:    
 `while read p; do grep -A1 -m1 $p".*Allele_0" 06-stacks_rx/batch_1.fa ; done < 06-stacks_rx/obtain_one_record_per_accn_list.txt > 06-stacks_rx/batch_1_filtered_single_record.fa`    
 
+## Identify position of loci in a reference genome
+e.g. find loci that are high loading for dapc1
+`awk -F"," ' $2 > 0.001 { print $1 }' 11-other_stats/locus_and_dapc1_var_contrib.csv | grep -vE '^mname' | awk -F"_" '{ print $1"_"$2 }' - > 11-other_stats/high_dapc_var_loci_to_keep.csv`
+
+This can be used as a white list to export a fasta and get a single record per locus as described above from the populations module. This will produce `06-stacks_rx/batch_1_filtered_single_record.fa` 
+
+Obtain info from the alignment
+`grep -vE '^@' 06-stacks_rx/batch_1_filtered_single_record.sam | awk '{ print $1","$3","$4 }' - > 11-other_stats/aligned_marker_info.csv`
+
+
 
