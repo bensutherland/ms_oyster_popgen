@@ -33,6 +33,9 @@ text(cex = 0.7,
      , offset=2.5 # gives distance to offset from pos
 )
 legend(x = "topright", legend = c("reads","mappings"), fill = c("white","grey"))
+abline(h = 1500000)
+abline(h = 1000000, lty = 2)
+
 
 # The following turns off the saving out of the image
 dev.off()

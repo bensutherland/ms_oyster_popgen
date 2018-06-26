@@ -80,7 +80,6 @@ Compare total number of reads per sample to the number of unique scaffolds being
 `./../ms_oyster_popgen/01_scripts/determine_number_unique_scaff_mapped.sh`    
 This produces a graph as well as some summary statistics.   
 
-
 ### Remove individuals with too few reads     
 Note: first requires that the following script was run in prev. step:    
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
@@ -104,7 +103,15 @@ If you want to know descriptive stats for only the retained samples, re-run the 
 If you want to see how many individuals per population were retained:     
 `ls -1 04-all_samples/*.fq.gz | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c`
 
+### Remove problematic individuals
+This individual was found to have very low mapping relative to read counts, so remove it:   
+`mv 04-all_samples/Pipestem_631.* 04-all_samples/removed_samples/`    
+
+
 ## Stacks steps
+Note: we now have a runall option that will run through all stacks steps, using the parameters set in each individual script.
+`./../ms_oyster_popgen/01_scripts/runall_stacks.sh`
+
 ### pstacks
 Adjust the number of threads and launch    
 `./00-scripts/stacks_1b_pstacks.sh`
