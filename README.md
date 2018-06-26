@@ -84,17 +84,17 @@ This produces a graph as well as some summary statistics.
 Note: first requires that the following script was run in prev. step:    
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
 
-Identify samples with less than 1.5 M reads    
-`awk '$2 < 1500000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove_under1.5M.txt`
+Identify samples with less than set number of reads    
+`awk '$2 < 1000000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove.txt`
 
 Make directory to remove too few read indiv.    
 `mkdir 04-all_samples/removed_samples`
 
 Move bam files into the removed_samples directory    
-`cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove_under1.5M.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
+`cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
 
 Also move fq.gz files into the removed_samples directory    
-`cd 04-all_samples/ ;  for i in $(cat samples_to_remove_under1.5M.txt) ; do mv $i removed_samples/ ; done ; cd ..`   
+`cd 04-all_samples/ ;  for i in $(cat samples_to_remove.txt) ; do mv $i removed_samples/ ; done ; cd ..`   
 
 Proceed to Stacks steps ahead [pstacks](#stacks-steps)
 
