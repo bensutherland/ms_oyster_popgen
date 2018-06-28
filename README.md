@@ -107,6 +107,10 @@ If you want to see how many individuals per population were retained:
 This individual was found to have very low mapping relative to read counts, so remove it:   
 `mv 04-all_samples/Pipestem_631.* 04-all_samples/removed_samples/`    
 
+### Determine how many samples you have per population
+`ls -1 04-all_samples/*.bam | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c`    
+
+
 
 ## Stacks steps
 Note: we now have a runall option that will run through all stacks steps, using the parameters set in each individual script.
