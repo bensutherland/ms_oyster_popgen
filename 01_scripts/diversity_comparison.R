@@ -126,8 +126,8 @@ reads$sample <- gsub(pattern = ".fq.gz", replacement = "", x = reads$sample)
 # plot(reads$reads, xaxt = "n", xlab = "", ylab = "Read depth", las = 1)
 # axis(side = 1, labels = reads$sample, at = c(1:nrow(reads)), las = 2, cex.axis = 0.5)
 # 
-# reads.het <- merge(x = reads, y = het, by = "sample")
-# head(reads.het)
+reads.het <- merge(x = reads, y = het, by = "sample")
+head(reads.het)
 # 
 # plot(reads.het$F ~ reads.het$reads, las = 1) # this does not explain it
 # # this really shows the two types! Could plot this w/ diff 

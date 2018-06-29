@@ -30,7 +30,7 @@
 
 
 ### 1) EDIT THE FOLLOWING THREE LINES TO PROVIDE PATHS TO THE fineRADstructure OUTPUT 
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow/08-fineRADstructure") ## The directory where the files are located
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_no_Qc/08-fineRADstructure") ## The directory where the files are located
 chunkfile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out" ## RADpainter output file
 mcmcfile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml" ## finestructure mcmc file
 treefile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmcTree.xml" ## finestructure tree file
