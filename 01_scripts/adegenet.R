@@ -6,7 +6,7 @@
 
 # Set working directory
 # Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_no_Qc")
 
 # Wayne
 # setwd("~/Documents/miller/00_Moore_oyster_project/04_analysis/stacks_workflow")
@@ -68,7 +68,7 @@ temp <- density(myFreq)
 lines(temp$x, temp$y, lwd=3)
 
 #### 3. Neighbour-joining tree, all loci ####
-par(mfrow=c(1,1), mar=c(3,3,2,3))
+par(mfrow=c(1,1), mar=c(3,3,3,3))
 # Determine distance between individuals
 # First use seploc to create a list of ten blocks of loci, each to be computed in parallel
 x <- seploc(my.data, n.block=10, parallel=F)
@@ -120,7 +120,7 @@ text(x = -2, y = 11, paste(labels=nLoc(my.data), "loci", sep = " "))
 text(x = -2, y = 9, labels=paste("PC1=Red", "\n", "PC2=Green", "\n", "PC3=Blue"))
 
 # Bring colorplot colors into the samples of the Neighbour-joining tree
-plot(nj(D), type="fan", show.tip=T, cex =  0.8)
+plot(nj(D), type="fan", show.tip=T, cex =  0.75)
 # or
 # plot(njs(D), type="fan", show.tip=T, cex =  0.8)
 tiplabels(pch=20, col=myCol, cex=4)
@@ -142,7 +142,7 @@ tiplabels(pch=20, col=myCol, cex=4)
 # 1st transforms data (possibly), submits to PCA, 2nd PCs are submitted to Linear Discriminant Analysis (LDA)
 
 dapc1 <- dapc(my.data, n.pca = 10, n.da = 1) # n.pca = number axes to be retained; n.da = number of axes retained in Discriminant Analysis step
-dapc1 # variance = 0.16
+dapc1 # variance = 0.112
 
 # Density plot of samples along discriminant function 1
 scatter(dapc1, scree.da = F, bg = "white", legend = T
@@ -209,24 +209,55 @@ pop(my.data.gid)
 
 # Show sample size per population
 table(pop(my.data.gid))
-par(mfrow=c(1,1), mar=c(6,5,3,3))
-barplot(table(pop(my.data.gid)), col=funky(17), las=3, las = 1
-        ,  xlab="Population", ylab="Sample size"
+par(mfrow=c(1,1), mar=c(8,5,3,3))
+barplot(table(pop(my.data.gid)), col=funky(17)
+        #, las=3, las = 1
+        , las=2
+        , xlab=""
+        , ylab="Sample size"
         , ylim = c(0,40))
+abline(h = c(10,20,30), lty=2)
 
 # How many alleles? (should all be 2)
 table(nAll(my.data.gid))
 
+# Change from genind to hierfstat
+all.data.hf <- genind2hierfstat(my.data.gid)
+rownames(all.data.hf) <- indNames(my.data.gid)
+
+# Pairwise Fst
+pairwise.WCfst(all.data.hf)
+
+# Bootstrapping
+# requires latest hierfstat (v0.04-29) otherwise get error
+# library(devtools)
+# install_github("jgx65/hierfstat")
+# library("hierfstat")
+boot.fst.all <- boot.ppfst(dat = all.data.hf, nboot = 100, quant = c(0.025,0.975))
+boot.fst.all
+
+write.csv(boot.fst.all$ll, file = "boot_fst_all_ll.csv")
+write.csv(boot.fst.all$ul, file = "boot_fst_all_ul.csv")
 
 #### 7. Investigate Wild Populations Only ####
 sep.obj <- seppop(x = my.data.gid)
 names(sep.obj)
 
 # Wild populations (and moved to farm)
-wild.bc.gid <- repool(sep.obj$BayneSpat, sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine)
+wild.bc.gid <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine)
 nPop(wild.bc.gid)
 nInd(wild.bc.gid)
 indNames(wild.bc.gid)
+
+# Show sample size per population
+par(mfrow=c(1,1), mar=c(8,5,3,3))
+barplot(table(pop(wild.bc.gid)), col=funky(17)
+        #, las=3, las = 1
+        , las=2
+        , xlab=""
+        , ylab="Sample size"
+        , ylim = c(0,40))
+abline(h = c(10,20,30), lty=2)
 
 # Change from genind file to hfstat
 wild.bc.hf <- genind2hierfstat(wild.bc.gid)
@@ -270,6 +301,8 @@ toploading.markers
 # wild.bc.gid.toploading <- wild.bc.gid[, loc=toploading.markers]
 # wild.bc.gid.toploading
 
+
+#### TOPLOADING STUFF ####
 # Subset the original my.data genlight file with the toploading markers and convert back to a genlight file
 my.data.mat <- as.matrix(my.data)
 my.data.mat[1:5,1:5]
@@ -301,9 +334,12 @@ plot(nj(D), type="fan", cex=0.7)
 pairwise.WCfst(wild.bc.hf)
 
 # Bootstrapping
-# requires latest hierfstat (v0.04-29)
+# requires latest hierfstat (v0.04-29) otherwise get error
+library(devtools)
+install_github("jgx65/hierfstat")
+library("hierfstat")
 boot.fst.wild.bc <- boot.ppfst(dat = wild.bc.hf, nboot = 100, quant = c(0.025,0.975))
-
+boot.fst.wild.bc
 
 
 #### 8. BC Seq Facility (Hisnit, Pendrell) ####
@@ -318,13 +354,41 @@ pop(bc.gid)
 indiv.used <- as.numeric(gsub(pattern = "*.*\\_", replacement = "", indNames(bc.gid)))
 indiv.used <- as.data.frame(indiv.used)
 indNames(bc.gid)
-refined.pop <- c(rep("Pen_2", times = 12), rep("Pen_3", times = 13), rep("His_3", times = 5), rep("His_6", times = 11)
+refined.pop <- c(rep("Pen_2", times = 15), rep("Pen_3", times = 13), rep("His_3", times = 5), rep("His_6", times = 11)
                  , rep("His_3", times = 5))
+# TODO # import sample database for auto matching of this using a merge function w/ sample ID and size class
+
 length(indNames(bc.gid))
 length(refined.pop)
 
 pop(bc.gid) <- refined.pop
 pop(bc.gid)
+
+# DAPC
+dapc3 <- dapc(bc.gid, n.pca = 10, n.da = 1)
+scatter(dapc3, scree.da = F, bg = "white", legend = T
+        , txt.leg=rownames(dapc3$means)
+        , posi.leg = "topleft"
+)
+# var (proportion of conserved variance): 0.244
+
+
+# Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
+par(mar=c(10,3,3,3))
+compoplot(dapc3
+          #, lab="" # comment out if you want sample labels
+          , txt.leg = rownames(dapc3$means)
+          , posi = "topright"
+          #          , cex = 0.7
+          , cex.names = 0.6 
+)
+
+# Loading plot # Plot marker variance contribution to DAPC
+par(mfrow=c(1,1), mar=c(3,4,3,3))
+
+# Plot the loading values of the different markers into the DAPC
+loadingplot(dapc3$var.contr, thres=1e-3)
+
 
 # Change to hierfstat
 bc.hf <- genind2hierfstat(bc.gid)
@@ -336,6 +400,7 @@ z <- indpca(bc.hf, ind.labels = rownames(bc.hf))
 # plot PCA
 plot(z, cex = 0.7)
 
+
 # Basic stats (gives per loc and overall, but only one value, not one for each comparison)
 bc.stats <- basic.stats(bc.hf, diploid = T, digits = 4)
 
@@ -346,13 +411,14 @@ text(x = 2000, y = 0.19, labels = paste(nInd(my.data),"ind" ))
 text(x = 2000, y = 0.18, labels = "Size class, Hisnit-Serp")
 text(x = 2000, y = 0.17, labels = "Max. Fst")
 
+
 # Save out these Fst values per locus to match to location in the genome
 perloc.stats.df <- bc.stats$perloc # save df w/ Ho, Hs, Ht, Dst, Htp, Dstp, Fst, Fstp, Fis, Dest (from hierfstat)
 write.csv(x = perloc.stats.df, file = "../ms_oyster_popgen/perloc.stats.csv")
 # match these to their genomic location and plot in Rscript (#todo)
 
 # Weir-Cockerham
-pairwise.WCfst(dat = bc.hf)
+pairwise.wcfst.bc.hf <- pairwise.WCfst(dat = bc.hf)
 
 # Bootstrapping
 boot.fst.obj <- boot.ppfst(dat = bc.hf, nboot = 1000, quant = c(0.025,0.975))
@@ -384,6 +450,8 @@ plot(div$Hobs, div$Hexp
      , ylim = c(0,1))
 abline(0, 1, lty=2)
 
+
+### HERE BE DRAGONS ###
 
 # The following can be used to test for significant difference between Hobs and Hexp
 # # test : H0: Hexp = Hobs (using Bartlett test of homogeneity of variances)
@@ -435,5 +503,3 @@ my.data.high.fst <- my.data.gid[, loc=high.fst.markers.true]
 my.data.high.fst
 
 
-#### TODO ####
-# 3. How to calculate pi across genome?
