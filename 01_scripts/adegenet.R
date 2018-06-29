@@ -389,6 +389,16 @@ par(mfrow=c(1,1), mar=c(3,4,3,3))
 # Plot the loading values of the different markers into the DAPC
 loadingplot(dapc3$var.contr, thres=1e-3)
 
+# Show sample size per population
+par(mfrow=c(1,1), mar=c(8,5,3,3))
+barplot(table(pop(bc.gid)), col=funky(17)
+        #, las=3, las = 1
+        , las=2
+        , xlab=""
+        , ylab="Sample size"
+        , ylim = c(0,40))
+abline(h = c(10,20,30), lty=2)
+
 
 # Change to hierfstat
 bc.hf <- genind2hierfstat(bc.gid)

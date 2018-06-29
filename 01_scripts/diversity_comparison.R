@@ -3,7 +3,7 @@
 # rm(list=ls())
 
 # Set working directory
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow/09-diversity_stats/")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_no_Qc/09-diversity_stats/")
 
 #### 1. Nucleotide Diversity ####
 
