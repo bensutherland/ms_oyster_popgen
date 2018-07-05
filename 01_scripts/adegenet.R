@@ -291,33 +291,6 @@ plot(div$Hobs, div$Hexp
 abline(0, 1, lty=2)
 
 
-### HERE BE DRAGONS ###
-
-# The following can be used to test for significant difference between Hobs and Hexp
-# # test : H0: Hexp = Hobs (using Bartlett test of homogeneity of variances)
-# exp.v.obs.test <- bartlett.test(list(div$Hexp, div$Hobs))
-# exp.v.obs.test
-# options(scipen=3)
-# text(x = 0.6, y = 0.9, labels = paste("pval =", exp.v.obs.test$p.value, sep = ""))
-
-
-# #### 10. Hardy-Weinberg Equilibrium ####
-# # Choose the dataset to test
-# #dataset.for.hwt <- my.data.gid
-# dataset.for.hwt <- wild.bc.nofarm.gid
-# 
-# # run the test
-# my.data.hwt <- hw.test(dataset.for.hwt, B=0) 
-# head(my.data.hwt)
-# table(my.data.hwt[,3] < 0.01) 
-# # for all samples (95) incl. farms  = False 4906; True 6364
-# # for wild.bc.nofarm.gid            = False 6270; True 4998
-# # Note, this looks as though it is being tested regardless of population, and remember
-# # When there is population structure, there is often loci out of hwt
-# # However, even when looking at samples without pop structure, it appears that many loci are out of HWE
-
-
-
 ##### 11. Other Fstats ####
 # May also try diveRsity or StAMPP
 
