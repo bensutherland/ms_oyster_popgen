@@ -17,20 +17,32 @@ my.data.gid
 sep.obj <- seppop(x = my.data.gid)
 names(sep.obj)
 
-wild.bc.gid <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine)
-bc.gid <- repool(sep.obj$Pendrell, sep.obj$Hisnit)
-fr.gid <- repool(sep.obj$FranceW, sep.obj$FranceC)
-ch.gid <- repool(sep.obj$ChinaQDW, sep.obj$ChinaBe) 
+# Make a list with it all
+datatype.list <- list()
+datatype.list[["all.bc.gid"]] <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine)
+datatype.list[["bc.sel.gid"]] <- repool(sep.obj$Pendrell, sep.obj$PendrellFarm)
+datatype.list[["bc.wild.size.gid"]] <- repool(sep.obj$Pendrell, sep.obj$Hisnit)
+datatype.list[["fr.gid"]] <- repool(sep.obj$FranceW, sep.obj$FranceC)
+datatype.list[["ch.gid"]] <- repool(sep.obj$ChinaQDW, sep.obj$ChinaBe)
+
+###
+# Several notes
 # ChinaQDW = spat taken from culture region (QD) by artificial attachment, then grown in 'lantern net culture'
 # ChinaBe = from QD region, sampled directly from rock on the beach
+###
 
 #### Choose dataset ####
-data.gid <- wild.bc.gid
-# data.gid <- bc.gid
-# data.gid <- fr.gid
-# data.gid <- ch.gid
+datatype <- "all.bc.gid"
+# datatype <- "bc.sel.gid"
+# datatype <- "bc.wild.size.gid"
+# datatype <- "fr.gid"
+# datatype <- "ch.gid"
 
-#### 1. Investigate Wild Populations Only ####
+# Set your data into the data.gid object
+data.gid <- datatype.list[[datatype]]
+  
+
+#### Analysis ####
 # Identify the populations in the data
 levels(pop(x = data.gid))
 nPop(data.gid)
@@ -38,6 +50,8 @@ nInd(data.gid)
 indNames(data.gid)
 
 # Show sample size per population
+filename <- paste("11-other_stats/", datatype, "_sample_size_per_pop.pdf", sep = "")
+pdf(file = filename, width = 7, height = 4)
 par(mfrow=c(1,1), mar=c(8,5,3,3))
 barplot(table(pop(data.gid)), col=funky(17)
         , las=2
@@ -45,6 +59,7 @@ barplot(table(pop(data.gid)), col=funky(17)
         , ylab="Sample size"
         , ylim = c(0,40))
 abline(h = c(10,20,30), lty=2)
+dev.off()
 
 # Change from genind file to hfstat
 data.hf <- genind2hierfstat(data.gid)
@@ -52,83 +67,79 @@ rownames(data.hf) <- indNames(data.gid)
 
 # PCA on a matrix of individual genotype frequencies (hierfstat)
 y <- indpca(data.hf, ind.labels = rownames(data.hf))
+
+filename <- paste("11-other_stats/", datatype, "_sample_PCA.pdf", sep = "")
+pdf(file = filename, width = 11, height = 6)
 plot(y, cex = 0.7)
+dev.off()
 
 # DAPC
 dapc <- dapc(data.gid, n.pca = 10, n.da = 1)
+
+filename <- paste("11-other_stats/", datatype, "_sample_DAPC.pdf", sep = "")
+pdf(file = filename, width = 11, height = 6)
 scatter(dapc, scree.da = F, bg = "white", legend = T
         , txt.leg=rownames(dapc$means)
-        , posi.leg = "topleft"
-)
+        , posi.leg = "topleft")
+dev.off()
 
 # Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
+filename <- paste("11-other_stats/", datatype, "_compoplot.pdf", sep = "")
+pdf(file = filename, width = 11, height = 6)
 par(mar=c(10,3,3,3))
 compoplot(dapc
           , txt.leg = rownames(dapc$means)
           , posi = "topright"
           , cex.names = 0.6 
 )
+dev.off()
 
 # Loading plot # Plot marker variance contribution to DAPC
+filename <- paste("11-other_stats/", datatype, "_DAPC_loadings.pdf", sep = "")
+pdf(file = filename, width = 11, height = 4)
 par(mfrow=c(1,1), mar=c(3,4,3,3))
-
-# Plot the loading values of the different markers into the DAPC
 loadingplot(dapc$var.contr, thres=1e-3, las = 1)
+dev.off()
 
-# Identify the top loading marker names
-toploading.markers <- dimnames(dapc2$var.contr)[[1]][which(dapc2$var.contr > 0.0005)]
-toploading.markers <- gsub(pattern = "\\..*", replacement = "", toploading.markers) # match the genlight name format (remove .1 or .2)
-toploading.markers
+# Pairwise Fst (hierfstat)
+pairwise.wc.fst <- pairwise.WCfst(data.hf)
 
-# # subset the gid file w/ toploading markers
-# locNames(wild.bc.gid)
-# 
-# wild.bc.gid.toploading <- wild.bc.gid[, loc=toploading.markers]
-# wild.bc.gid.toploading
+filename <- paste("11-other_stats/", datatype, "_pairwise_wc_fst.csv", sep = "")
+write.csv(pairwise.wc.fst, file = filename)
 
-
-#### TOPLOADING STUFF ####
-# Subset the original my.data genlight file with the toploading markers and convert back to a genlight file
-my.data.mat <- as.matrix(my.data)
-my.data.mat[1:5,1:5]
-# retain only top loading markers
-my.data.mat.toploading <- my.data.mat[,toploading.markers]
-# retain only wild samples (removing DeepBay only currently)
-samples.to.keep <- rownames(my.data.mat)[grep(pattern = "DeepBay", x = rownames(my.data.mat), invert = T)]
-my.data.mat.toploading.wild <- my.data.mat.toploading[samples.to.keep,]
-
-# Convert back to genlight format
-my.data.toploading.gl  <- as.genlight(my.data.mat.toploading.wild)
-
-# Determine distance between individuals
-# First use seploc to create a list of ten blocks of loci, each to be computed in parallel
-x <- seploc(my.data.toploading.gl, n.block=10, parallel=F)
-
-## Use dist in a lapply loop to compute pairwise distances between individuals for each block
-lD <- lapply(x, function(e) dist(as.matrix(e)))
-
-# Obtain general distance matrix by summing these
-D <- Reduce("+", lD)
-
-# Plot a neighbor-joining tree using ape's nj function on the distance matrix
-plot(nj(D), type="fan", cex=0.7)
-# this fails if there are too few markers
-# plot(njs(D), type="fan", cex=0.7)
-
-# Pairwise Fst
-pairwise.WCfst(data.hf)
-
-# Bootstrapping
+# Pairwise Fst w/ bootstrapping (hierfstat)
 # requires latest hierfstat (v0.04-29) otherwise get error
-library(devtools)
-install_github("jgx65/hierfstat")
+# library(devtools)
+# install_github("jgx65/hierfstat")
 library("hierfstat")
-boot.fst.wild.bc <- boot.ppfst(dat = data.hf, nboot = 100, quant = c(0.025,0.975))
-boot.fst.wild.bc
+boot.fst <- boot.ppfst(dat = data.hf, nboot = 100, quant = c(0.025,0.975))
+boot.fst
+
+# Collect output
+lower.limit <- t(boot.fst$ll)
+upper.limit <- boot.fst$ul
+upper.limit[is.na(upper.limit)] <- 0
+lower.limit[is.na(lower.limit)] <- 0
+boot.fst.output <- upper.limit + lower.limit
+boot.fst.output
+
+filename <- paste("11-other_stats/", datatype, "_boot_fst_output.csv", sep = "")
+write.csv(x = boot.fst.output, file = filename)
+
+# Heatmap output
+# install.packages("plsgenomics")
+# require(plsgenomics)
+# matrix.heatmap(mat = boot.fst.all.output)
+
+require("lattice")
+levelplot(boot.fst.output, scales=list(x=list(rot=90)))
+
+require("gplots")
+heatmap.2(boot.fst.output)
+
 
 
 #### 8. BC Seq Facility (Hisnit, Pendrell) ####
-
 # could also use # sep.obj$Serpentine
 nPop(bc.gid)
 nInd(bc.gid)
