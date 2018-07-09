@@ -208,7 +208,16 @@ Generate input file for adegenet:
 `plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.05 --recodeA --noweb --out 06-stacks_rx/batch_1`
 
 Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
+This script will allow you to import the data, build a neighbour-joining tree, perform PCA, DAPC, and bootstrap Fst values for all populations. The script will end with a conversion to a genind object from genlight, and saving out as `11-other_stats/adegenet_output.RData`.    
 
+Next, use the script `01_scripts/adegenet_sep_pops.R` to import the genind object from above, then perform various stats on separated subcomponents of the full dataset. For example:    
+* All local samples from BC
+* Spatial vs. temporal in BC (Hisnit and Serpentine)
+* Selection experiment BC
+* Selection experiment France
+* Selection experiment China
+
+Result figures and tables will be labeled using their respective subcomponent, and placed in the `11-other_stats` folder.     
 
 ## Nucleotide diversity
 Use a single SNP per locus for this, and move the output vcf to a new directory.     
