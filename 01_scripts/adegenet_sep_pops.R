@@ -4,6 +4,26 @@
 # Clean space
 # rm(list=ls())
 
+# Resource packages required:
+#install.packages("purrr")
+library("purrr")
+#install.packages("dplyr")
+library("dplyr")
+
+# require(devtools)
+# install_version("hierfstat", version = "0.04-22", repos = "http://cran.us.r-project.org") # compoplot functional
+# install_github("jgx65/hierfstat") # compoplot not functional
+library(hierfstat)
+
+library("ape")
+library("pegas")
+library("seqinr")
+library("ggplot2")
+
+# install_version("adegenet", version = "2.0.1", repos = "http://cran.us.r-project.org") # compoplot functional
+# install.packages("adegenet") # compoplot not functional
+library("adegenet")
+
 # Set working directory
 # Xavier
 setwd("~/Documents/01_moore_oyster_project/stacks_workflow_no_Qc")
@@ -13,17 +33,28 @@ load("11-other_stats/adegenet_output.RData")
 
 my.data.gid
 
+# Read in database with sample phenotypes, most notably the Size_Class attribute
+sample.data <- read.csv(file = "../ms_oyster_popgen/00_archive/master_list_all_samples.csv", header = T)
+head(sample.data)
+# reduce
+sample.data <- sample.data[,c("Sample_Number", "Date_Collected", "CollectionSite", "Collection_Site_Location_Details", "Year_Class", "Size_Class")]
+head(sample.data)
+
+
 # Separate gid
 sep.obj <- seppop(x = my.data.gid)
 names(sep.obj)
 
-# Make a list with it all
+# Create a subsetted list of repooled subcomponents of the full data
 datatype.list <- list()
 datatype.list[["all.bc.gid"]] <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine)
-datatype.list[["bc.sel.gid"]] <- repool(sep.obj$Pendrell, sep.obj$PendrellFarm)
-datatype.list[["bc.wild.size.gid"]] <- repool(sep.obj$Pendrell, sep.obj$Hisnit)
-datatype.list[["fr.gid"]] <- repool(sep.obj$FranceW, sep.obj$FranceC)
-datatype.list[["ch.gid"]] <- repool(sep.obj$ChinaQDW, sep.obj$ChinaBe)
+
+datatype.list[["bc.wild.size.gid"]] <- repool(sep.obj$Serpentine, sep.obj$Hisnit) # requires use of sample.data for phenotype of size
+
+datatype.list[["bc.sel.gid"]] <- repool(sep.obj$Pendrell, sep.obj$PendrellFarm) # PendrellFarm is culture selection
+datatype.list[["fr.gid"]] <- repool(sep.obj$FranceW, sep.obj$FranceC) # FranceC is culture selection
+datatype.list[["ch.gid"]] <- repool(sep.obj$ChinaBe, sep.obj$ChinaQDW) # QDW is culture selection
+
 
 ###
 # Several notes
@@ -33,8 +64,10 @@ datatype.list[["ch.gid"]] <- repool(sep.obj$ChinaQDW, sep.obj$ChinaBe)
 
 #### Choose dataset ####
 datatype <- "all.bc.gid"
-# datatype <- "bc.sel.gid"
+
 # datatype <- "bc.wild.size.gid"
+
+# datatype <- "bc.sel.gid"
 # datatype <- "fr.gid"
 # datatype <- "ch.gid"
 
@@ -43,11 +76,40 @@ data.gid <- datatype.list[[datatype]]
   
 
 #### Analysis ####
+
+# Include size data if needed (note: can run if not needed, will not replace popid
+# Obtain sample numbers only (no pop info) to match w/ sample.info
+indiv.used <- as.numeric(gsub(pattern = "*.*\\_", replacement = "", indNames(data.gid)))
+
+# Take the samples from the sample.data, specifically with the info on the location and size class
+subset.of.sample.data <- sample.data[indiv.used, c("CollectionSite", "Size_Class")]
+# Only keep the first three letters of the location
+subset.of.sample.data$CollectionSite <- substr(subset.of.sample.data$CollectionSite, start = 1, stop = 3)
+
+# collapse the columns together
+subset.of.sample.data$pop.id <- apply(subset.of.sample.data[,c(1:ncol(subset.of.sample.data))], 1, paste, collapse = "_")
+subset.of.sample.data$pop.id
+
+# Confirm lengths match
+if(length(indNames(data.gid)) == length(subset.of.sample.data$pop.id)){ print("yes")} else {print("no")}
+
+# For only the datatype bc.wild.size.gid, replace the pop id with the one including oyster sizes
+if(datatype == "bc.wild.size.gid"){ 
+  print("Replacing population ID to include size data")
+  pop(data.gid) <- subset.of.sample.data$pop.id
+  print(pop(data.gid))
+} else {
+    print("No size class information required")
+  }
+
+pop(data.gid)
+
 # Identify the populations in the data
 levels(pop(x = data.gid))
 nPop(data.gid)
 nInd(data.gid)
 indNames(data.gid)
+pop(data.gid)
 
 # Show sample size per population
 filename <- paste("11-other_stats/", datatype, "_sample_size_per_pop.pdf", sep = "")
@@ -67,6 +129,7 @@ rownames(data.hf) <- indNames(data.gid)
 
 # PCA on a matrix of individual genotype frequencies (hierfstat)
 y <- indpca(data.hf, ind.labels = rownames(data.hf))
+#y <- indpca(data.hf, ind.labels = pop(data.gid)) # this allows to view the size class type, if wanted
 
 filename <- paste("11-other_stats/", datatype, "_sample_PCA.pdf", sep = "")
 pdf(file = filename, width = 11, height = 6)
@@ -112,7 +175,7 @@ write.csv(pairwise.wc.fst, file = filename)
 # library(devtools)
 # install_github("jgx65/hierfstat")
 library("hierfstat")
-boot.fst <- boot.ppfst(dat = data.hf, nboot = 100, quant = c(0.025,0.975))
+boot.fst <- boot.ppfst(dat = data.hf, nboot = 1000, quant = c(0.025,0.975))
 boot.fst
 
 # Collect output
@@ -137,95 +200,28 @@ levelplot(boot.fst.output, scales=list(x=list(rot=90)))
 require("gplots")
 heatmap.2(boot.fst.output)
 
-
-
-#### 8. BC Seq Facility (Hisnit, Pendrell) ####
-# could also use # sep.obj$Serpentine
-nPop(bc.gid)
-nInd(bc.gid)
-indNames(bc.gid)
-pop(bc.gid)
-
-# If you want to edit the population variable, do it here
-indiv.used <- as.numeric(gsub(pattern = "*.*\\_", replacement = "", indNames(bc.gid)))
-indiv.used <- as.data.frame(indiv.used)
-indNames(bc.gid)
-refined.pop <- c(rep("Pen_2", times = 15), rep("Pen_3", times = 13), rep("His_3", times = 5), rep("His_6", times = 11)
-                 , rep("His_3", times = 5))
-# TODO # import sample database for auto matching of this using a merge function w/ sample ID and size class
-
-length(indNames(bc.gid))
-length(refined.pop)
-
-pop(bc.gid) <- refined.pop
-pop(bc.gid)
-
-# DAPC
-dapc3 <- dapc(bc.gid, n.pca = 10, n.da = 1)
-scatter(dapc3, scree.da = F, bg = "white", legend = T
-        , txt.leg=rownames(dapc3$means)
-        , posi.leg = "topleft"
-)
-# var (proportion of conserved variance): 0.244
-
-
-# Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
-par(mar=c(10,3,3,3))
-compoplot(dapc3
-          #, lab="" # comment out if you want sample labels
-          , txt.leg = rownames(dapc3$means)
-          , posi = "topright"
-          #          , cex = 0.7
-          , cex.names = 0.6 
-)
-
-# Loading plot # Plot marker variance contribution to DAPC
-par(mfrow=c(1,1), mar=c(3,4,3,3))
-
-# Plot the loading values of the different markers into the DAPC
-loadingplot(dapc3$var.contr, thres=1e-3)
-
-# Show sample size per population
-par(mfrow=c(1,1), mar=c(8,5,3,3))
-barplot(table(pop(bc.gid)), col=funky(17)
-        #, las=3, las = 1
-        , las=2
-        , xlab=""
-        , ylab="Sample size"
-        , ylim = c(0,40))
-abline(h = c(10,20,30), lty=2)
-
-
-# Change to hierfstat
-bc.hf <- genind2hierfstat(bc.gid)
-rownames(bc.hf) <- indNames(bc.gid)
-
-# PCA
-z <- indpca(bc.hf, ind.labels = rownames(bc.hf))
-# z <- indpca(bc.hf, ind.labels = rownames(refined.pop)) # use this if want to see the refined pop
-# plot PCA
-plot(z, cex = 0.7)
-
-
+## Per loc Fst
 # Basic stats (gives per loc and overall, but only one value, not one for each comparison)
-bc.stats <- basic.stats(bc.hf, diploid = T, digits = 4)
+perloc.stats <- basic.stats(data.hf, diploid = T, digits = 4)
+str(perloc.stats$perloc) # this is the key data from this analysis
 
-par(mar=c(5,5,2.5,3))
-plot(bc.stats$perloc$Fst, ylab = "Fst", las = 1) # Plot Fst
-text(x = 2000, y = 0.2, labels = paste(nLoc(my.data),"loci" ))
-text(x = 2000, y = 0.19, labels = paste(nInd(my.data),"ind" ))
-text(x = 2000, y = 0.18, labels = "Size class, Hisnit-Serp")
+# Per loc Fst figure
+filename <- paste("11-other_stats/", datatype, "_per_loc_overall_fst.pdf", sep = "")
+pdf(file = filename, width = 9, height = 6)
+par(mfrow=c(1,1), mar=c(5,5,2.5,3))
+plot(perloc.stats$perloc$Fst, ylab = "Fst", las = 1) # Plot Fst
+text(x = 2000, y = 0.2, labels = paste(ncol(data.hf)-1,"loci" ))
+text(x = 2000, y = 0.19, labels = paste(nrow(data.hf),"ind" ))
 text(x = 2000, y = 0.17, labels = "Max. Fst")
+
+dev.off()
 
 
 # Save out these Fst values per locus to match to location in the genome
-perloc.stats.df <- bc.stats$perloc # save df w/ Ho, Hs, Ht, Dst, Htp, Dstp, Fst, Fstp, Fis, Dest (from hierfstat)
-write.csv(x = perloc.stats.df, file = "../ms_oyster_popgen/perloc.stats.csv")
+perloc.stats.df <- perloc.stats$perloc # save df w/ Ho, Hs, Ht, Dst, Htp, Dstp, Fst, Fstp, Fis, Dest (from hierfstat)
+filename <- paste("11-other_stats/", datatype, "_perloc_stats.csv", sep = "")
+write.csv(x = perloc.stats.df, file = filename)
 # match these to their genomic location and plot in Rscript (#todo)
 
-# Weir-Cockerham
-pairwise.wcfst.bc.hf <- pairwise.WCfst(dat = bc.hf)
 
-# Bootstrapping
-boot.fst.obj <- boot.ppfst(dat = bc.hf, nboot = 1000, quant = c(0.025,0.975))
-boot.fst.obj
+
