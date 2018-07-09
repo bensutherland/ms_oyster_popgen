@@ -226,25 +226,20 @@ mkdir 09-diversity_stats
 cp 06-stacks_rx/batch_1.vcf 09-diversity_stats/
 ```
 
-Get sample names and then calculate genetic diversity for the hatchery and the wild samples:   
-```
-vcf-query -l 09-diversity_stats/batch_1.vcf | grep 'DeepBay' - > 09-diversity_stats/hatchery_samples.txt
-vcf-query -l 09-diversity_stats/batch_1.vcf | grep 'PendrellFarm' - > 09-diversity_stats/wild_to_farm_samples.txt
-vcf-query -l 09-diversity_stats/batch_1.vcf | grep -vE 'DeepBay|PendrellFarm|China|Rosewall' - > 09-diversity_stats/wild_samples.txt
-
-vcftools --vcf 09-diversity_stats/batch_1.vcf --site-pi --keep 09-diversity_stats/hatchery_samples.txt
-mv out.sites.pi 09-diversity_stats/hatchery_out.sites.pi
-vcftools --vcf 09-diversity_stats/batch_1.vcf --site-pi --keep 09-diversity_stats/wild_to_farm_samples.txt
-mv out.sites.pi 09-diversity_stats/wild_to_farm_out.sites.pi
-
-vcftools --vcf 09-diversity_stats/batch_1.vcf --site-pi --keep 09-diversity_stats/wild_samples.txt
-mv out.sites.pi 09-diversity_stats/wild_out.sites.pi
-```
+Get sample names and then calculate genetic diversity for the hatchery and the wild samples.   
+The following will generate a per locus pi value for the following sets of samples:      
+1. Hisnit/Pendrell/Pipestem/Serpentine (not including PendrellFarm)
+2. PendrellFarm
+3. Rosewall
+4. FranceW
+5. FranceC
+6. China
+7. Guernsey
+`../ms_oyster_popgen/01_scripts/nuc_diversity.sh`
 
 Also obtain Fis per individual:    
 `vcftools --vcf 09-diversity_stats/batch_1.vcf --het`
 `mv out.het 09-diversity_stats/batch_1.het`
-
 
 Then use the RScript `diversity_comparison.R`    
 
@@ -284,10 +279,9 @@ Evaluate total number of mappings
 
 ## Obtain a single read per locus
 Use a whitelist to generate a single accession per locus fasta file
-* Obtain a single SNP per locus with max_maf filter    
-`00-scripts/utility_scripts/extract_snp_with_max_maf.py 06-stacks_rx/batch_1.vcf 06-stacks_rx/batch_1_max_maf.vcf`
+* Use the vcf that only has a single SNP per locus    
 * Identify the catalog locus IDs from the vcf (3rd column, first unit (second unit is the position of the SNP in the tag))    
-`grep -vE '^#' 06-stacks_rx/batch_1_max_maf.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 06-stacks_rx/whitelist_max_maf.txt`
+`grep -vE '^#' 06-stacks_rx/batch_1.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 06-stacks_rx/whitelist.txt`
 * Edit populations to use -W flag and point towards the whitelist. Turn on .fasta output and turn off vcf output. (todo: give a one-liner for this instead of using script)    
 * Obtain a single Allele 0 record per locus from the fasta output    
 `grep -E '^>' 06-stacks_rx/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 06-stacks_rx/obtain_one_record_per_accn_list.txt`
@@ -299,9 +293,14 @@ e.g. find loci that are high loading for dapc1
 `awk -F"," ' $2 > 0.001 { print $1 }' 11-other_stats/locus_and_dapc1_var_contrib.csv | grep -vE '^mname' | awk -F"_" '{ print $1"_"$2 }' - > 11-other_stats/high_dapc_var_loci_to_keep.csv`
 
 This can be used as a white list to export a fasta and get a single record per locus as described above from the populations module. This will produce `06-stacks_rx/batch_1_filtered_single_record.fa` 
+This type of file is also produced by the previous section 'Obtain a single read per locus', and this probably makes more sense to use, as there is no point in doing this multiple times, just do it for all markers at once.    
+
+Align against the reference genome:    
+`bwa mem -t 6 ~/Documents/genomes/C_gigas_assembly_1_all_chr.fa 06-stacks_rx/batch_1_filtered_single_record.fa > 06-stacks_rx/batch_1_filtered_single_record.sam`    
+`samtools view -Sb -F 4 -q 5 06-stacks_rx/batch_1_filtered_single_record.sam > 06-stacks_rx/batch_1_filtered_single_record_q.bam`
 
 Obtain info from the alignment
-`grep -vE '^@' 06-stacks_rx/batch_1_filtered_single_record.sam | awk '{ print $1","$3","$4 }' - > 11-other_stats/aligned_marker_info.csv`
+`samtools view 06-stacks_rx/batch_1_filtered_single_record_q.bam | awk '{ print $1 "," $3 "," $4 }' - > 11-other_stats/aligned_marker_info.csv`
 
 
 
