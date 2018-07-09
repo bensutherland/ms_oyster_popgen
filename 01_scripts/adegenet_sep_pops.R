@@ -47,6 +47,11 @@ names(sep.obj)
 
 # Create a subsetted list of repooled subcomponents of the full data
 datatype.list <- list()
+datatype.list[["all.gid"]] <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine
+                                     , sep.obj$ChinaBe, sep.obj$ChinaQDC, sep.obj$ChinaQDW, sep.obj$ChinaRSC
+                                     , sep.obj$DeepBay, sep.obj$Rosewall, sep.obj$Guernsey
+                                     , sep.obj$FranceW, sep.obj$FranceC
+                                     )
 datatype.list[["all.bc.gid"]] <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine)
 
 datatype.list[["bc.wild.size.gid"]] <- repool(sep.obj$Serpentine, sep.obj$Hisnit) # requires use of sample.data for phenotype of size
@@ -63,7 +68,8 @@ datatype.list[["ch.gid"]] <- repool(sep.obj$ChinaBe, sep.obj$ChinaQDW) # QDW is 
 ###
 
 #### Choose dataset ####
-datatype <- "all.bc.gid"
+datatype <- "all.gid"
+# datatype <- "all.bc.gid"
 
 # datatype <- "bc.wild.size.gid"
 
@@ -194,8 +200,13 @@ write.csv(x = boot.fst.output, file = filename)
 # require(plsgenomics)
 # matrix.heatmap(mat = boot.fst.all.output)
 
+filename <- paste("11-other_stats/", datatype, "_levelplot_fst_heatmap.pdf", sep = "")
+pdf(file = filename, width = 10.5, height = 6)
 require("lattice")
-levelplot(boot.fst.output, scales=list(x=list(rot=90)))
+levelplot(boot.fst.output, scales=list(x=list(rot=90))
+          , xlab = "Fst (lower limit Fst)"
+          , ylab = "Fst (upper limit Fst)")
+dev.off()
 
 require("gplots")
 heatmap.2(boot.fst.output)
@@ -212,7 +223,6 @@ par(mfrow=c(1,1), mar=c(5,5,2.5,3))
 plot(perloc.stats$perloc$Fst, ylab = "Fst", las = 1) # Plot Fst
 text(x = 2000, y = 0.2, labels = paste(ncol(data.hf)-1,"loci" ))
 text(x = 2000, y = 0.19, labels = paste(nrow(data.hf),"ind" ))
-text(x = 2000, y = 0.17, labels = "Max. Fst")
 
 dev.off()
 
