@@ -56,10 +56,13 @@ pop(my.data) # what are the pop names?
 
 #### 2. Basic Analysis (adegenet) ####
 # genlight plot to visualize the number of second alleles across individuals and SNPs
+png(file = "11-other_stats/glPlot_all_samples.png", width = 924, height = 600)
 glPlot(x = my.data, posi="topleft") 
+dev.off()
 
 # Create density plot of minor allele frequencies
 myFreq <- glMean(my.data)
+pdf(file = "11-other_stats/maf_all.pdf", width = 6, height = 4)
 hist(myFreq, proba=T, col="gold", xlab = "Allele frequencies"
      , main = "Distribution of (second) allele frequencies"
      , ylim = c(0,8)
@@ -67,6 +70,7 @@ hist(myFreq, proba=T, col="gold", xlab = "Allele frequencies"
 text(x = 0.4, y = 7, labels = paste(nLoc(my.data), " loci", sep = "" ))
 temp <- density(myFreq)
 lines(temp$x, temp$y, lwd=3)
+dev.off()
 
 #### 3. Neighbour-joining tree, all loci ####
 par(mfrow=c(1,1), mar=c(3,3,3,3))
@@ -84,7 +88,9 @@ class(lD[[1]]) # lD is a list of distance matrices bw pairs of indiv
 D <- Reduce("+", lD)
 
 # Plot a neighbor-joining tree using ape's nj function on the distance matrix
+pdf(file = "11-other_stats/nj_tree_all.pdf", width = 11, height = 9)
 plot(nj(D), type="fan", cex=0.7)
+dev.off()
 # or, if missing data:
 # plot(njs(D), type ="fan", cex = 0.7)
 
@@ -92,17 +98,20 @@ plot(nj(D), type="fan", cex=0.7)
 pca1 <- glPca(my.data, nf = 3)
 
 # Plot PCA (axes 1,2,3)
+pdf(file = "11-other_stats/pca_all_samples", width = 11.5, height = 7.5)
 par(mfrow=c(2,1))
 scatter(x = pca1, posi = "topleft", xax = 1, yax = 2)
 title("PC1 (x) vs PC2 (y)", adj = 1)
 
 scatter(x = pca1, posi = "topleft", xax = 3, yax = 2) # show PC3 and PC4
 title("PC3 (x) vs PC2 (y)", adj = 1)
+dev.off()
 
 # Plot allele loadings
 num.retained.pcs <- length(dimnames(pca1$loadings)[[2]]) # how many axes were retained? 
 
 # Plot loading values of the markers in the PCs
+pdf(file = "11-other_stats/pc_loadings.pdf", width = 8, height = 5)
 par(mfrow=c(num.retained.pcs,1))
 # Plot the loading values of the different markers into the PCA
 for(i in 1:num.retained.pcs){
@@ -112,6 +121,7 @@ for(i in 1:num.retained.pcs){
               , threshold = 0.001
               )
 }
+dev.off()
 
 # Plot colorplot using the PC scores of the samples
 par(mfrow=c(1,1))
@@ -146,17 +156,18 @@ dapc1 <- dapc(my.data, n.pca = 10, n.da = 1) # n.pca = number axes to be retaine
 dapc1 # variance = 0.112
 
 # Density plot of samples along discriminant function 1
+pdf(file = "11-other_stats/dapc_all_pops.pdf", width = 10.5, height = 4.5)
 scatter(dapc1, scree.da = F, bg = "white", legend = T
         , txt.leg=rownames(dapc1$means)
         , posi.leg = "topleft"
         )
-
+dev.off()
 # assignplot hasn't been explored/implemented here yet
 #assignplot(x = dapc1)
 
 # Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
 par(mar=c(10,3,3,3))
-#pdf(file = "test", width = 10, height = 10)
+pdf(file = "11-other_stats/compoplot_all_samples", width = 24, height = 8)
 compoplot(dapc1
           #, lab="" # comment out if you want sample labels
           , txt.leg = rownames(dapc1$means)
@@ -164,7 +175,7 @@ compoplot(dapc1
 #          , cex = 0.7
           , cex.names = 0.6 
           )
-#dev.off()
+dev.off()
 
 # Loading plot # Plot marker variance contribution to DAPC
 par(mfrow=c(1,1), mar=c(3,4,3,3))
@@ -210,6 +221,7 @@ pop(my.data.gid)
 
 # Show sample size per population
 table(pop(my.data.gid))
+pdf(file = "11-other_stats/sample_size.pdf", width = 8, height = 5)
 par(mfrow=c(1,1), mar=c(8,5,3,3))
 barplot(table(pop(my.data.gid)), col=funky(17)
         #, las=3, las = 1
@@ -218,6 +230,7 @@ barplot(table(pop(my.data.gid)), col=funky(17)
         , ylab="Sample size"
         , ylim = c(0,40))
 abline(h = c(10,20,30), lty=2)
+dev.off()
 
 # How many alleles? (should all be 2)
 table(nAll(my.data.gid))
@@ -227,14 +240,15 @@ all.data.hf <- genind2hierfstat(my.data.gid)
 rownames(all.data.hf) <- indNames(my.data.gid)
 
 # Pairwise Fst
-pairwise.WCfst(all.data.hf)
+pairwise.wc.fst <- pairwise.WCfst(all.data.hf)
+write.csv(pairwise.wc.fst, file = "11-other_stats/all_data_wcfst.csv")
 
 # Bootstrapping
 # requires latest hierfstat (v0.04-29) otherwise get error
 # library(devtools)
 # install_github("jgx65/hierfstat")
 # library("hierfstat")
-boot.fst.all <- boot.ppfst(dat = all.data.hf, nboot = 100, quant = c(0.025,0.975))
+boot.fst.all <- boot.ppfst(dat = all.data.hf, nboot = 1000, quant = c(0.025,0.975))
 boot.fst.all
 
 # Collect output
@@ -245,7 +259,7 @@ lower.limit[is.na(lower.limit)] <- 0
 boot.fst.all.output <- upper.limit + lower.limit
 boot.fst.all.output
 
-write.csv(x = boot.fst.all.output, file = "11-other_stats/boot.fst.output.csv")
+write.csv(x = boot.fst.all.output, file = "11-other_stats/all_data_boot.fst.output.csv")
 
 # Heatmap output
 # install.packages("plsgenomics")
