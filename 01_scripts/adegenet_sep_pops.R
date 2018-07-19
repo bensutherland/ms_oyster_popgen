@@ -54,7 +54,7 @@ datatype.list[["all.gid"]] <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$P
                                      )
 datatype.list[["all.bc.gid"]] <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine)
 
-datatype.list[["bc.wild.size.gid"]] <- repool(sep.obj$Serpentine, sep.obj$Hisnit) # requires use of sample.data for phenotype of size
+datatype.list[["bc.wild.size.gid"]] <- repool(sep.obj$Pendrell, sep.obj$Hisnit) # requires use of sample.data for phenotype of size
 
 datatype.list[["bc.sel.gid"]] <- repool(sep.obj$Pendrell, sep.obj$PendrellFarm) # PendrellFarm is culture selection
 datatype.list[["fr.gid"]] <- repool(sep.obj$FranceW, sep.obj$FranceC) # FranceC is culture selection
@@ -68,7 +68,16 @@ datatype.list[["ch.gid"]] <- repool(sep.obj$ChinaBe, sep.obj$ChinaQDW) # QDW is 
 ###
 
 #### Choose dataset ####
-datatype <- "all.gid"
+
+# The following would allow looping over all diff types if wanted..
+for(i in 1:length(datatype.list)){
+  datatype <- names(datatype.list)[i]
+  data.gid <- datatype.list[[datatype]]
+  print(paste("Now working on datatype", datatype))
+
+
+# Individual runs:
+# datatype <- "all.gid"
 # datatype <- "all.bc.gid"
 
 # datatype <- "bc.wild.size.gid"
@@ -79,16 +88,18 @@ datatype <- "all.gid"
 
 # Set your data into the data.gid object
 data.gid <- datatype.list[[datatype]]
-  
+nInd(data.gid)  
 
 #### Analysis ####
-
-# Include size data if needed (note: can run if not needed, will not replace popid
-# Obtain sample numbers only (no pop info) to match w/ sample.info
-indiv.used <- as.numeric(gsub(pattern = "*.*\\_", replacement = "", indNames(data.gid)))
+# Incorporate size data
+# Obtain sample numbers only to match w/ sample.info database
+indiv.used.pre <- gsub(pattern = "*.*\\_", replacement = "", indNames(data.gid))
+indiv.used <- gsub(pattern = "\\..*", replacement = "", indiv.used.pre)
+indiv.used <- as.numeric(indiv.used)
 
 # Take the samples from the sample.data, specifically with the info on the location and size class
 subset.of.sample.data <- sample.data[indiv.used, c("CollectionSite", "Size_Class")]
+
 # Only keep the first three letters of the location
 subset.of.sample.data$CollectionSite <- substr(subset.of.sample.data$CollectionSite, start = 1, stop = 3)
 
@@ -97,7 +108,7 @@ subset.of.sample.data$pop.id <- apply(subset.of.sample.data[,c(1:ncol(subset.of.
 subset.of.sample.data$pop.id
 
 # Confirm lengths match
-if(length(indNames(data.gid)) == length(subset.of.sample.data$pop.id)){ print("yes")} else {print("no")}
+if(length(indNames(data.gid)) == length(subset.of.sample.data$pop.id)){ print("yes these match")} else {print("no")}
 
 # For only the datatype bc.wild.size.gid, replace the pop id with the one including oyster sizes
 if(datatype == "bc.wild.size.gid"){ 
@@ -234,4 +245,4 @@ write.csv(x = perloc.stats.df, file = filename)
 # match these to their genomic location and plot in Rscript (#todo)
 
 
-
+}
