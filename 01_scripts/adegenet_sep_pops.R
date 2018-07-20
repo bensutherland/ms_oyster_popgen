@@ -60,6 +60,8 @@ datatype.list[["bc.sel.gid"]] <- repool(sep.obj$Pendrell, sep.obj$PendrellFarm) 
 datatype.list[["fr.gid"]] <- repool(sep.obj$FranceW, sep.obj$FranceC) # FranceC is culture selection
 datatype.list[["ch.gid"]] <- repool(sep.obj$ChinaBe, sep.obj$ChinaQDW) # QDW is culture selection
 
+datatype.list[["all.ch.gid"]] <- repool(sep.obj$ChinaBe, sep.obj$ChinaQDW, sep.obj$ChinaQDC, sep.obj$ChinaRSC) # QDW is culture selection
+
 
 ###
 # Several notes
@@ -75,7 +77,7 @@ for(i in 1:length(datatype.list)){
   data.gid <- datatype.list[[datatype]]
   print(paste("Now working on datatype", datatype))
 
-
+# Otherwise, select one of the following individual dataset to work with
 # Individual runs:
 # datatype <- "all.gid"
 # datatype <- "all.bc.gid"
@@ -85,7 +87,9 @@ for(i in 1:length(datatype.list)){
 # datatype <- "bc.sel.gid"
 # datatype <- "fr.gid"
 # datatype <- "ch.gid"
-
+# datatype <- "all.ch.gid"
+  
+  
 # Set your data into the data.gid object
 data.gid <- datatype.list[[datatype]]
 nInd(data.gid)  
