@@ -6,7 +6,7 @@
 
 # Set working directory
 # Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_no_Qc")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_mopup_chips")
 
 # Wayne
 # setwd("~/Documents/miller/00_Moore_oyster_project/04_analysis/stacks_workflow")
@@ -43,6 +43,12 @@ my.data
 nInd(my.data) # how many individuals?
 nLoc(my.data) # how many loci?
 indNames(my.data) # see names of individuals
+
+# # Method to label a specific individual, for example in the neighbour-joining tree
+# temp <- indNames(my.data)
+# temp[grep(pattern = "RSC_1656", x = temp, perl = T)] <- "****!!!!PROBLEM!!!!***"
+# indNames(my.data) <- temp
+
 nPop(my.data) # how many pops?
 pop(my.data) # what are the pop names?
 head(locNames(my.data, withAlleles = T), n = 20) # see allele names
@@ -50,6 +56,14 @@ head(locNames(my.data, withAlleles = T), n = 20) # see allele names
 # Rename pop attributes
 pop(my.data) <- gsub(x = indNames(my.data), pattern = "\\_.*", replacement = "") # create pop ID
 pop(my.data) # what are the pop names?
+
+# separate out as character to change names
+new.pop <- as.character(pop(my.data))
+new.pop[grep(pattern = "Japan", x = new.pop, perl = T)] <- "Japan"
+
+pop(my.data) <- new.pop
+pop(my.data)
+
 
 #### 1.b. Additional filtering ####
 # Apply here if needed (e.g. remove samples, populations etc.)
@@ -65,7 +79,7 @@ myFreq <- glMean(my.data)
 pdf(file = "11-other_stats/maf_all.pdf", width = 6, height = 4)
 hist(myFreq, proba=T, col="gold", xlab = "Allele frequencies"
      , main = "Distribution of (second) allele frequencies"
-     , ylim = c(0,8)
+     , ylim = c(0,20)
      )
 text(x = 0.4, y = 7, labels = paste(nLoc(my.data), " loci", sep = "" ))
 temp <- density(myFreq)
@@ -111,7 +125,7 @@ dev.off()
 num.retained.pcs <- length(dimnames(pca1$loadings)[[2]]) # how many axes were retained? 
 
 # Plot loading values of the markers in the PCs
-pdf(file = "11-other_stats/pc_loadings.pdf", width = 8, height = 5)
+pdf(file = "11-other_stats/pc_loadings.pdf", width = 8, height = 8)
 par(mfrow=c(num.retained.pcs,1))
 # Plot the loading values of the different markers into the PCA
 for(i in 1:num.retained.pcs){
@@ -124,18 +138,21 @@ for(i in 1:num.retained.pcs){
 dev.off()
 
 # Plot colorplot using the PC scores of the samples
-par(mfrow=c(1,1))
+pdf(file = "11-other_stats/pca_colorplot.pdf", width = 8, height = 8)
+par(mfrow=c(1,1), mar = c(4,4,4,4))
 myCol <- colorplot(pca1$scores, pca1$scores, transp=T, cex=4)
 abline(h=0,v=0, col = "grey")
 text(x = -2, y = 11, paste(labels=nLoc(my.data), "loci", sep = " "))
 text(x = -2, y = 9, labels=paste("PC1=Red", "\n", "PC2=Green", "\n", "PC3=Blue"))
+dev.off()
 
 # Bring colorplot colors into the samples of the Neighbour-joining tree
+pdf(file = "11-other_stats/njt_colorplot.pdf", width = 11, height = 9)
 plot(nj(D), type="fan", show.tip=T, cex =  0.75)
 # or
 # plot(njs(D), type="fan", show.tip=T, cex =  0.8)
 tiplabels(pch=20, col=myCol, cex=4)
-
+dev.off()
 
 # ## try w/ smaller subset of samples
 # pop(my.data)
@@ -156,10 +173,10 @@ dapc1 <- dapc(my.data, n.pca = 10, n.da = 1) # n.pca = number axes to be retaine
 dapc1 # variance = 0.112
 
 # Density plot of samples along discriminant function 1
-pdf(file = "11-other_stats/dapc_all_pops.pdf", width = 10.5, height = 4.5)
+pdf(file = "11-other_stats/dapc_all_pops.pdf", width = 10.5, height = 7)
 scatter(dapc1, scree.da = F, bg = "white", legend = T
         , txt.leg=rownames(dapc1$means)
-        , posi.leg = "topleft"
+        , posi.leg = "topright"
         )
 dev.off()
 # assignplot hasn't been explored/implemented here yet
@@ -216,7 +233,9 @@ my.data.gid <- df2genind(my.data.mat, sep = "/", ploidy = 2) # convert df to gen
 # Generate populations for genind
 pop(my.data.gid) # currently null
 indNames(my.data.gid) # The individual names actually contain pop IDs
-pop(my.data.gid) <- gsub(x = indNames(my.data.gid), pattern = "\\_.*", replacement = "") # create pop ID
+pop(my.data.gid) <- pop(my.data)
+## The following was an old version of this
+# pop(my.data.gid) <- gsub(x = indNames(my.data.gid), pattern = "\\_.*", replacement = "") # create pop ID
 pop(my.data.gid)
 
 # Show sample size per population
