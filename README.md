@@ -226,15 +226,19 @@ mkdir 09-diversity_stats
 cp 06-stacks_rx/batch_1.vcf 09-diversity_stats/
 ```
 
-Get sample names and then calculate genetic diversity for the hatchery and the wild samples.   
-The following will generate a per locus pi value for the following sets of samples:      
-1. Hisnit/Pendrell/Pipestem/Serpentine (not including PendrellFarm)
+Use automated script to get sample names for each data subset, then calculate genetic diversity (Pi) for each subset with vcftools.       
+The script will generate a per locus pi value for the following sets of samples:      
+1. Hisnit/Pendrell/Pipestem/Serpentine 
 2. PendrellFarm
 3. Rosewall
-4. FranceW
-5. FranceC
-6. China
-7. Guernsey
+4. DeepBay
+5. FranceW
+6. FranceC
+7. China Farm 1 (QDC)
+8. China Farm 2 (RSC)
+9. China Wild (QDW/Be)
+10. Guernsey
+11. Japan        
 `../ms_oyster_popgen/01_scripts/nuc_diversity.sh`
 
 Also obtain Fis per individual:    
