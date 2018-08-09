@@ -62,8 +62,8 @@ for(i in 2:length(datatypes)){
   plot(data$wild_bc ~ data[,i], xlab = colnames(data)[i])
 }
 
-par(mfrow=c(1,1))
-str(data)
+par(mfrow=c(1,1), mar = c(3,4,3,3))
+#str(data)
 boxplot(data, las = 1, ylab = "Pi")
 
 # RUN A MODEL, NEED TO SEPARATE BY HATCHERY / WILD SAMPLES
@@ -137,11 +137,30 @@ het <- read.table("batch_1.het", header = T, row.names = 1)
 head(het)
 het$sample <- rownames(het)
 
-# pdf(file=paste("Fis_per_indiv.pdf",sep=""), height=5, width=14)
+# Add population
+sub(pattern = "\\_.*", replacement = "", reads.het$sample)
+poptype <- gsub(pattern = "\\_.*", replacement = "", x = het$sample )
+het <- cbind(het, poptype)
+head(het)
+
+# remove deepbay
+het <- het[het$poptype!="DeepBay", ]
+het <- droplevels(het)
+table(het$poptype)
+
+# Boxplot by population
+pdf(file = "Fis_per_pop_boxplot.pdf", width = 8, height = 5)
+boxplot(het$F ~ het$poptype, las = 3, ylab = "Fis")
+dev.off()
+
+mod1 <- aov(het$F ~ het$poptype)
+summary(mod1)
+TukeyHSD(mod1)
+
+pdf(file=paste("Fis_per_indiv.pdf",sep=""), height=9, width=14)
 par(mar=c(6,5,3,3), mfrow=c(2,1))
 plot(het$F, xaxt ="n", xlab = "", ylab = "Fis", las = 1)
 axis(side = 1, labels = rownames(het), at = c(1:nrow(het)), las = 2, cex.axis = 0.5)
-#dev.off()
 
 #### 3. Read depth per sample
 options(scipen = 1)
@@ -160,20 +179,10 @@ head(reads.het)
 # head(reads.het, n = 10)
 
 plot(reads.het$F ~ reads.het$reads, las = 1)
-
-head(reads.het)
-reads.het$type <- gsub(pattern = "\\_.*", replacement = "", reads.het$sample)
-head(reads.het)
-par(mfrow=c(1,1))
-boxplot(reads.het$F ~ reads.het$type, las = 3
-        , ylab = "Fis")
-mod1 <- aov(reads.het$F ~ reads.het$type)
-summary(mod1)
-TukeyHSD(mod1)
+dev.off()
 
 
-
-### OLD ###
+### OLD Qc/BC comparison ###
 # # Separate the quebec and bc data
 # qc.data <- reads.het[grep(x= reads.het$sample, pattern = "_s", fixed = T), ]
 # bc.data <- reads.het[-c(grep(x= reads.het$sample, pattern = "_s", fixed = T)), ]
