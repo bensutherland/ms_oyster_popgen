@@ -242,8 +242,10 @@ The script will generate a per locus pi value for the following sets of samples:
 `../ms_oyster_popgen/01_scripts/nuc_diversity.sh`
 
 Also obtain Fis per individual:    
-`vcftools --vcf 09-diversity_stats/batch_1.vcf --het`
-`mv out.het 09-diversity_stats/batch_1.het`
+```
+vcftools --vcf 09-diversity_stats/batch_1.vcf --het    
+mv out.het 09-diversity_stats/batch_1.het
+```
 
 Then use the RScript `diversity_comparison.R`    
 
