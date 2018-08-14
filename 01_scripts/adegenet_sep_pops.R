@@ -26,7 +26,7 @@ library("adegenet")
 
 # Set working directory
 # Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_no_Qc")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_mopup_chips")
 
 # Load part 1 results
 load("11-other_stats/adegenet_output.RData")
