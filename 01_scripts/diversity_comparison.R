@@ -3,18 +3,19 @@
 # rm(list=ls())
 
 # Set working directory
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_no_Qc/09-diversity_stats/")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_mopup_chips/09-diversity_stats/")
 
 #install.packages("rlist")
 require("rlist")
 
 #### 1. Nucleotide Diversity ####
+# Set datatypes
+datatypes <- c("bc_wild", "bc_wild_to_farm"
+               , "chinaQDC", "chinaRSC", "china_wild"
+               , "deepbay", "france_wild_to_farm", "france_wild", "guernsey", "japan", "rosewall")
 
-# Import data
-datatypes <- c("wild_bc", "rosewall", "guernsey", "france_wild", "france_cultured", "china", "bc_wild_to_farm")
-
+# Import each of the datatypes
 datatypes.list <- list(); datatype <- NULL
-
 for(i in 1:length(datatypes)){
   
   #identify the datatype name
@@ -30,42 +31,55 @@ for(i in 1:length(datatypes)){
 
 str(datatypes.list)
 
+# Set colors for datatypes
+datatypes
+cols <- c("green", "darkgreen"
+          , "coral3", "coral4", "coral"
+          , "royalblue"
+          , "purple4", "purple"
+          , "paleturquoise"
+          , "lightsteelblue"
+          , "palevioletred")
 
-wild_bc <- as.data.frame(list.extract(datatypes.list, 1))
-str(wild_bc)
-
-
-# See average Pi per sample type
-# wild_bc <- NULL; rosewall <- NULL; guernsey <- NULL; france_wild <- NULL; france_cultured <- NULL ; china <- NULL;  bc_wild_to_farm <- NULL
+# Collect from the datatype list
 data <- NULL
+
+# Start the data set by extracting the Pi (3rd address) value for the first population (1)
 data <-  as.data.frame(list.extract(datatypes.list, 1))[3]
 summary(data$PI)
 
-# Extract elements from list
+# Extract the rest of the elements from list
 for(i in 2:length(datatypes.list)){
+  # Print summaries
   print(datatypes[i])
   print(summary(datatypes.list[[i]]$PI))
   
+  # Collect in that datatype into the data dataframe
   data <- cbind(data, as.data.frame(list.extract(datatypes.list, i))[3])
-  
 }
 
+# Rename the dataframe columns with the datatypes value
 str(data)
 colnames(data) <- datatypes
-
-str(data)
 colnames(data)
 
+
 # Plot
-par(mfrow=c(3,2))
+par(mfrow=c(3,4))
 for(i in 2:length(datatypes)){
-  plot(data$wild_bc ~ data[,i], xlab = colnames(data)[i])
+  plot(data$bc_wild ~ data[,i], xlab = colnames(data)[i])
 }
 
-par(mfrow=c(1,1), mar = c(3,4,3,3))
-#str(data)
-boxplot(data, las = 1, ylab = "Pi")
+# Boxplot Pi per locus averaged across the population
+par(mfrow=c(2,1), mar = c(6,4,3,3))
+boxplot(data, las = 3, ylab = "Per locus Pi (population mean)"
+        , col = cols
+        #, xaxt = "n"
+        )
 
+
+
+### TO DELETE?
 # RUN A MODEL, NEED TO SEPARATE BY HATCHERY / WILD SAMPLES
 
 # #### 1.1. Pi per locus across types ####
@@ -130,6 +144,8 @@ boxplot(data, las = 1, ylab = "Pi")
 # text(x = 2, y = 0.55, labels = "b")
 # text(x = 3, y = 0.55, labels = "b")
 # #text(paste("pval=", round(summary(mod1)[[1]][["Pr(>F)"]][1], digits = 3)), x = 2, y = 0.42)
+### END TO DELETE?
+
 
 
 #### 2. Heterozygosity ####
@@ -137,30 +153,40 @@ het <- read.table("batch_1.het", header = T, row.names = 1)
 head(het)
 het$sample <- rownames(het)
 
-# Add population
-sub(pattern = "\\_.*", replacement = "", reads.het$sample)
-poptype <- gsub(pattern = "\\_.*", replacement = "", x = het$sample )
+# Add population to het object
+poptype <- NULL
+poptype <- sub(pattern = "\\_.*", replacement = "", het$sample)
+poptype <- gsub(pattern = "Japan.*", replacement = "Japan", x = poptype ) # group all Japan into one
+poptype <- gsub(pattern = "Japan.*", replacement = "Japan", x = poptype ) # group ChinaQDW and ChinaBe into one
+poptype <- gsub(pattern = "ChinaQDW|ChinaBe", replacement = "ChinaWild", perl = T, x = poptype)
+poptype <- gsub(pattern = "Hisnit|Pendrell|Pipestem|Serpentine", replacement = "BCWild", perl = T, x = poptype)
 het <- cbind(het, poptype)
 head(het)
 
-# remove deepbay
-het <- het[het$poptype!="DeepBay", ]
-het <- droplevels(het)
+# # remove deepbay
+# het <- het[het$poptype!="DeepBay", ]
+# het <- droplevels(het)
+
+# How many per
 table(het$poptype)
 
 # Boxplot by population
-pdf(file = "Fis_per_pop_boxplot.pdf", width = 8, height = 5)
-boxplot(het$F ~ het$poptype, las = 3, ylab = "Fis")
-dev.off()
+#pdf(file = "Fis_per_pop_boxplot.pdf", width = 8, height = 5)
+boxplot(het$F ~ het$poptype, las = 3, ylab = "Homozygous F statistic (VCFtools)"
+        , col = cols)
+#dev.off()
 
 mod1 <- aov(het$F ~ het$poptype)
 summary(mod1)
-TukeyHSD(mod1)
+result <- TukeyHSD(mod1)
+
+write.csv(x = result$`het$poptype`, file = "tukeyHSD_poptype_het.csv")
 
 pdf(file=paste("Fis_per_indiv.pdf",sep=""), height=9, width=14)
 par(mar=c(6,5,3,3), mfrow=c(2,1))
 plot(het$F, xaxt ="n", xlab = "", ylab = "Fis", las = 1)
 axis(side = 1, labels = rownames(het), at = c(1:nrow(het)), las = 2, cex.axis = 0.5)
+
 
 #### 3. Read depth per sample
 options(scipen = 1)
@@ -178,7 +204,9 @@ head(reads.het)
 # # this really shows the two types! Could plot this w/ diff 
 # head(reads.het, n = 10)
 
-plot(reads.het$F ~ reads.het$reads, las = 1)
+pdf(file="het_by_reads.pdf", height=5, width=7)
+par(mfrow=c(1,1))
+plot(reads.het$F ~ reads.het$reads, las = 1, ylab = "F", xlab = "Reads per Sample")
 dev.off()
 
 
