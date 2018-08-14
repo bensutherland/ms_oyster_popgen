@@ -269,6 +269,7 @@ write.csv(pairwise.wc.fst, file = "11-other_stats/all_data_wcfst.csv")
 # library("hierfstat")
 boot.fst.all <- boot.ppfst(dat = all.data.hf, nboot = 1000, quant = c(0.025,0.975))
 boot.fst.all
+# note that nboot = 1000 is about the same as nboot = 10,000 (very marginally different)
 
 # Collect output
 lower.limit <- t(boot.fst.all$ll)
@@ -282,8 +283,8 @@ write.csv(x = boot.fst.all.output, file = "11-other_stats/all_data_boot.fst.outp
 
 # Heatmap output
 # install.packages("plsgenomics")
-require(plsgenomics)
-matrix.heatmap(mat = boot.fst.all.output)
+# require(plsgenomics)
+# matrix.heatmap(mat = boot.fst.all.output)
 
 require("lattice")
 levelplot(boot.fst.all.output, scales=list(x=list(rot=90)))
