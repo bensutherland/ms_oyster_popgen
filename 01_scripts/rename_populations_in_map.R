@@ -6,7 +6,7 @@
 
 # Set working directory
 # Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_mopup_chips")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data")
 
 pop.map <- read.table(file = "01-info_files/population_map_retained.txt")
 colnames(pop.map) <- c("sample","pop")
@@ -25,10 +25,6 @@ dim(pop.map) # this should only include the samples retained in the analysis
 pop.map$pop[pop.map$pop==14] <- 14
 pop.map$pop[pop.map$pop==15] <- 14
 
-# Keep DeepBay (3)
-# for now, actually just group DeepBay into BC, as there aren't enough of them to count as a sep pop
-# pop.map$pop[pop.map$pop==3] <- 1
-
 # Keep Rosewall (4)
 
 # Keep Guernsey (9)
@@ -43,12 +39,7 @@ pop.map$pop[pop.map$pop==13] <- 12
 pop.map$pop[pop.map$pop==6] <- 2
 pop.map$pop[pop.map$pop==2] <- 2
 
-# Rename Japans all as 16
-pop.map$pop[pop.map$pop==16] <- 16
-pop.map$pop[pop.map$pop==17] <- 16
-pop.map$pop[pop.map$pop==18] <- 16
-
-table(pop.map$pop) 
+table(pop.map$pop)
 
 # total number alleles
 sum(table(pop.map$pop)) * 2 * 0.01 
