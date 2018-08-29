@@ -212,8 +212,8 @@ This will produce plots in the working directory.
 ## hierfstat and adegenet
 Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
 
-Generate input file for adegenet:
-`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.05 --recodeA --noweb --out 06-stacks_rx/batch_1`
+Generate input file for adegenet:    
+`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.01 --recodeA --noweb --out 06-stacks_rx/batch_1`
 
 Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
 This script will allow you to import the data, build a neighbour-joining tree, perform PCA, DAPC, and bootstrap Fst values for all populations. The script will end with a conversion to a genind object from genlight, and saving out as `11-other_stats/adegenet_output.RData`.    
@@ -237,16 +237,17 @@ cp 06-stacks_rx/batch_1.vcf 09-diversity_stats/
 Use automated script to get sample names for each data subset, then calculate genetic diversity (Pi) for each subset with vcftools.       
 The script will generate a per locus pi value for the following sets of samples:      
 1. Hisnit/Pendrell/Pipestem/Serpentine 
-2. PendrellFarm
+2. BC wild-to-farm (PENF)
 3. Rosewall
 4. DeepBay
 5. FranceW
 6. FranceC
 7. China Farm 1 (QDC)
 8. China Farm 2 (RSC)
-9. China Wild (QDW/Be)
-10. Guernsey
-11. Japan        
+9. China Wild (CHN)
+10. China wild-to-farm (CHNF)
+11. Guernsey
+12. Japan        
 `../ms_oyster_popgen/01_scripts/nuc_diversity.sh`
 
 Also obtain Fis per individual:    
