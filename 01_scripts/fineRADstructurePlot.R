@@ -30,7 +30,7 @@
 
 
 ### 1) EDIT THE FOLLOWING THREE LINES TO PROVIDE PATHS TO THE fineRADstructure OUTPUT 
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_mopup_chips/08-fineRADstructure") ## The directory where the files are located
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data/08-fineRADstructure") ## The directory where the files are located
 chunkfile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out" ## RADpainter output file
 mcmcfile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml" ## finestructure mcmc file
 treefile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmcTree.xml" ## finestructure tree file
@@ -96,7 +96,7 @@ datamatrix<-dataraw[fullorder,fullorder] # reorder the data matrix
 
 tmpmat<-datamatrix 
 tmpmat[tmpmat>maxIndv]<-maxIndv #  # cap the heatmap
-pdf(file=paste(plotsFolder,analysisName,"-SimpleCoancestry.pdf",sep=""),height=25,width=25)
+pdf(file=paste(plotsFolder,analysisName,"-SimpleCoancestry.pdf",sep=""),height=40,width=40)
 plotFinestructure(tmpmat,dimnames(tmpmat)[[1]],dend=tdend,cols=some.colorsEnd,cex.axis=1.1,edgePar=list(p.lwd=0,t.srt=90,t.off=-0.1,t.cex=1.2))
 dev.off()
 
