@@ -26,12 +26,17 @@ library("adegenet")
 
 # Set working directory
 # Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_mopup_chips")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data")
 
 # Load part 1 results
 load("11-other_stats/adegenet_output.RData")
 
 my.data.gid
+
+# fix colors dataframe
+my.cols.df$my.pops <- as.character(my.cols.df$my.pops)
+my.cols.df$my.cols <- as.character(my.cols.df$my.cols)
+str(my.cols.df)
 
 # Read in database with sample phenotypes, most notably the Size_Class attribute
 sample.data <- read.csv(file = "../ms_oyster_popgen/00_archive/master_list_all_samples.csv", header = T)
@@ -47,36 +52,45 @@ names(sep.obj)
 
 # Create a subsetted list of repooled subcomponents of the full data
 datatype.list <- list()
-datatype.list[["all.gid"]] <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine
-                                     , sep.obj$ChinaBe, sep.obj$ChinaQDC, sep.obj$ChinaQDW, sep.obj$ChinaRSC
-                                     , sep.obj$DeepBay, sep.obj$Rosewall, sep.obj$Guernsey
-                                     , sep.obj$FranceW, sep.obj$FranceC
+datatype.list[["all.gid"]] <- repool(sep.obj$HIS, sep.obj$PEN, sep.obj$PENF, sep.obj$PIP, sep.obj$SER
+                                     , sep.obj$CHN, sep.obj$QDC, sep.obj$CHNF, sep.obj$RSC
+                                     , sep.obj$DPB, sep.obj$ROS, sep.obj$GUR
+                                     , sep.obj$FRA, sep.obj$FRAF
+                                     , sep.obj$JPN
                                      )
-datatype.list[["all.bc.gid"]] <- repool(sep.obj$Hisnit, sep.obj$Pendrell, sep.obj$PendrellFarm, sep.obj$Pipestem, sep.obj$Serpentine)
+datatype.list[["all.bc.gid"]] <- repool(sep.obj$HIS, sep.obj$PEN, sep.obj$PIP, sep.obj$SER)
 
-datatype.list[["bc.wild.size.gid"]] <- repool(sep.obj$Pendrell, sep.obj$Hisnit) # requires use of sample.data for phenotype of size
+datatype.list[["bc.wild.size.gid"]] <- repool(sep.obj$PEN, sep.obj$HIS) # NOTE: requires use of sample.data for phenotype of size
 
-datatype.list[["bc.sel.gid"]] <- repool(sep.obj$Pendrell, sep.obj$PendrellFarm) # PendrellFarm is culture selection
-datatype.list[["fr.gid"]] <- repool(sep.obj$FranceW, sep.obj$FranceC) # FranceC is culture selection
-datatype.list[["ch.gid"]] <- repool(sep.obj$ChinaBe, sep.obj$ChinaQDW) # QDW is culture selection
+datatype.list[["all.ch.gid"]] <- repool(sep.obj$CHN, sep.obj$CHNF, sep.obj$QDC, sep.obj$RSC)
 
-datatype.list[["all.ch.gid"]] <- repool(sep.obj$ChinaBe, sep.obj$ChinaQDW, sep.obj$ChinaQDC, sep.obj$ChinaRSC) # QDW is culture selection
-
+# selection experiments
+datatype.list[["bc.sel.gid"]] <- repool(sep.obj$PEN, sep.obj$PENF)
+datatype.list[["fr.gid"]] <- repool(sep.obj$FRA, sep.obj$FRAF)
+datatype.list[["ch.gid"]] <- repool(sep.obj$CHN, sep.obj$CHNF)
 
 ###
 # Several notes
-# ChinaQDW = spat taken from culture region (QD) by artificial attachment, then grown in 'lantern net culture'
-# ChinaBe = from QD region, sampled directly from rock on the beach
+# CHNF = spat taken from culture region (QD) by artificial attachment, then grown in 'lantern net culture'
+# CHN = from QD region, sampled directly from rock on the beach
 ###
 
 #### Choose dataset ####
 
 # The following would allow looping over all diff types if wanted..
+pops.involved <- NULL; subset.cols <- NULL
+
 for(i in 1:length(datatype.list)){
   datatype <- names(datatype.list)[i]
   data.gid <- datatype.list[[datatype]]
   print(paste("Now working on datatype", datatype))
-
+  
+  # Get the colors for this datatype
+  pops.involved <- levels(datatype.list[[datatype]]$pop) # identify pops in this datatype
+  pops.involved.df <- as.data.frame(pops.involved) # make the vector of pops involved a df so that can use merge
+  my.cols.per.datatype.df <- merge(x = pops.involved.df, y = my.cols.df, by.x = "pops.involved", by.y = "my.pops", sort = F)
+  cols <- my.cols.per.datatype.df[,"my.cols"]
+  
 # Otherwise, select one of the following individual dataset to work with
 # Individual runs:
 # datatype <- "all.gid"
@@ -95,6 +109,8 @@ data.gid <- datatype.list[[datatype]]
 nInd(data.gid)  
 
 #### Analysis ####
+
+# The following is only relevant for the bc.wild.size.gid dataset, otherwise not needed (others are excluded later)
 # Incorporate size data
 # Obtain sample numbers only to match w/ sample.info database
 indiv.used.pre <- gsub(pattern = "*.*\\_", replacement = "", indNames(data.gid))
@@ -103,13 +119,16 @@ indiv.used <- as.numeric(indiv.used)
 
 # Take the samples from the sample.data, specifically with the info on the location and size class
 subset.of.sample.data <- sample.data[indiv.used, c("CollectionSite", "Size_Class")]
+head(subset.of.sample.data)
 
 # Only keep the first three letters of the location
 subset.of.sample.data$CollectionSite <- substr(subset.of.sample.data$CollectionSite, start = 1, stop = 3)
+head(subset.of.sample.data)
 
 # collapse the columns together
 subset.of.sample.data$pop.id <- apply(subset.of.sample.data[,c(1:ncol(subset.of.sample.data))], 1, paste, collapse = "_")
 subset.of.sample.data$pop.id
+head(subset.of.sample.data)
 
 # Confirm lengths match
 if(length(indNames(data.gid)) == length(subset.of.sample.data$pop.id)){ print("yes these match")} else {print("no")}
@@ -164,7 +183,8 @@ filename <- paste("11-other_stats/", datatype, "_sample_DAPC.pdf", sep = "")
 pdf(file = filename, width = 11, height = 6)
 scatter(dapc, scree.da = F, bg = "white", legend = T
         , txt.leg=rownames(dapc$means)
-        , posi.leg = "topleft")
+        , posi.leg = "topleft"
+        , col = cols)
 dev.off()
 
 # Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
