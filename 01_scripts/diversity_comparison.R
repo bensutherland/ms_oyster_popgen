@@ -3,7 +3,7 @@
 # rm(list=ls())
 
 # Set working directory
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_mopup_chips/09-diversity_stats/")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data/09-diversity_stats/")
 
 #install.packages("rlist")
 require("rlist")
@@ -11,8 +11,13 @@ require("rlist")
 #### 1. Nucleotide Diversity ####
 # Set datatypes
 datatypes <- c("bc_wild", "bc_wild_to_farm"
-               , "chinaQDC", "chinaRSC", "china_wild"
-               , "deepbay", "france_wild_to_farm", "france_wild", "guernsey", "japan", "rosewall")
+               , "chinaQDC", "chinaRSC", "china_wild", "china_wild_to_farm"
+               , "deepbay", "france_wild", "france_wild_to_farm", "guernsey", "japan", "rosewall")
+
+datatypes.short <- c("BCW", "BCWF"
+               , "QDC", "RSC", "CHN", "CHNF"
+               , "DPB", "FRA", "FRAF", "GUR", "JPN", "ROS")
+
 
 # Import each of the datatypes
 datatypes.list <- list(); datatype <- NULL
@@ -32,14 +37,22 @@ for(i in 1:length(datatypes)){
 str(datatypes.list)
 
 # Set colors for datatypes
+my.cols <- read.csv("../01-info_files/my_cols.csv")
+
 datatypes
-cols <- c("green", "darkgreen"
-          , "coral3", "coral4", "coral"
-          , "royalblue"
-          , "purple4", "purple"
-          , "paleturquoise"
-          , "lightsteelblue"
-          , "palevioletred")
+cols <- as.character(my.cols[c(9,10,12,14,1,2,3,4,5,6,8,13), 2]) # select colors into the same order that they are plotted
+# in names(data)
+
+# cols <- c("mediumorchid1"
+#           , "purple1"
+#           , "darkseagreen1", "darkseagreen"
+#           , "darkseagreen4"
+#           , "darkseagreen3"
+#           , "dodgerblue2"
+#           , "gold1", "gold3"
+#           , "darkslategray2"
+#           , "turquoise4"
+#           , "red")
 
 # Collect from the datatype list
 data <- NULL
@@ -64,17 +77,65 @@ colnames(data) <- datatypes
 colnames(data)
 
 # Plot
-par(mfrow=c(3,4))
+pdf(file = "Pi_per_locus_all_comp_to_bc_wild.pdf", width = 15, height = 7)
+par(mfrow=c(3,4), mar=c(5,5,3,3))
 for(i in 2:length(datatypes)){
   plot(data$bc_wild ~ data[,i], xlab = colnames(data)[i])
 }
+dev.off()
 
 # Boxplot Pi per locus averaged across the population
-par(mfrow=c(2,1), mar = c(6,4,3,3))
+pdf(file = "Pi_per_pop_mean.pdf", width = 8, height = 5)
+par(mfrow=c(1,1), mar = c(8,4,3,3))
 boxplot(data, las = 3, ylab = "Per locus Pi (population mean)"
         , col = cols
-        #, xaxt = "n"
+        , xaxt = "n"
+        , ylim = c(0,0.6)
         )
+axis(side = 1, at = c(1:length(datatypes.short)), labels = datatypes.short, las = 2)
+dev.off()
+
+# put data into a longform dataframe that can be used for stats
+str(data)
+data.long <- NULL
+data.long.pop <- NULL
+
+for(i in 1:length(names(data))){
+  data.long <- c(data.long, data[,i])
+  data.long.pop <- c(data.long.pop, rep(colnames(data)[i], times = length(data[,i])))
+}
+
+length(data.long)
+length(data.long.pop)
+
+data.long.df <- as.data.frame(cbind(data.long.pop, data.long))
+dim(data.long.df)
+colnames(data.long.df) <- c("pop", "per.locus.pi")
+data.long.df$per.locus.pi <- as.numeric(as.character(data.long.df$per.locus.pi))
+str(data.long.df)
+
+head(data.long.df)
+
+#
+
+# test w/ boxplot
+boxplot(data.long.df$per.locus.pi ~ data.long.df$pop, ylim = c(0,0.6), col = cols, las = 2)
+
+mod.pi <- aov(data.long.df$per.locus.pi ~ data.long.df$pop) 
+summary(mod.pi)
+TukeyHSD(mod.pi)
+
+levels(data.long.df$pop)
+
+mod.kr.pi <- kruskal.test(data.long.df$per.locus.pi ~ data.long.df$pop)
+
+pairwise.wilcox.test(data.long.df$per.locus.pi, data.long.df$pop, p.adjust.method = "BH")
+
+# Just compare between deepbay and bc wild
+data.long.bcw.dpb <- data.long.df[data.long.df$pop=="bc_wild"|data.long.df$pop=="deepbay",]
+wilcox.test(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop)
+summary(aov(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop))
+
 
 
 #### 2. Heterozygosity ####
