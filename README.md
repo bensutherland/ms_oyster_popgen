@@ -195,6 +195,8 @@ python /home/ben/Programs/fineRADstructure/Stacks2fineRAD.py -i 08-fineRADstruct
 # This will output a file that has loci filtered based on ploidy, and samples filtered by missing data. 
 ```
 
+If you want to drop individuals from this analysis to reduce the total size of the graphs, this is best done after the haplotypes.tsv has been translated to the fiiltered fineRADpainter input file (i.e. after the Stacks2fineRAD step). Then one can use `fineRADstructure_input_reduction.R`. PLEASE NOTE: this Rscript will write over the original input of the Stacks2fineRAD step.    
+
 In general, follow instructions from the fineRADstructure tutorial (http://cichlid.gurdon.cam.ac.uk/fineRADstructure.html), but in brief:  
 1) Calculate co-ancestry matrix:     
 ` RADpainter paint 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt.txt`
@@ -204,7 +206,7 @@ note: this uses by default a Markov chain Monte Carlo (mcmc) without a tree. By 
 3) Build tree: `finestructure -m T -x 10000 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmcTree.xml`     
 
 Then plot using the Rscripts available from the following website shown above:    
-`fineRADstructurePlot.R` (follow instructions here)
+`fineRADstructurePlot.R` (follow instructions here)    
 `FinestructureLibrary.R`
 This will produce plots in the working directory.    
 
