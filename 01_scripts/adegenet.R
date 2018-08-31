@@ -6,7 +6,7 @@
 
 # Set working directory
 # Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_mopup_chips")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data")
 
 # Wayne
 # setwd("~/Documents/miller/00_Moore_oyster_project/04_analysis/stacks_workflow")
@@ -44,7 +44,7 @@ nInd(my.data) # how many individuals?
 nLoc(my.data) # how many loci?
 indNames(my.data) # see names of individuals
 
-# # Method to label a specific individual, for example in the neighbour-joining tree
+# # Troubleshooting method to label a specific individual, for example in the neighbour-joining tree
 # temp <- indNames(my.data)
 # temp[grep(pattern = "RSC_1656", x = temp, perl = T)] <- "****!!!!PROBLEM!!!!***"
 # indNames(my.data) <- temp
@@ -57,16 +57,14 @@ head(locNames(my.data, withAlleles = T), n = 20) # see allele names
 pop(my.data) <- gsub(x = indNames(my.data), pattern = "\\_.*", replacement = "") # create pop ID
 pop(my.data) # what are the pop names?
 
-# separate out as character to change names
-new.pop <- as.character(pop(my.data))
-new.pop[grep(pattern = "Japan", x = new.pop, perl = T)] <- "Japan"
-
-pop(my.data) <- new.pop
-pop(my.data)
-
-
-#### 1.b. Additional filtering ####
-# Apply here if needed (e.g. remove samples, populations etc.)
+### NO LONGER NEEDED ###
+# If need to replace a population name...
+# # separate out as character to change names
+# new.pop <- as.character(pop(my.data))
+# new.pop[grep(pattern = "Japan", x = new.pop, perl = T)] <- "Japan"
+# pop(my.data) <- new.pop
+# pop(my.data)
+### END NO LONGER NEEDED
 
 #### 2. Basic Analysis (adegenet) ####
 # genlight plot to visualize the number of second alleles across individuals and SNPs
@@ -136,6 +134,9 @@ for(i in 1:num.retained.pcs){
               )
 }
 dev.off()
+# NOTE: ylim is not possible, because the code itself uses max and min values
+# would have to redo the function in R if we want to make a loading plot w/ ylim functionality
+
 
 # Plot colorplot using the PC scores of the samples
 pdf(file = "11-other_stats/pca_colorplot.pdf", width = 8, height = 8)
@@ -163,6 +164,25 @@ dev.off()
 # nInd(pendrell.pipestem.gid)
 
 
+#### pre-5 ####
+# Define colours
+my.pops <- levels(dapc1$grp)
+my.cols <- c("darkseagreen4", "darkseagreen3" #china1
+             , "blue3" #dpb
+             , "gold1", "gold3" #FRA and FRAF (darker = derived)
+             , "darkslategray2" #GUR
+             , "mediumpurple3" #HIS
+             , "turquoise4" #JPN
+             , "purple1", "purple4" #PEN PENF
+             , "darkviolet" #PIP 
+             ,"darkseagreen1" #QDC
+             , "red" #ROS
+             , "darkseagreen" #china2
+             , "orchid2"
+             )
+
+my.cols.df <- as.data.frame(cbind(my.pops, my.cols))
+write.csv(my.cols.df, file = "01-info_files/my_cols.csv", quote = F, row.names = F)
 
 #### 5. Discriminant Analysis of Principal Components (DAPC) ####
 # DAPC implemented for genlight by an approp. method for find.clusters and dapc generics
@@ -177,6 +197,7 @@ pdf(file = "11-other_stats/dapc_all_pops.pdf", width = 10.5, height = 7)
 scatter(dapc1, scree.da = F, bg = "white", legend = T
         , txt.leg=rownames(dapc1$means)
         , posi.leg = "topright"
+        , col = my.cols
         )
 dev.off()
 # assignplot hasn't been explored/implemented here yet
@@ -258,11 +279,13 @@ table(nAll(my.data.gid))
 all.data.hf <- genind2hierfstat(my.data.gid)
 rownames(all.data.hf) <- indNames(my.data.gid)
 
-# Pairwise Fst
+
+##### Pairwise Fst #####
 pairwise.wc.fst <- pairwise.WCfst(all.data.hf)
 write.csv(pairwise.wc.fst, file = "11-other_stats/all_data_wcfst.csv")
 
 # Bootstrapping
+nboots <- 1000
 # requires latest hierfstat (v0.04-29) otherwise get error
 # library(devtools)
 # install_github("jgx65/hierfstat")
@@ -279,18 +302,20 @@ lower.limit[is.na(lower.limit)] <- 0
 boot.fst.all.output <- upper.limit + lower.limit
 boot.fst.all.output
 
-write.csv(x = boot.fst.all.output, file = "11-other_stats/all_data_boot.fst.output.csv")
+filename <- paste0("11-other_stats/all_data_fst_nboot_", nboots, ".csv")
+write.csv(x = boot.fst.all.output, file = filename)
 
 # Heatmap output
 # install.packages("plsgenomics")
 # require(plsgenomics)
 # matrix.heatmap(mat = boot.fst.all.output)
 
-require("lattice")
-levelplot(boot.fst.all.output, scales=list(x=list(rot=90)))
-
-require("gplots")
-heatmap.2(boot.fst.all.output)
+## Good heatmaps here
+# require("lattice")
+# levelplot(boot.fst.all.output, scales=list(x=list(rot=90)))
+# 
+# require("gplots")
+# heatmap.2(boot.fst.all.output)
 
 
 save.image(file = "11-other_stats/adegenet_output.RData") # Save out this data
