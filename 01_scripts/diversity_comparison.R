@@ -142,33 +142,56 @@ summary(aov(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop))
 het <- read.table("batch_1.het", header = T, row.names = 1)
 head(het)
 het$sample <- rownames(het)
+head(het)
 
 # Add population to het object
 poptype <- NULL
 poptype <- sub(pattern = "\\_.*", replacement = "", het$sample)
-poptype <- gsub(pattern = "Japan.*", replacement = "Japan", x = poptype ) # group all Japan into one
-poptype <- gsub(pattern = "Japan.*", replacement = "Japan", x = poptype ) # group ChinaQDW and ChinaBe into one
-poptype <- gsub(pattern = "ChinaQDW|ChinaBe", replacement = "ChinaWild", perl = T, x = poptype)
-poptype <- gsub(pattern = "Hisnit|Pendrell|Pipestem|Serpentine", replacement = "BCWild", perl = T, x = poptype)
+# poptype <- gsub(pattern = "HIS|PEN|PIP|SER", replacement = "BCWild", perl = T, x = poptype) # this could be an option..
 het <- cbind(het, poptype)
 head(het)
 
 # How many per
 table(het$poptype)
 
-# Boxplot by population
-#pdf(file = "Fis_per_pop_boxplot.pdf", width = 8, height = 5)
-boxplot(het$F ~ het$poptype, las = 3, ylab = "Homozygous F statistic (VCFtools)"
-        , col = cols)
-#dev.off()
-
-mod1 <- aov(het$F ~ het$poptype)
-summary(mod1)
-result <- TukeyHSD(mod1)
+# Conduct anova and pairwise tukeys to investigate differences among poptypes
+mod.fis <- aov(het$F ~ het$poptype)
+summary(mod.fis)
+result <- TukeyHSD(mod.fis)
 
 write.csv(x = result$`het$poptype`, file = "tukeyHSD_poptype_het.csv")
 
-pdf(file=paste("Fis_per_indiv.pdf",sep=""), height=9, width=14)
+# Based on these results, make significance value indicators for the plot (if doesn't share letter, sig diff p< 0.05)
+sig.indicators <- c("a", "a", "b", "bc", "bc"
+                  , "bc", "ab", "ab", "ac", "ac"
+                  , "ab", "ab", "bc", "ab", "ac")
+length(sig.indicators)
+
+# Boxplot by population
+pdf(file = "Fis_per_pop_boxplot.pdf", width = 8, height = 5)
+boxplot(het$F ~ het$poptype, las = 1, ylab = "Fis"
+        , col = as.character(my.cols$my.cols)
+        , ylim = c(-0.1,0.3)
+        , xaxt = "n")
+axis(side = 1, labels = levels(het$poptype), at = c(1:length(levels(het$poptype))), las = 2)
+text(x = seq(1:length(levels(het$poptype))), y = 0.25
+     , labels = sig.indicators
+     )
+
+dev.off()
+
+# Get some summaries
+library("dplyr")
+summarized <- het %>%
+  select(F, poptype) %>%
+  group_by(poptype) %>%
+  summarise(F.avg = mean(F), F.med = median(F))
+
+summarized
+write.csv(x = summarized, file = "F_avg_and_median.csv", quote = F)
+
+### 3. Plot Fis by read depth per sample
+pdf(file=paste("Fis_and_read_depth_per_indiv.pdf",sep=""), height=9, width=14)
 par(mar=c(6,5,3,3), mfrow=c(2,1))
 plot(het$F, xaxt ="n", xlab = "", ylab = "Fis", las = 1)
 axis(side = 1, labels = rownames(het), at = c(1:nrow(het)), las = 2, cex.axis = 0.5)
@@ -180,20 +203,12 @@ reads <- read.table("../04-all_samples/reads_per_sample_table.txt", col.names = 
 head(reads)
 reads$sample <- gsub(pattern = ".fq.gz", replacement = "", x = reads$sample)
 
+# combine the reads and het dataframes
 reads.het <- merge(x = reads, y = het, by = "sample")
 head(reads.het)
 
-pdf(file="het_by_reads.pdf", height=5, width=7)
-par(mfrow=c(1,1))
+#pdf(file="het_by_reads.pdf", height=5, width=7)
+#par(mfrow=c(1,1))
 plot(reads.het$F ~ reads.het$reads, las = 1, ylab = "F", xlab = "Reads per Sample")
 dev.off()
 
-
-### OLD CODE: Qc/BC comparison ###
-# # Separate the quebec and bc data
-# qc.data <- reads.het[grep(x= reads.het$sample, pattern = "_s", fixed = T), ]
-# bc.data <- reads.het[-c(grep(x= reads.het$sample, pattern = "_s", fixed = T)), ]
-# 
-# plot(reads.het$F ~ reads.het$reads, las = 1, type = "n", ylab = "Fis", xlab = "Number reads per sample")
-# points(qc.data$reads, qc.data$F, col = 2)
-# points(bc.data$reads, bc.data$F, col = 1)
