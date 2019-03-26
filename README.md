@@ -88,8 +88,7 @@ This individual was found to have very low mapping relative to read counts, so r
 `mv 04-all_samples/PIP_631.* 04-all_samples/removed_samples/`    
 
 ### Remove individuals with too few reads     
-Note: first requires that the following script was run in prev. step:    
-`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
+Note: this step requires that you have already 'assessed results' above.      
 
 Identify samples with less than set number of reads    
 `awk '$2 < 1000000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove.txt`
@@ -103,22 +102,26 @@ Also move fq.gz files into the removed_samples directory
 Retain the original report files (e.g. reads, mappings):    
 `mv 04-all_samples/samples_to_remove.txt 04-all_samples/mappings_per_sample_table.txt 04-all_samples/reads_per_sample_table.txt ./reads_and_mappings_current.pdf 04-all_samples/removed_samples/`
 
-If you want to see how many individuals per population were retained:     
-`ls -1 04-all_samples/*.fq.gz | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c`
-
-Proceed to Stacks steps ahead [pstacks](#stacks-steps)
-
-If you want to know descriptive stats for only the retained samples, re-run the `assess_results.sh` script.   
+To obtain details for the retained samples, you can re-run the 'assess samples' script, as above.   
 
 ### Determine how many samples you have per population
+Optional:      
 `ls -1 04-all_samples/*.bam | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c`    
 
-### Rebuild a population map that only includes the post-filtered (by reads) samples
-`../ms_oyster_popgen/01_scripts/redo_population_map.sh`
-This will create an output file of `01-info_files/population_map_retained.txt`.     
-This file can be used an input to the following Rscript in order to merge closely-related populations:    
+### Remove filtered individuals from the population map
+Use the following to only keep retained samples in your population map:    
+`../ms_oyster_popgen/01_scripts/redo_population_map.sh`      
+
+This creates the file `01-info_files/population_map_retained.txt`.     
+
+### Merge closely-related collections in the population map
+Optional:      
+If you want to merge closely-related populations prior to stacks, use the following:      
 `rename_populations_in_map.R`
-Following this script, there will be a new file entitled `"01-info_files/population_map_retained_renamed.txt"`. If you want to use the merged populations, then point the populations module to this new population map file.     
+
+This will produce `"01-info_files/population_map_retained_renamed.txt"`.    
+
+At the final stage of stacks, when filtering out variants using the populations module, this new file is useful.      
 
 ## Stacks steps
 Note: we now have a runall option that will run through all stacks steps, using the parameters set in each individual script.
@@ -128,9 +131,9 @@ Note: we now have a runall option that will run through all stacks steps, using 
 Adjust the number of threads and launch    
 `./00-scripts/stacks_1b_pstacks.sh`
 
-Obtain some info on your pstacks alignment results from the log file:   
+Optional: obtain some info on your pstacks alignment results from the log file:   
 `./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
-Produces output `output_pstacks_results.csv` and graph with num reads per sample and average locus coverage per sample.
+This produces `output_pstacks_results.csv` and a graph with num reads per sample and average locus coverage per sample.     
 
 ### cstacks
 Edit the following script to use the -g flag (use genomic location) and turn off the -n flag (number mismatches allowed), and incr p (threads)   
