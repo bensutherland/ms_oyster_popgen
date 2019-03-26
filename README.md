@@ -81,6 +81,9 @@ Compare total number of reads per sample to the number of unique scaffolds being
 This produces a graph as well as some summary statistics.   
 
 ### Remove problematic individuals
+Make directory to remove problematic or off-project samples.    
+`mkdir 04-all_samples/removed_samples`
+
 This individual was found to have very low mapping relative to read counts, so remove it:   
 `mv 04-all_samples/PIP_631.* 04-all_samples/removed_samples/`    
 
@@ -90,9 +93,6 @@ Note: first requires that the following script was run in prev. step:
 
 Identify samples with less than set number of reads    
 `awk '$2 < 1000000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove.txt`
-
-Make directory to remove too few read indiv.    
-`mkdir 04-all_samples/removed_samples`
 
 Move bam files into the removed_samples directory    
 `cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
