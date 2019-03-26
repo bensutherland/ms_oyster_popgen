@@ -102,7 +102,8 @@ Also move fq.gz files into the removed_samples directory
 Retain the original report files (e.g. reads, mappings):    
 `mv 04-all_samples/samples_to_remove.txt 04-all_samples/mappings_per_sample_table.txt 04-all_samples/reads_per_sample_table.txt ./reads_and_mappings_current.pdf 04-all_samples/removed_samples/`
 
-To obtain details for the retained samples, you can re-run the 'assess samples' script, as above.   
+Recalculate sample stats with the limited number of samples:     
+`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
 
 ### Determine how many samples you have per population
 Optional:      
@@ -133,6 +134,7 @@ Adjust the number of threads and launch
 
 Optional: obtain some info on your pstacks alignment results from the log file:   
 `./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
+Requires on an up-to-date assess results calculation.    
 This produces `output_pstacks_results.csv` and a graph with num reads per sample and average locus coverage per sample.     
 
 ### cstacks
