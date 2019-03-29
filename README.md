@@ -167,7 +167,7 @@ Edit to add -g flag and remove -n flag
 Edit to add -g flag    
 `00-scripts/stacks_7_sstacks_rx.sh`
 
-### populations (round 2)
+## Populations (round 2) and multiple export formats
 `00-scripts/stacks_8_populations_rx.sh`    
 
 Edit parameters for single-SNP analysis:     
@@ -208,8 +208,8 @@ vcf_haplotypes="--vcf_haplotypes"
 ```
 
 Compare total numbers of SNPs and total number of loci using:    
-`grep -vE '^@' 06_stacks_rx/batch_1.vcf`    
-`grep -vE '^@' 06_stacks_rx/batch_1.haplotypes.vcf`     
+`grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l`    
+`grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l`     
 
 Analyze relatedness by shared haplotypes with the haplotype VCF [fineRADstructure](#fineradstructure)    
 ```
@@ -223,13 +223,10 @@ Aside: if building RAD capture panel, more loci would be retained with r = 0.4 o
 
 
 ## Nucleotide diversity
-Use a single SNP per locus for this, and move the output vcf to a new directory.     
-```
-mkdir 09-diversity_stats
-cp 06-stacks_rx/batch_1.vcf 09-diversity_stats/
-```
-
+Uses the single SNP VCF moved to `09-diversity_stats` in a previous step.    
 Use automated script to get sample names for each data subset, then calculate genetic diversity (Pi) for each subset with vcftools.       
+`../ms_oyster_popgen/01_scripts/nuc_diversity.sh`     
+
 The script will generate a per locus pi value for the following sets of samples:      
 1. Hisnit/Pendrell/Pipestem/Serpentine 
 2. BC wild-to-farm (PENF)
@@ -243,15 +240,15 @@ The script will generate a per locus pi value for the following sets of samples:
 10. China wild-to-farm (CHNF)
 11. Guernsey
 12. Japan        
-`../ms_oyster_popgen/01_scripts/nuc_diversity.sh`
 
 Also obtain Fis per individual:    
 ```
 vcftools --vcf 09-diversity_stats/batch_1.vcf --het    
+# vcftools outputs the data to the working directory
 mv out.het 09-diversity_stats/batch_1.het
 ```
 
-Then use the RScript `diversity_comparison.R`    
+Then use the RScript `../ms_oyster_popgen/diversity_comparison.R`    
 
 ## hierfstat and adegenet
 Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
