@@ -170,22 +170,24 @@ Edit to add -g flag
 ### populations (round 2)
 `00-scripts/stacks_8_populations_rx.sh`    
 
-Current parameters:     
+Edit parameters for single-SNP analysis:     
 ```
-p=<number pops>     
+p=<number pops total>     
 r=0.7    
 min_maf=0.01
+M="population_map_retained.txt"
 #lnl_lim # remove if using -g flag
+plink="--plink"
+vcf="--vcf"
+write_single_snp
 ```
 
 Need to know how many populations remain?    
 `awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uniq -c | less`    
 
-If building RAD capture panel, more loci would be retained with r = 0.4 or 0.5
+Analyze diversity with VCF [Diversity](#nucleotide-diversity)     
+Analyze FST with plink ped/map [General Stats](#hierfstat-and-adegenet)
 
-First set to `write_single_snp`' to export:   
-- VCF for use in diversity stats [Diversity](#nucleotide-diversity)     
-- plink ped/map files for use in adegenet [General Stats](#hierfstat-and-adegenet)
 
 ```
 # Save output to analysis folders
@@ -193,6 +195,15 @@ mkdir 09-diversity_stats
 mv 06-stacks_rx/batch_1.vcf 09-diversity_stats
 mkdir 11-adegenet_analysis
 mv 06-stacks_rx/batch_1.ped 06-stacks_rx/batch_1.map 11-adegenet_analysis/
+```
+
+Edit parameters for multiple-SNP analysis:      
+
+```
+#plink
+#vcf
+#write-single-snp
+vcf_haplotypes="--vcf_haplotypes"
 ```
 
 Then re-run populations module with multiple SNP allowed and haplotype VCF activated to:    
@@ -203,6 +214,7 @@ mkdir 08-fineRADstructure
 mv 06-stacks_rx/batch_1.haplotypes.vcf  08-fineRADstructure 
 ```
 
+Aside: if building RAD capture panel, more loci would be retained with r = 0.4 or 0.5
 
 ## hierfstat and adegenet
 Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
