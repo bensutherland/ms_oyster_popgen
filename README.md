@@ -168,52 +168,40 @@ Edit to add -g flag
 `00-scripts/stacks_7_sstacks_rx.sh`
 
 ### populations (round 2)
-Edit to remove lnl_lim
 `00-scripts/stacks_8_populations_rx.sh`    
-When creating capture panel, also set: min_maf=0.01, p=<the # of pops>, r = 0.4 or 0.5      
-When going forward to do pop gen work, set the r value above to 0.7   
 
-### Extra filtering
-`00-scripts/05_filter_vcf.py -i 06-stacks_rx/batch_1.vcf -o 06-stacks_rx/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 40 --use_percent -a 0.05 -s 20 -H 0.5 -C 200`     
-This provides additional filters of allelic imbalance (-I), max SNPs per locus, max heterozygosity (-H), and max depth (-C)     
-
-### Graph output 
-Unfiltered:    
-`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o graphs_before_filters_oyster -g`
-
-Filtered:    
-`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1_filt.vcf -o graphs_after_filters_oyster -g`
-
-Combine:    
-`00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
-
-
-## fineRADstructure
-Use multiple SNP per locus for fineRADstructure input (`06-stacks_rx/batch_1.haplotypes.tsv`)
-
-Make a new directory, move the haplotypes text file to this new directory, and format the file as an input to fineRADstructure:    
+Current parameters:     
 ```
+p=<number pops>     
+r=0.7    
+min_maf=0.01
+#lnl_lim # remove if using -g flag
+```
+
+Need to know how many populations remain?    
+`awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uniq -c | less`    
+
+If building RAD capture panel, more loci would be retained with r = 0.4 or 0.5
+
+First set to `write_single_snp`' to export:   
+- VCF for use in diversity stats [Diversity](#nucleotide-diversity)     
+- plink ped/map files for use in adegenet [General Stats](#hierfstat-and-adegenet)
+
+```
+# Save output to analysis folders
+mkdir 09-diversity_stats    
+mv 06-stacks_rx/batch_1.vcf 09-diversity_stats
+mkdir 11-adegenet_analysis
+mv 06-stacks_rx/batch_1.ped 06-stacks_rx/batch_1.map 11-adegenet_analysis/
+```
+
+Then re-run populations module with multiple SNP allowed and haplotype VCF activated to:    
+- haplotypes VCF for fineRADstructure [fineRADstructure](#fineradstructure)    
+```
+# Save haplotype output to analysis folder
 mkdir 08-fineRADstructure
-cp 06-stacks_rx/batch_1.haplotypes.tsv 08-fineRADstructure
-# It is best to use the Stacks2fineRAD.py script to prepare stacks output into fineRADstructure input as this gives some info about the loci and removes instances of triploid alleles.   
-python /home/ben/Programs/fineRADstructure/Stacks2fineRAD.py -i 08-fineRADstructure/batch_1.haplotypes.tsv -n 10 -m 30
-# This will output a file that has loci filtered based on ploidy, and samples filtered by missing data. 
+mv 06-stacks_rx/batch_1.haplotypes.vcf  08-fineRADstructure 
 ```
-
-If you want to drop individuals from this analysis to reduce the total size of the graphs, this is best done after the haplotypes.tsv has been translated to the fiiltered fineRADpainter input file (i.e. after the Stacks2fineRAD step). Then one can use `fineRADstructure_input_reduction.R`. PLEASE NOTE: this Rscript will write over the original input of the Stacks2fineRAD step.    
-
-In general, follow instructions from the fineRADstructure tutorial (http://cichlid.gurdon.cam.ac.uk/fineRADstructure.html), but in brief:  
-1) Calculate co-ancestry matrix:     
-` RADpainter paint 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt.txt`
-2) Assign individuals to populations:     
-`finestructure -x 100000 -y 100000 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml`     
-note: this uses by default a Markov chain Monte Carlo (mcmc) without a tree. By default it assumes the data comes from one population (-I 1), and uses 100000 burn in (-x) and sample iterations (-y) for the MCMC.    
-3) Build tree: `finestructure -m T -x 10000 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmcTree.xml`     
-
-Then plot using the Rscripts available from the following website shown above:    
-`fineRADstructurePlot.R` (follow instructions here)    
-`FinestructureLibrary.R`
-This will produce plots in the working directory.    
 
 
 ## hierfstat and adegenet
@@ -265,7 +253,36 @@ mv out.het 09-diversity_stats/batch_1.het
 
 Then use the RScript `diversity_comparison.R`    
 
-## Other Methods 
+## Haplotype Analysis
+### fineRADstructure
+Use multiple SNP per locus for fineRADstructure input (`06-stacks_rx/batch_1.haplotypes.tsv`)   
+
+Make a new directory, move the haplotypes text file to this new directory, and format the file as an input to fineRADstructure:    
+```
+mkdir 08-fineRADstructure
+cp 06-stacks_rx/batch_1.haplotypes.tsv 08-fineRADstructure
+# It is best to use the Stacks2fineRAD.py script to prepare stacks output into fineRADstructure input as this gives some info about the loci and removes instances of triploid alleles.   
+python /home/ben/Programs/fineRADstructure/Stacks2fineRAD.py -i 08-fineRADstructure/batch_1.haplotypes.tsv -n 10 -m 30
+# This will output a file that has loci filtered based on ploidy, and samples filtered by missing data. 
+```
+
+If you want to drop individuals from this analysis to reduce the total size of the graphs, this is best done after the haplotypes.tsv has been translated to the fiiltered fineRADpainter input file (i.e. after the Stacks2fineRAD step). Then one can use `fineRADstructure_input_reduction.R`. PLEASE NOTE: this Rscript will write over the original input of the Stacks2fineRAD step.    
+
+In general, follow instructions from the fineRADstructure tutorial (http://cichlid.gurdon.cam.ac.uk/fineRADstructure.html), but in brief:  
+1) Calculate co-ancestry matrix:     
+` RADpainter paint 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt.txt`
+2) Assign individuals to populations:     
+`finestructure -x 100000 -y 100000 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml`     
+note: this uses by default a Markov chain Monte Carlo (mcmc) without a tree. By default it assumes the data comes from one population (-I 1), and uses 100000 burn in (-x) and sample iterations (-y) for the MCMC.    
+3) Build tree: `finestructure -m T -x 10000 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmcTree.xml`     
+
+Then plot using the Rscripts available from the following website shown above:    
+`fineRADstructurePlot.R` (follow instructions here)    
+`FinestructureLibrary.R`
+This will produce plots in the working directory.    
+
+
+## Other Utilities 
 Proceed to:   
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
