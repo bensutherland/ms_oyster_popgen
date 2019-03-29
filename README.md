@@ -197,6 +197,7 @@ mkdir 11-adegenet_analysis
 mv 06-stacks_rx/batch_1.plink.ped 06-stacks_rx/batch_1.plink.map 11-adegenet_analysis/
 ```
 
+
 Edit parameters for multiple-SNP analysis:      
 
 ```
@@ -205,6 +206,10 @@ vcf # keep vcf for counting total SNP
 #write-single-snp
 vcf_haplotypes="--vcf_haplotypes"
 ```
+
+Compare total numbers of SNPs and total number of loci using:    
+`grep -vE '^@' 06_stacks_rx/batch_1.vcf`    
+`grep -vE '^@' 06_stacks_rx/batch_1.haplotypes.vcf`     
 
 Analyze relatedness by shared haplotypes with the haplotype VCF [fineRADstructure](#fineradstructure)    
 ```
