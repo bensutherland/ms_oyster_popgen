@@ -167,7 +167,7 @@ Edit to add -g flag and remove -n flag
 Edit to add -g flag    
 `00-scripts/stacks_7_sstacks_rx.sh`
 
-## Populations (round 2) and multiple export formats
+### Populations (round 2) and single SNP export
 `00-scripts/stacks_8_populations_rx.sh`    
 
 Edit parameters for single-SNP analysis:     
@@ -185,10 +185,6 @@ write_single_snp
 Need to know how many populations remain?    
 `awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uniq -c | less`    
 
-Analyze diversity with VCF [Diversity](#nucleotide-diversity)     
-Analyze FST with plink ped/map [General Stats](#hierfstat-and-adegenet)
-
-
 ```
 # Save output to analysis folders
 mkdir 09-diversity_stats    
@@ -197,9 +193,12 @@ mkdir 11-adegenet_analysis
 mv 06-stacks_rx/batch_1.plink.ped 06-stacks_rx/batch_1.plink.map 11-adegenet_analysis/
 ```
 
+Analyze diversity with VCF [Diversity](#nucleotide-diversity)     
+Analyze FST with plink ped/map [General Stats](#hierfstat-and-adegenet)
 
+
+### Populations (round 2) and haplotype export
 Edit parameters for multiple-SNP analysis:      
-
 ```
 #plink
 vcf # keep vcf for counting total SNP
@@ -212,14 +211,13 @@ Compare total numbers of SNPs and total number of loci using:
 `grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l`     
 
 Analyze relatedness by shared haplotypes with the haplotype VCF [fineRADstructure](#fineradstructure)    
+
 ```
 # Save haplotype output to analysis folder
 mkdir 08-fineRADstructure
 mv 06-stacks_rx/batch_1.haplotypes.vcf  08-fineRADstructure 
 ```
 
-
-Aside: if building RAD capture panel, more loci would be retained with r = 0.4 or 0.5
 
 
 ## Nucleotide diversity
