@@ -194,45 +194,28 @@ Analyze FST with plink ped/map [General Stats](#hierfstat-and-adegenet)
 mkdir 09-diversity_stats    
 mv 06-stacks_rx/batch_1.vcf 09-diversity_stats
 mkdir 11-adegenet_analysis
-mv 06-stacks_rx/batch_1.ped 06-stacks_rx/batch_1.map 11-adegenet_analysis/
+mv 06-stacks_rx/batch_1.plink.ped 06-stacks_rx/batch_1.plink.map 11-adegenet_analysis/
 ```
 
 Edit parameters for multiple-SNP analysis:      
 
 ```
 #plink
-#vcf
+vcf # keep vcf for counting total SNP
 #write-single-snp
 vcf_haplotypes="--vcf_haplotypes"
 ```
 
-Then re-run populations module with multiple SNP allowed and haplotype VCF activated to:    
-- haplotypes VCF for fineRADstructure [fineRADstructure](#fineradstructure)    
+Analyze relatedness by shared haplotypes with the haplotype VCF [fineRADstructure](#fineradstructure)    
 ```
 # Save haplotype output to analysis folder
 mkdir 08-fineRADstructure
 mv 06-stacks_rx/batch_1.haplotypes.vcf  08-fineRADstructure 
 ```
 
+
 Aside: if building RAD capture panel, more loci would be retained with r = 0.4 or 0.5
 
-## hierfstat and adegenet
-Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
-
-Generate input file for adegenet:    
-`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.01 --recodeA --noweb --out 06-stacks_rx/batch_1`
-
-Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
-This script will allow you to import the data, build a neighbour-joining tree, perform PCA, DAPC, and bootstrap Fst values for all populations. The script will end with a conversion to a genind object from genlight, and saving out as `11-other_stats/adegenet_output.RData`.    
-
-Next, use the script `01_scripts/adegenet_sep_pops.R` to import the genind object from above, then perform various stats on separated subcomponents of the full dataset. For example:    
-* All local samples from BC
-* Spatial vs. temporal in BC (Hisnit and Serpentine)
-* Selection experiment BC
-* Selection experiment France
-* Selection experiment China
-
-Result figures and tables will be labeled using their respective subcomponent, and placed in the `11-other_stats` folder.     
 
 ## Nucleotide diversity
 Use a single SNP per locus for this, and move the output vcf to a new directory.     
@@ -264,6 +247,25 @@ mv out.het 09-diversity_stats/batch_1.het
 ```
 
 Then use the RScript `diversity_comparison.R`    
+
+## hierfstat and adegenet
+Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
+
+Generate input file for adegenet:    
+`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.01 --recodeA --noweb --out 06-stacks_rx/batch_1`
+
+Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
+This script will allow you to import the data, build a neighbour-joining tree, perform PCA, DAPC, and bootstrap Fst values for all populations. The script will end with a conversion to a genind object from genlight, and saving out as `11-other_stats/adegenet_output.RData`.    
+
+Next, use the script `01_scripts/adegenet_sep_pops.R` to import the genind object from above, then perform various stats on separated subcomponents of the full dataset. For example:    
+* All local samples from BC
+* Spatial vs. temporal in BC (Hisnit and Serpentine)
+* Selection experiment BC
+* Selection experiment France
+* Selection experiment China
+
+Result figures and tables will be labeled using their respective subcomponent, and placed in the `11-other_stats` folder.     
+
 
 ## Haplotype Analysis
 ### fineRADstructure
