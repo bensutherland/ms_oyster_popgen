@@ -81,18 +81,17 @@ Compare total number of reads per sample to the number of unique scaffolds being
 This produces a graph as well as some summary statistics.   
 
 ### Remove problematic individuals
+Make directory to remove problematic or off-project samples.    
+`mkdir 04-all_samples/removed_samples`
+
 This individual was found to have very low mapping relative to read counts, so remove it:   
 `mv 04-all_samples/PIP_631.* 04-all_samples/removed_samples/`    
 
 ### Remove individuals with too few reads     
-Note: first requires that the following script was run in prev. step:    
-`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
+Note: this step requires that you have already 'assessed results' above.      
 
 Identify samples with less than set number of reads    
 `awk '$2 < 1000000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove.txt`
-
-Make directory to remove too few read indiv.    
-`mkdir 04-all_samples/removed_samples`
 
 Move bam files into the removed_samples directory    
 `cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
@@ -103,22 +102,27 @@ Also move fq.gz files into the removed_samples directory
 Retain the original report files (e.g. reads, mappings):    
 `mv 04-all_samples/samples_to_remove.txt 04-all_samples/mappings_per_sample_table.txt 04-all_samples/reads_per_sample_table.txt ./reads_and_mappings_current.pdf 04-all_samples/removed_samples/`
 
-If you want to see how many individuals per population were retained:     
-`ls -1 04-all_samples/*.fq.gz | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c`
-
-Proceed to Stacks steps ahead [pstacks](#stacks-steps)
-
-If you want to know descriptive stats for only the retained samples, re-run the `assess_results.sh` script.   
+Recalculate sample stats with the limited number of samples:     
+`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
 
 ### Determine how many samples you have per population
+Optional:      
 `ls -1 04-all_samples/*.bam | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c`    
 
-### Rebuild a population map that only includes the post-filtered (by reads) samples
-`../ms_oyster_popgen/01_scripts/redo_population_map.sh`
-This will create an output file of `01-info_files/population_map_retained.txt`.     
-This file can be used an input to the following Rscript in order to merge closely-related populations:    
+### Remove filtered individuals from the population map
+Use the following to only keep retained samples in your population map:    
+`../ms_oyster_popgen/01_scripts/redo_population_map.sh`      
+
+This creates the file `01-info_files/population_map_retained.txt`.     
+
+### Merge closely-related collections in the population map
+Optional:      
+If you want to merge closely-related populations prior to stacks, use the following:      
 `rename_populations_in_map.R`
-Following this script, there will be a new file entitled `"01-info_files/population_map_retained_renamed.txt"`. If you want to use the merged populations, then point the populations module to this new population map file.     
+
+This will produce `"01-info_files/population_map_retained_renamed.txt"`.    
+
+At the final stage of stacks, when filtering out variants using the populations module, this new file is useful.      
 
 ## Stacks steps
 Note: we now have a runall option that will run through all stacks steps, using the parameters set in each individual script.
@@ -128,9 +132,10 @@ Note: we now have a runall option that will run through all stacks steps, using 
 Adjust the number of threads and launch    
 `./00-scripts/stacks_1b_pstacks.sh`
 
-Obtain some info on your pstacks alignment results from the log file:   
+Optional: obtain some info on your pstacks alignment results from the log file:   
 `./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
-Produces output `output_pstacks_results.csv` and graph with num reads per sample and average locus coverage per sample.
+Requires on an up-to-date assess results calculation.    
+This produces `output_pstacks_results.csv` and a graph with num reads per sample and average locus coverage per sample.     
 
 ### cstacks
 Edit the following script to use the -g flag (use genomic location) and turn off the -n flag (number mismatches allowed), and incr p (threads)   
@@ -162,29 +167,109 @@ Edit to add -g flag and remove -n flag
 Edit to add -g flag    
 `00-scripts/stacks_7_sstacks_rx.sh`
 
-### populations (round 2)
-Edit to remove lnl_lim
+### Populations (round 2) and single SNP export
 `00-scripts/stacks_8_populations_rx.sh`    
-When creating capture panel, also set: min_maf=0.01, p=<the # of pops>, r = 0.4 or 0.5      
-When going forward to do pop gen work, set the r value above to 0.7   
 
-### Extra filtering
-`00-scripts/05_filter_vcf.py -i 06-stacks_rx/batch_1.vcf -o 06-stacks_rx/batch_1_filt.vcf -c 1 -m 4 -I 8 -p 40 --use_percent -a 0.05 -s 20 -H 0.5 -C 200`     
-This provides additional filters of allelic imbalance (-I), max SNPs per locus, max heterozygosity (-H), and max depth (-C)     
+Edit parameters for single-SNP analysis:     
+```
+p=<number pops total>     
+r=0.7    
+min_maf=0.01
+M="population_map_retained.txt"
+#lnl_lim # remove if using -g flag
+plink="--plink"
+vcf="--vcf"
+write_single_snp
+```
 
-### Graph output 
-Unfiltered:    
-`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1.vcf -o graphs_before_filters_oyster -g`
+Need to know how many populations remain?    
+`awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uniq -c | less`    
 
-Filtered:    
-`./00-scripts/05_filter_vcf.py -i 05-stacks/batch_1_filt.vcf -o graphs_after_filters_oyster -g`
+```
+# Save output to analysis folders
+mkdir 09-diversity_stats    
+mv 06-stacks_rx/batch_1.vcf 09-diversity_stats
+mkdir 11-adegenet_analysis
+mv 06-stacks_rx/batch_1.plink.ped 06-stacks_rx/batch_1.plink.map 11-adegenet_analysis/
+```
 
-Combine:    
-`00-scripts/utility_scripts/combine_distribution_graphs.py graphs_before_filters_oyster graphs_after_filters_oyster graphs_both_oyster`
+Analyze diversity with VCF [Diversity](#nucleotide-diversity)     
+Analyze FST with plink ped/map [General Stats](#hierfstat-and-adegenet)
 
 
-## fineRADstructure
-Use multiple SNP per locus for fineRADstructure input (`06-stacks_rx/batch_1.haplotypes.tsv`)
+### Populations (round 2) and haplotype export
+Edit parameters for multiple-SNP analysis:      
+```
+#plink
+vcf # keep vcf for counting total SNP
+#write-single-snp
+vcf_haplotypes="--vcf_haplotypes"
+```
+
+Compare total numbers of SNPs and total number of loci using:    
+`grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l`    
+`grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l`     
+
+Analyze relatedness by shared haplotypes with the haplotype VCF [fineRADstructure](#fineradstructure)    
+
+```
+# Save haplotype output to analysis folder
+mkdir 08-fineRADstructure
+mv 06-stacks_rx/batch_1.haplotypes.vcf  08-fineRADstructure 
+```
+
+
+
+## Nucleotide diversity
+Uses the single SNP VCF moved to `09-diversity_stats` in a previous step.    
+Use automated script to get sample names for each data subset, then calculate genetic diversity (Pi) for each subset with vcftools.       
+`../ms_oyster_popgen/01_scripts/nuc_diversity.sh`     
+
+The script will generate a per locus pi value for the following sets of samples:      
+1. Hisnit/Pendrell/Pipestem/Serpentine 
+2. BC wild-to-farm (PENF)
+3. Rosewall
+4. DeepBay
+5. FranceW
+6. FranceC
+7. China Farm 1 (QDC)
+8. China Farm 2 (RSC)
+9. China Wild (CHN)
+10. China wild-to-farm (CHNF)
+11. Guernsey
+12. Japan        
+
+Also obtain Fis per individual:    
+```
+vcftools --vcf 09-diversity_stats/batch_1.vcf --het    
+# vcftools outputs the data to the working directory
+mv out.het 09-diversity_stats/batch_1.het
+```
+
+Then use the RScript `../ms_oyster_popgen/diversity_comparison.R`    
+
+## hierfstat and adegenet
+Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
+
+Generate input file for adegenet:    
+`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.01 --recodeA --noweb --out 06-stacks_rx/batch_1`
+
+Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
+This script will allow you to import the data, build a neighbour-joining tree, perform PCA, DAPC, and bootstrap Fst values for all populations. The script will end with a conversion to a genind object from genlight, and saving out as `11-other_stats/adegenet_output.RData`.    
+
+Next, use the script `01_scripts/adegenet_sep_pops.R` to import the genind object from above, then perform various stats on separated subcomponents of the full dataset. For example:    
+* All local samples from BC
+* Spatial vs. temporal in BC (Hisnit and Serpentine)
+* Selection experiment BC
+* Selection experiment France
+* Selection experiment China
+
+Result figures and tables will be labeled using their respective subcomponent, and placed in the `11-other_stats` folder.     
+
+
+## Haplotype Analysis
+### fineRADstructure
+Use multiple SNP per locus for fineRADstructure input (`06-stacks_rx/batch_1.haplotypes.tsv`)   
 
 Make a new directory, move the haplotypes text file to this new directory, and format the file as an input to fineRADstructure:    
 ```
@@ -211,56 +296,7 @@ Then plot using the Rscripts available from the following website shown above:
 This will produce plots in the working directory.    
 
 
-## hierfstat and adegenet
-Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
-
-Generate input file for adegenet:    
-`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.01 --recodeA --noweb --out 06-stacks_rx/batch_1`
-
-Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
-This script will allow you to import the data, build a neighbour-joining tree, perform PCA, DAPC, and bootstrap Fst values for all populations. The script will end with a conversion to a genind object from genlight, and saving out as `11-other_stats/adegenet_output.RData`.    
-
-Next, use the script `01_scripts/adegenet_sep_pops.R` to import the genind object from above, then perform various stats on separated subcomponents of the full dataset. For example:    
-* All local samples from BC
-* Spatial vs. temporal in BC (Hisnit and Serpentine)
-* Selection experiment BC
-* Selection experiment France
-* Selection experiment China
-
-Result figures and tables will be labeled using their respective subcomponent, and placed in the `11-other_stats` folder.     
-
-## Nucleotide diversity
-Use a single SNP per locus for this, and move the output vcf to a new directory.     
-```
-mkdir 09-diversity_stats
-cp 06-stacks_rx/batch_1.vcf 09-diversity_stats/
-```
-
-Use automated script to get sample names for each data subset, then calculate genetic diversity (Pi) for each subset with vcftools.       
-The script will generate a per locus pi value for the following sets of samples:      
-1. Hisnit/Pendrell/Pipestem/Serpentine 
-2. BC wild-to-farm (PENF)
-3. Rosewall
-4. DeepBay
-5. FranceW
-6. FranceC
-7. China Farm 1 (QDC)
-8. China Farm 2 (RSC)
-9. China Wild (CHN)
-10. China wild-to-farm (CHNF)
-11. Guernsey
-12. Japan        
-`../ms_oyster_popgen/01_scripts/nuc_diversity.sh`
-
-Also obtain Fis per individual:    
-```
-vcftools --vcf 09-diversity_stats/batch_1.vcf --het    
-mv out.het 09-diversity_stats/batch_1.het
-```
-
-Then use the RScript `diversity_comparison.R`    
-
-## Other Methods 
+## Other Utilities 
 Proceed to:   
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
