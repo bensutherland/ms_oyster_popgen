@@ -6,7 +6,7 @@
 
 # Set working directory
 # Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data")
+setwd("~/Documents/01_moore_oyster_project/stacks_workflow")
 
 # Wayne
 # setwd("~/Documents/miller/00_Moore_oyster_project/04_analysis/stacks_workflow")
