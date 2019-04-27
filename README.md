@@ -136,8 +136,8 @@ Edit the following scripts:
 
 
 ### Run automatically
-_Note: use the runall option to run this entire section_
-_*to be updated* for stacks v2.0_
+_Note: use the runall option to run this entire section_       
+_*to be updated* for stacks v2.0_       
 `./../ms_oyster_popgen/01_scripts/runall_stacks.sh`
 
 ### Run individual steps manually: 
@@ -149,13 +149,14 @@ _*to be updated* for stacks v2.0_
 ```
 
 ### Obtain data for different analyses: 
-The following steps will provide the outputs needed for downstream analyses. Each individual numbered step will provide a different output needed. All edits required are to: `./00-scripts/stacks2_2_populations.sh`.       
+The following steps will provide the outputs needed for downstream analyses. Each individual numbered step will provide a different output needed. All edits required are to: `./00-scripts/stacks2_2_populations.sh`       
 
 **1. Identify loci out of HWE**
 ```
 # Add flag --hwe
 # Re-run
 ./00-scripts/stacks2_2_populations.sh
+
 # Gain list of loci out of HWE
 # Use as blacklist in future steps
 ```
@@ -165,6 +166,7 @@ The following steps will provide the outputs needed for downstream analyses. Eac
 # Toggle on blacklist flag (-B) pointing to list of loci out of HWE
 # Toggle on single snp flag (--write-single-snp)
 # Re-run
+./00-scripts/stacks2_2_populations.sh
 
 # Observe number of samples per populations remaining
 awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uniq -c | less
