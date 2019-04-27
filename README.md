@@ -77,17 +77,22 @@ Produces:
 # A graph of number reads and aligned reads
 # a graph of number reads and scaffolds mapped
 ```
-Calculate total reads in all samples:     
-`awk '{ print $2 } ' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc`
-Calculate total reads before de-multiplexing (note: divide by 4 due to fastqc):   
-`for i in $(ls 02-raw/*.fastq.gz) ; do echo $i ; gunzip -c $i | wc -l ; done`
+
+Other calculations:
+```
+# Total reads in all samples:     
+awk '{ print $2 } ' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc
+# Total reads before de-multiplexing (note: divide by 4 due to fastqc):   
+for i in $(ls 02-raw/*.fastq.gz) ; do echo $i ; gunzip -c $i | wc -l ; done
+```
 
 ### c. Filter out low reads/alignments individuals
 Make directory to remove samples:    
 `mkdir 04-all_samples/removed_samples`
 
 1. Remove specific individuals (e.g. one with low alignments):   
-`mv 04-all_samples/PIP_631.* 04-all_samples/removed_samples/`    
+`mv 04-all_samples/PIP_631.* 04-all_samples/removed_samples/`   
+
 2. Remove individuals with too few reads:     
 (_note: requires 'Inspect alignment results' output_).      
 ```
@@ -104,27 +109,23 @@ mv 04-all_samples/samples_to_remove.txt 04-all_samples/mappings_per_sample_table
 ```
 
 ### d. Characterize input samples and populations 
-Determine how many samples you have per population
-Optional:      
-`ls -1 04-all_samples/*.bam | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c`    
+```
+# Calculate the number of samples per population
+ls -1 04-all_samples/*.bam | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c
+# Reconstruct population map with only retained individuals 
+../ms_oyster_popgen/01_scripts/redo_population_map.sh
+# Produces: 01-info_files/population_map_retained.txt
+```
+Optional to merge closely-related collections in the population map based on previous analyses:     
+_Update: this may be no longer necessary because of the two tiers allowed in the map file_
+```
+./rename_populations_in_map.R
+# Produces: 01-info_files/population_map_retained_renamed.txt
+# This can be useful for the populations module (below)
+```
 
-### Remove filtered individuals from the population map
-Use the following to only keep retained samples in your population map:    
-`../ms_oyster_popgen/01_scripts/redo_population_map.sh`      
-
-This creates the file `01-info_files/population_map_retained.txt`.     
-
-### Merge closely-related collections in the population map
-Optional:      
-If you want to merge closely-related populations prior to stacks, use the following:      
-`rename_populations_in_map.R`
-
-This will produce `"01-info_files/population_map_retained_renamed.txt"`.    
-
-At the final stage of stacks, when filtering out variants using the populations module, this new file is useful.      
-
-# Stacks steps
-Note: we now have a runall option that will run through all stacks steps, using the parameters set in each individual script.
+## 3. Genotyping
+_Note: use the runall option to run this entire section_
 `./../ms_oyster_popgen/01_scripts/runall_stacks.sh`
 
 ### pstacks
