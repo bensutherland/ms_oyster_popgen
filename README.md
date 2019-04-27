@@ -14,7 +14,7 @@ Primarily uses the repo https://github.com/bensutherland/stacks_workflow, which 
 `ape` (install within R)     
 `libxml2-dev` (req'd for XML, install w/ apt-get)       
 `XML`    
-`fastStructure`    http://rajanil.github.io/fastStructure/
+`fastStructure`    http://rajanil.github.io/fastStructure/     
 `stacks_workflow` from E. Normandeau, use fork: https://github.com/bensutherland/stacks_workflow        
 
 All analysis is done within the `stacks_workflow` repo, which should be contained within the same parent directory as this repo (at the same level).       
@@ -124,112 +124,93 @@ _Update: this may be no longer necessary because of the two tiers allowed in the
 # This can be useful for the populations module (below)
 ```
 
-## 3. Genotyping
-_Note: use the runall option to run this entire section_
-`./../ms_oyster_popgen/01_scripts/runall_stacks.sh`
-
-### pstacks
-Adjust the number of threads and launch    
-`./00-scripts/stacks_1b_pstacks.sh`
-
-Optional: obtain some info on your pstacks alignment results from the log file:   
-`./../ms_oyster_popgen/01_scripts/01_assess_pstacks.sh`   
-Requires on an up-to-date assess results calculation.    
-This produces `output_pstacks_results.csv` and a graph with num reads per sample and average locus coverage per sample.     
-
-### cstacks
-Edit the following script to use the -g flag (use genomic location) and turn off the -n flag (number mismatches allowed), and incr p (threads)   
-`./00-scripts/stacks_2_cstacks.sh`
-
-Assessment: per sample, number of loci matched to the catalog, number of loci added to catalog (starts at second sample).    
-`./../ms_oyster_popgen/01_scripts/02_assess_cstacks.sh`     
-Produces output `cstacks_output_table.csv`
-
-### sstacks
-Edit following script to use -g flag
-`./00-scripts/stacks_3_sstacks.sh`     
-Log file can be viewed to see how many loci are matched against the catalog. 
-
-### populations
-Create .vcf with minimal filtering.    
-Edit following script to remove the log-likelihood filter which is not working with alignment based data (--lnl_lim)     
-`./00-scripts/stacks_4_populations.sh`
-
-### rxstacks
-Edit the following script to remove the log-likelihood filter (--lnl_filter ; --lnl_lim -10)    
-`00-scripts/stacks_5b_rxstacks.sh`
-
-### cstacks (round 2)
-Edit to add -g flag and remove -n flag    
-`00-scripts/stacks_6_cstacks_rx.sh`
-
-### sstacks (round 2) 
-Edit to add -g flag    
-`00-scripts/stacks_7_sstacks_rx.sh`
-
-# Data export from Stacks
-### Identify loci out of HWE
-First, check which loci are not in HWE so they can be screened out of most analyses below.   
-Edit parameters to include the following:     
+## 3. Genotype
+Edit the following scripts:
+(#TODO: to add...)
 -r 0.7       
 -p 15      
 -m 4      
 -a 0.01     
---hwe       
+--plink     
+--in-vcf     
 
-Then take the list of loci out of hwe and use as a blacklist (-B) to keep these markers out of the analysis for the studies not searching for signatures of selection.     
 
-## Populations A: single SNP export, all in HWE 
-`00-scripts/stacks_8_populations_rx.sh`    
+### Run automatically
+_Note: use the runall option to run this entire section_
+_*to be updated* for stacks v2.0_
+`./../ms_oyster_popgen/01_scripts/runall_stacks.sh`
 
-Edit parameters for single-SNP analysis:     
+### Run individual steps manually: 
 ```
-p=<number pops total>     
-r=0.7    
-min_maf=0.01
-M="population_map_retained.txt"
-#lnl_lim # remove if using -g flag
-plink="--plink"
-vcf="--vcf"
-write_single_snp
-#TODO# Add -B to remove loci out of hwe
+# Genotype using alignments 
+./00-scripts/stacks2_1_gstacks.sh
+# Filter identified variants
+./00-scripts/stacks2_2_populations.sh
 ```
 
-Need to know how many populations remain?    
-`awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uniq -c | less`    
+### Obtain data for different analyses: 
+The following steps will provide the outputs needed for downstream analyses. Each individual numbered step will provide a different output needed. All edits required are to: `./00-scripts/stacks2_2_populations.sh`.       
 
+**1. Identify loci out of HWE**
 ```
-# Save output to analysis folders
+# Add flag --hwe
+# Re-run
+./00-scripts/stacks2_2_populations.sh
+# Gain list of loci out of HWE
+# Use as blacklist in future steps
+```
+
+**2. Filter and output loci for population genetic analysis (single SNP)**
+```
+# Toggle on blacklist flag (-B) pointing to list of loci out of HWE
+# Toggle on single snp flag (--write-single-snp)
+# Re-run
+
+# Observe number of samples per populations remaining
+awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uniq -c | less
+
+# Save outputs to analysis folder
 mkdir 09-diversity_stats    
 mv 06-stacks_rx/batch_1.vcf 09-diversity_stats
+
 mkdir 11-adegenet_analysis
 mv 06-stacks_rx/batch_1.plink.ped 06-stacks_rx/batch_1.plink.map 11-adegenet_analysis/
 ```
 
-Analyze diversity with VCF [Diversity](#nucleotide-diversity)     
-Analyze FST with plink ped/map [General Stats](#hierfstat-and-adegenet)
+Provides output for:
+Diversity analysis: [Diversity Analysis](#nucleotide-diversity)     
+Population differentiation analysis:[General Stats](#hierfstat-and-adegenet)
 
-## Populations B: haplotype export, all in HWE
-Edit parameters for multiple-SNP analysis:      
+**3. Filter and output loci for population genetic analysis (single SNP)**
 ```
-#plink
-vcf # keep vcf for counting total SNP
-#write-single-snp
-vcf_haplotypes="--vcf_haplotypes"
-#TODO# Add -B to remove loci out of hwe
-```
+# Toggle on blacklist flag (-B) pointing to list of loci out of HWE
+# Toggle OFF single snp flag (--write-single-snp)
 
-Compare total numbers of SNPs and total number of loci using:    
-`grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l`    
-`grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l`     
+# Compare number SNP vs number loci
+grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l
+grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l
 
-```
-# Save haplotype output to analysis folder
+# Save outputs to analysis folder
 mkdir 08-fineRADstructure
 mv 06-stacks_rx/batch_1.haplotypes.vcf  08-fineRADstructure 
 ```
 
-Analyze relatedness by shared haplotypes with the haplotype VCF [fineRADstructure](#fineradstructure)    
+Provides output for:    
+Relatedness via shared haplotypes [fineRADstructure](#fineradstructure)      
+
+**4. Filter and output loci for selection/domestication analysis**      
+```
+# Toggle OFF blacklist flag (-B) pointing to list of loci out of HWE
+# Toggle on single snp flag (--write-single-snp)
+
+# Save outputs to analysis folder
+mkdir 24-selection
+mv 06-stacks_rx/batch_1.vcf 24-selection
+```
+
+Provides output for:    
+Selection detection [to_add](#to_add)      
+
 
 ## Nucleotide diversity
 Uses the single SNP VCF moved to `09-diversity_stats` (above).    
