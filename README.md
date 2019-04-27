@@ -221,8 +221,9 @@ mv 06-stacks_rx/batch_1.haplotypes.vcf  08-fineRADstructure
 
 
 ## Nucleotide diversity
-Uses the single SNP VCF moved to `09-diversity_stats` in a previous step.    
-Use automated script to get sample names for each data subset, then calculate genetic diversity (Pi) for each subset with vcftools.       
+Uses the single SNP VCF moved to `09-diversity_stats` (above).    
+### a. Per-site nucleotide diversity
+Use automated script to get sample names for each data subset, then use vcftools to calculate per-site nucleotide diversity (Pi) for all sites in the VCF file for each subset.       
 `../ms_oyster_popgen/01_scripts/nuc_diversity.sh`     
 
 The script will generate a per locus pi value for the following sets of samples:      
@@ -239,7 +240,9 @@ The script will generate a per locus pi value for the following sets of samples:
 11. Guernsey
 12. Japan        
 
-Also obtain Fis per individual:    
+### b. Per-individual heterozygosity
+Calculate the inbreeding coefficient 'F' for each individual with vcftools:      
+
 ```
 vcftools --vcf 09-diversity_stats/batch_1.vcf --het    
 # vcftools outputs the data to the working directory
