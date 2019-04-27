@@ -3,7 +3,7 @@ Manuscript analysis instruction guide and associated scripts for the Moore Oyste
 Primarily uses the repo https://github.com/bensutherland/stacks_workflow, which is a fork of the original repo by Eric Normandeau https://github.com/enormandeau/stacks_workflow but customized for Stacks v2.0.       
 
 
-Requirements:    
+### Requirements    
 `cutadapt` https://cutadapt.readthedocs.io/en/stable/index.html    
 `fastqc` https://www.bioinformatics.babraham.ac.uk/projects/fastqc/   
 `multiqc` https://multiqc.info/   
@@ -19,7 +19,7 @@ Requirements:
 
 All analysis is done within the `stacks_workflow` repo, which should be contained within the same parent directory as this repo (at the same level).       
 
-## A. Preparing Data
+## 1. Preparing Data
 ### a. Set up 
 1. Put all raw data in `02-raw` using cp or cp -l    
 2. Prepare the sample info file (see template in repo sample_information.csv). Note: tab-delimited, even though name is .csv.    
@@ -57,55 +57,54 @@ Collect samples from multiple runs together and rename samples:
 Prepare the population map file:     
 `./00-scripts/04_prepare_population_map.sh`
 
-## B. Read alignments and removal of problematic individuals
+## 2. Align samples and quality filter on samples
 ### a. Align samples against the reference genome
-Here, use the _Crassostrea gigas_ assembly from NCBI    
-Index the reference genome for use with bwa   
-`bwa index GCA_000297895.1_oyster_v9_genomic.fna.gz`
+Index the reference genome with bwa, here using _Crassostrea gigas_:    
+`bwa index GCA_000297895.1_oyster_v9_genomic.fna.gz`    
 
-Edit the following script to point to the correct GENOMEFOLDER (full path!) and GENOME variables, then run it        
+Point the alignment script to the reference genome (full path) using the GENOMEFOLDER and GENOME variables, and run:         
 `00-scripts/bwa_mem_align_reads.sh 6`     
 
-Compare total number of reads to the total number of mappings per sample using the automated script:
+### b. Inspect alignment results
+Compare per-sample reads and alignments, and per-sample reads and number of aligned scaffolds:      
 `./../ms_oyster_popgen/01_scripts/assess_results.sh`    
-This produces files in `04-all_samples`: `reads_per_sample_table.txt` and `mappings_per_sample.txt` and a graph in the main directory of number reads per sample vs number of mappings.
+`./../ms_oyster_popgen/01_scripts/determine_number_unique_scaff_mapped.sh`    
 
-Want to see how many reads are present in total?    
+Produces:      
+```
+04-all_samples/reads_per_sample_table.txt
+04-all_samples/mappings_per_sample.txt
+# A graph of number reads and aligned reads
+# a graph of number reads and scaffolds mapped
+```
+Calculate total reads in all samples:     
 `awk '{ print $2 } ' 04-all_samples/reads_per_sample_table.txt | paste -sd+ - | bc`
-
-And before assigning (must divide by 4) :   
+Calculate total reads before de-multiplexing (note: divide by 4 due to fastqc):   
 `for i in $(ls 02-raw/*.fastq.gz) ; do echo $i ; gunzip -c $i | wc -l ; done`
 
-Compare total number of reads per sample to the number of unique scaffolds being mapped against using the script:    
-`./../ms_oyster_popgen/01_scripts/determine_number_unique_scaff_mapped.sh`    
-This produces a graph as well as some summary statistics.   
-
-### Remove problematic individuals
-Make directory to remove problematic or off-project samples.    
+### c. Filter out low reads/alignments individuals
+Make directory to remove samples:    
 `mkdir 04-all_samples/removed_samples`
 
-This individual was found to have very low mapping relative to read counts, so remove it:   
+1. Remove specific individuals (e.g. one with low alignments):   
 `mv 04-all_samples/PIP_631.* 04-all_samples/removed_samples/`    
+2. Remove individuals with too few reads:     
+(_note: requires 'Inspect alignment results' output_).      
+```
+# Identify samples with too few reads (here < 1000000)
+awk '$2 < 1000000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove.txt
 
-### Remove individuals with too few reads     
-Note: this step requires that you have already 'assessed results' above.      
+# Remove .bam, .fq.gz, and report files from analysis
+cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove.txt ) ; do mv $i removed_samples/ ; done ; cd ..
+cd 04-all_samples/ ;  for i in $(cat samples_to_remove.txt) ; do mv $i removed_samples/ ; done ; cd ..
+mv 04-all_samples/samples_to_remove.txt 04-all_samples/mappings_per_sample_table.txt 04-all_samples/reads_per_sample_table.txt ./reads_and_mappings_current.pdf 04-all_samples/removed_samples/
 
-Identify samples with less than set number of reads    
-`awk '$2 < 1000000 { print $1 } ' 04-all_samples/reads_per_sample_table.txt > 04-all_samples/samples_to_remove.txt`
+# Recalculate sample stats with retained samples
+./../ms_oyster_popgen/01_scripts/assess_results.sh
+```
 
-Move bam files into the removed_samples directory    
-`cd 04-all_samples/ ; for i in $(sed 's/\.fq\.gz/\.bam/g' samples_to_remove.txt ) ; do mv $i removed_samples/ ; done ; cd ..`
-
-Also move fq.gz files into the removed_samples directory    
-`cd 04-all_samples/ ;  for i in $(cat samples_to_remove.txt) ; do mv $i removed_samples/ ; done ; cd ..`   
-
-Retain the original report files (e.g. reads, mappings):    
-`mv 04-all_samples/samples_to_remove.txt 04-all_samples/mappings_per_sample_table.txt 04-all_samples/reads_per_sample_table.txt ./reads_and_mappings_current.pdf 04-all_samples/removed_samples/`
-
-Recalculate sample stats with the limited number of samples:     
-`./../ms_oyster_popgen/01_scripts/assess_results.sh`    
-
-### Determine how many samples you have per population
+### d. Characterize input samples and populations 
+Determine how many samples you have per population
 Optional:      
 `ls -1 04-all_samples/*.bam | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c`    
 
