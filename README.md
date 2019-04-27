@@ -124,7 +124,7 @@ This will produce `"01-info_files/population_map_retained_renamed.txt"`.
 
 At the final stage of stacks, when filtering out variants using the populations module, this new file is useful.      
 
-## Stacks steps
+# Stacks steps
 Note: we now have a runall option that will run through all stacks steps, using the parameters set in each individual script.
 `./../ms_oyster_popgen/01_scripts/runall_stacks.sh`
 
@@ -167,7 +167,19 @@ Edit to add -g flag and remove -n flag
 Edit to add -g flag    
 `00-scripts/stacks_7_sstacks_rx.sh`
 
-### Populations (round 2) and single SNP export
+# Data export from Stacks
+### Identify loci out of HWE
+First, check which loci are not in HWE so they can be screened out of most analyses below.   
+Edit parameters to include the following:     
+-r 0.7       
+-p 15      
+-m 4      
+-a 0.01     
+--hwe       
+
+Then take the list of loci out of hwe and use as a blacklist (-B) to keep these markers out of the analysis for the studies not searching for signatures of selection.     
+
+## Populations A: single SNP export, all in HWE 
 `00-scripts/stacks_8_populations_rx.sh`    
 
 Edit parameters for single-SNP analysis:     
@@ -180,6 +192,7 @@ M="population_map_retained.txt"
 plink="--plink"
 vcf="--vcf"
 write_single_snp
+#TODO# Add -B to remove loci out of hwe
 ```
 
 Need to know how many populations remain?    
@@ -196,21 +209,19 @@ mv 06-stacks_rx/batch_1.plink.ped 06-stacks_rx/batch_1.plink.map 11-adegenet_ana
 Analyze diversity with VCF [Diversity](#nucleotide-diversity)     
 Analyze FST with plink ped/map [General Stats](#hierfstat-and-adegenet)
 
-
-### Populations (round 2) and haplotype export
+## Populations B: haplotype export, all in HWE
 Edit parameters for multiple-SNP analysis:      
 ```
 #plink
 vcf # keep vcf for counting total SNP
 #write-single-snp
 vcf_haplotypes="--vcf_haplotypes"
+#TODO# Add -B to remove loci out of hwe
 ```
 
 Compare total numbers of SNPs and total number of loci using:    
 `grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l`    
 `grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l`     
-
-Analyze relatedness by shared haplotypes with the haplotype VCF [fineRADstructure](#fineradstructure)    
 
 ```
 # Save haplotype output to analysis folder
@@ -218,7 +229,7 @@ mkdir 08-fineRADstructure
 mv 06-stacks_rx/batch_1.haplotypes.vcf  08-fineRADstructure 
 ```
 
-
+Analyze relatedness by shared haplotypes with the haplotype VCF [fineRADstructure](#fineradstructure)    
 
 ## Nucleotide diversity
 Uses the single SNP VCF moved to `09-diversity_stats` (above).    
