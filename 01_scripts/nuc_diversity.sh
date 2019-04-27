@@ -1,10 +1,10 @@
 #!/bin/bash
-# First obtain a list of samples containing keywords (part 1) then calculate Pi for each of these groups of samples.    
-# Run this script from within the stacks_workflow main repo
+# Generate lists of samples for each sample type by keywords (Part 1) 
+# Calculate nucleotide diversity (pi) for each group.    
 
 DIVERSITY_FOLDER="09-diversity_stats"
 
-# Part 1: Collect sample lists for comparison groups 
+# Part 1: Generate lists of samples
 # BC Wild = Hisnit, Pendrell, Pipestem and Serpentine
 vcf-query -l $DIVERSITY_FOLDER/batch_1.vcf |
     grep -E 'HIS_|PEN_|PIP_|SER_' - \
@@ -66,7 +66,7 @@ vcf-query -l $DIVERSITY_FOLDER/batch_1.vcf |
         > $DIVERSITY_FOLDER/japan_samples.txt
 
 
-# Part 2. Loop across the different 'samples' list files and calculate site pi
+# Part 2. Loop across the sample lists above to calculate per locus pi
 ls -1 09-diversity_stats/*_samples.txt |
         perl -pe 's/\.txt//' |
         while read i
