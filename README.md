@@ -1,65 +1,65 @@
-# MOP oyster population genetics 
-Instruction guide and scripts for the Moore Oyster Project genotyping using Eric Normandeau's stacks_workflow pipeline    
-https://github.com/enormandeau/stacks_workflow
+# Moore Oyster Project - Population Genetics
+Manuscript analysis instruction guide and associated scripts for the Moore Oyster Project Population Genetics analysis.      
+Primarily uses the repo https://github.com/bensutherland/stacks_workflow, which is a fork of the original repo by Eric Normandeau https://github.com/enormandeau/stacks_workflow but customized for Stacks v2.0.       
+
 
 Requirements:    
-`cutadapt`    
-`fastqc`   
-`multiqc`   
-`bwa`   
-`samtools`    
-`stacks`    
-`fineRADstructure`    http://cichlid.gurdon.cam.ac.uk/fineRADstructure.html
-`ape`   (install within R)   
-`libxml2-dev`   (req'd for XML) `sudo apt-get install libxml2-dev`
+`cutadapt` https://cutadapt.readthedocs.io/en/stable/index.html    
+`fastqc` https://www.bioinformatics.babraham.ac.uk/projects/fastqc/   
+`multiqc` https://multiqc.info/   
+`bwa` http://bio-bwa.sourceforge.net/   
+`samtools (v.1.9)` http://www.htslib.org/    
+`stacks (v2.3e)` http://catchenlab.life.illinois.edu/stacks/     
+`fineRADstructure` http://cichlid.gurdon.cam.ac.uk/fineRADstructure.html     
+`ape` (install within R)     
+`libxml2-dev` (req'd for XML, install w/ apt-get)       
 `XML`    
 `fastStructure`    http://rajanil.github.io/fastStructure/
+`stacks_workflow` from E. Normandeau, use fork: https://github.com/bensutherland/stacks_workflow        
 
-## Prepare Data
+All analysis is done within the `stacks_workflow` repo, which should be contained within the same parent directory as this repo (at the same level).       
 
-### Setup 
-
+## A. Preparing Data
+### a. Set up 
 1. Put all raw data in `02-raw` using cp or cp -l    
+2. Prepare the sample info file (see template in repo sample_information.csv). Note: tab-delimited, even though name is .csv.    
+3. Download reference genome (oyster_v9): https://www.ncbi.nlm.nih.gov/assembly/GCF_000297895.1/      
+note: source citation is Zhang et al. 2012, Nature. https://www.ncbi.nlm.nih.gov/pubmed/22992520/       
 
-2. Manually prepare a sample info file (see example file sample_information.csv).   
-This must be a tab-delimited text file, but the file name is .csv.    
 
-### Cleanup
-
-Run fastqc and summarize results    
+### b. Clean data
+View raw data with fastqc and multiqc:    
 ```
 mkdir 02-raw/fastqc_raw    
 fastqc 02-raw/*.fastq.gz -o 02-raw/fastqc_raw/ -t 5    
 multiqc -o 02-raw/fastqc_raw/ 02-raw/fastqc_raw   
 ```
+Prepare lane_info.txt file with automated script:    
+`./00-scripts/00_prepare_lane_info.sh`    
 
-Use automated script to prep lane_info.txt file    
-`./00-scripts/00_prepare_lane_info.sh`
-
-Trim for adapters and too short reads    
+Trim adapters and too short reads:    
 `./00-scripts/01_cutadapt.sh <numCPUs>`    
-Record the results of the trimming for reference
 
-Run fastqc on trimmed data and summarize results     
+View trimmed data with fastqc and multiqc:     
 ```
 mkdir 02-raw/trimmed/fastqc_trimmed/    
 fastqc -t 5 02-raw/trimmed/*.fastq.gz -o 02-raw/trimmed/fastqc_trimmed/
 multiqc -o 02-raw/trimmed/fastqc_trimmed/ 02-raw/trimmed/fastqc_trimmed       
 ```
 
-### De-multiplex
-Trim with process_radtags in parallel (here 8 cores)     
+### c. De-multiplex reads
+Detect cut sites and barcodes to de-multiplex and truncate reads to 80 bp with process_radtags in parallel:     
 `00-scripts/02_process_radtags_2_enzymes_parallel.sh 80 nsiI mspI 8`    
 
-Use automated script to rename and copy samples    
+Collect samples from multiple runs together and rename samples:    
 `./00-scripts/03_rename_samples.sh`
 
-Prepare for Stacks    
-Use automated script to prepare the population map file     
+Prepare the population map file:     
 `./00-scripts/04_prepare_population_map.sh`
 
-### Align samples against reference genome
-Here use C. gigas assembly from NCBI    
+## B. Read alignments and removal of problematic individuals
+### a. Align samples against the reference genome
+Here, use the _Crassostrea gigas_ assembly from NCBI    
 Index the reference genome for use with bwa   
 `bwa index GCA_000297895.1_oyster_v9_genomic.fna.gz`
 
