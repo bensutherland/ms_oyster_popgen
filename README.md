@@ -234,12 +234,7 @@ The script will generate a per locus pi value for the following sets of samples:
 
 #### ii. Per-individual heterozygosity
 Calculate the inbreeding coefficient 'F' for each individual with vcftools:      
-
-```
-vcftools --vcf 09-diversity_stats/batch_1.vcf --het    
-# vcftools outputs the data to the working directory
-mv out.het 09-diversity_stats/batch_1.het
-```
+`../ms_oyster_popgen/01_scripts/heterozygosity.sh`      
 
 Then use the RScript `../ms_oyster_popgen/diversity_comparison.R`    
 
