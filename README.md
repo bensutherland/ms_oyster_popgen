@@ -210,10 +210,11 @@ mv 07-filtered_vcfs/* 24-selection
 Provides output for:    
 Selection detection [to_add](#to_add)      
 
-
-## Nucleotide diversity
+## 4. Diversity analysis
+### A. Nucleotide diversity
 Uses the single SNP VCF moved to `09-diversity_stats` (above).    
-### a. Per-site nucleotide diversity
+
+#### i. Per-site nucleotide diversity
 Use automated script to get sample names for each data subset, then use vcftools to calculate per-site nucleotide diversity (Pi) for all sites in the VCF file for each subset.       
 `../ms_oyster_popgen/01_scripts/nuc_diversity.sh`     
 
@@ -231,7 +232,7 @@ The script will generate a per locus pi value for the following sets of samples:
 11. Guernsey
 12. Japan        
 
-### b. Per-individual heterozygosity
+#### ii. Per-individual heterozygosity
 Calculate the inbreeding coefficient 'F' for each individual with vcftools:      
 
 ```
@@ -242,7 +243,8 @@ mv out.het 09-diversity_stats/batch_1.het
 
 Then use the RScript `../ms_oyster_popgen/diversity_comparison.R`    
 
-## hierfstat and adegenet
+## 5. Genetic differentiation and relatedness
+### A. hierfstat and adegenet
 Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
 
 Generate input file for adegenet:    
@@ -261,8 +263,8 @@ Next, use the script `01_scripts/adegenet_sep_pops.R` to import the genind objec
 Result figures and tables will be labeled using their respective subcomponent, and placed in the `11-other_stats` folder.     
 
 
-## Haplotype Analysis
-### fineRADstructure
+### B. Haplotype Analysis
+#### i. fineRADstructure
 Use multiple SNP per locus for fineRADstructure input (`06-stacks_rx/batch_1.haplotypes.tsv`)   
 
 Make a new directory, move the haplotypes text file to this new directory, and format the file as an input to fineRADstructure:    
