@@ -126,7 +126,7 @@ _Update: this may be no longer necessary because of the two tiers allowed in the
 
 ## 3. Genotype
 Edit the following scripts:
-(#TODO: to add...)
+(#TODO: to add...)     
 -r 0.7       
 -p 15      
 -m 4      
@@ -134,13 +134,7 @@ Edit the following scripts:
 --plink     
 --in-vcf     
 
-
-### Run automatically
-_Note: use the runall option to run this entire section_       
-_*to be updated* for stacks v2.0_       
-`./../ms_oyster_popgen/01_scripts/runall_stacks.sh`
-
-### Run individual steps manually: 
+### Run Stacks v2.0 individual steps:     
 ```
 # Genotype using alignments 
 ./00-scripts/stacks2_1_gstacks.sh
@@ -150,6 +144,9 @@ _*to be updated* for stacks v2.0_
 
 ### Obtain data for different analyses: 
 The following steps will provide the outputs needed for downstream analyses. Each individual numbered step will provide a different output needed. All edits required are to: `./00-scripts/stacks2_2_populations.sh`       
+
+For simplicity, an output script has been created that will iteratively run populations with the following changes identified below. Run the following script in replacement of the following steps:      
+`./../ms_oyster_popgen/01_scripts/runall_outputs.sh`     
 
 **1. Identify loci out of HWE**
 ```
@@ -173,17 +170,17 @@ awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uni
 
 # Save outputs to analysis folder
 mkdir 09-diversity_stats    
-mv 06-stacks_rx/batch_1.vcf 09-diversity_stats
+cp 07-filtered_vcfs/populations.snps.vcf 09-diversity_stats
 
 mkdir 11-adegenet_analysis
-mv 06-stacks_rx/batch_1.plink.ped 06-stacks_rx/batch_1.plink.map 11-adegenet_analysis/
+cp 07-filtered_vcfs/*plink* 11-adegenet_analysis
 ```
 
 Provides output for:
 Diversity analysis: [Diversity Analysis](#nucleotide-diversity)     
 Population differentiation analysis:[General Stats](#hierfstat-and-adegenet)
 
-**3. Filter and output loci for population genetic analysis (single SNP)**
+**3. Filter and output loci for population genetic analysis (multiple SNP)**
 ```
 # Toggle on blacklist flag (-B) pointing to list of loci out of HWE
 # Toggle OFF single snp flag (--write-single-snp)
@@ -194,7 +191,7 @@ grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l
 
 # Save outputs to analysis folder
 mkdir 08-fineRADstructure
-mv 06-stacks_rx/batch_1.haplotypes.vcf  08-fineRADstructure 
+cp 07-filtered_vcfs/populations.haps.vcf 08-fineRADstructure
 ```
 
 Provides output for:    
@@ -207,7 +204,7 @@ Relatedness via shared haplotypes [fineRADstructure](#fineradstructure)
 
 # Save outputs to analysis folder
 mkdir 24-selection
-mv 06-stacks_rx/batch_1.vcf 24-selection
+mv 07-filtered_vcfs/* 24-selection
 ```
 
 Provides output for:    
