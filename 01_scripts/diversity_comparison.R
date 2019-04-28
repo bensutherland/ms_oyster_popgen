@@ -11,7 +11,7 @@ require("rlist")
 # if on a different system, prompt for working directory
 if(Sys.info()["nodename"] == "stark"){ 
   print("On Stark, ready to go")
-  setwd("/mnt/data/01_moore_oyster_project/stacks_workflow_popgen/09-diversity_stats/") # stark
+  setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/09-diversity_stats/") # stark
 } else if(Sys.info()["nodename"] == "Xavier"){
   print("On Xavier, ready to go")
   setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data/09-diversity_stats/") # Xavier
@@ -168,7 +168,7 @@ summary(aov(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop))
 
 
 #### 2. Heterozygosity ####
-het <- read.table("batch_1.het", header = T, row.names = 1)
+het <- read.table("populations.snps.het", header = T, row.names = 1)
 head(het)
 het$sample <- rownames(het)
 head(het)
