@@ -4,34 +4,49 @@
 # Clean space
 # rm(list=ls())
 
-# Set working directory
-# Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow")
+## Install and load packages
+# install.packages("purrr")
+# install.packages("dplyr")
+# install.packages("ape")
+# install.packages("pegas")
+# install.packages("seqinr")
+# install.packages("ggplot2")
 
-# Wayne
-# setwd("~/Documents/miller/00_Moore_oyster_project/04_analysis/stacks_workflow")
-
-# Resource packages required:
-#install.packages("purrr")
-library("purrr")
-#install.packages("dplyr")
-library("dplyr")
-
+# Specifics for hierfstat and adegenet
 # require(devtools)
 # install_version("hierfstat", version = "0.04-22", repos = "http://cran.us.r-project.org") # compoplot functional
 # install_github("jgx65/hierfstat") # compoplot not functional
-library(hierfstat)
 
-library("ape")
-library("pegas")
-library("seqinr")
-library("ggplot2")
+# install.packages("hierfstat")
+library(hierfstat)
 
 # install_version("adegenet", version = "2.0.1", repos = "http://cran.us.r-project.org") # compoplot functional
 # install.packages("adegenet") # compoplot not functional
 library("adegenet")
 
-sessionInfo()
+
+library("purrr")
+library("dplyr")
+library("ape")
+library("pegas")
+library("seqinr")
+library("ggplot2")
+
+
+# Set working directory for stark or xavier
+# if on a different system, prompt for working directory
+if(Sys.info()["nodename"] == "stark"){ 
+  print("On Stark, ready to go")
+  setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/09-diversity_stats/") # stark
+} else if(Sys.info()["nodename"] == "Xavier"){
+  print("On Xavier, ready to go")
+  setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data/09-diversity_stats/") # Xavier
+} else {
+  print("You are on an unrecognized system, please set working directory manually")
+}
+
+## Info
+# sessionInfo()
 
 #### 1. Import Genomics (genlight) ####
 # The following was produced by plink out of stacks (using .ped and .map)
