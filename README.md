@@ -239,23 +239,27 @@ Calculate the inbreeding coefficient 'F' for each individual with vcftools:
 Then use the RScript `../ms_oyster_popgen/diversity_comparison.R`    
 
 ## 5. Genetic differentiation and relatedness
-### A. hierfstat and adegenet
-Use a single SNP per locus for this, and output in plink format, which will allow you to move genomic SNP data into adegenet.    
+### A. Genetic differentiation
+Input: single SNP populations output in plink format to input to adegenet.    
 
-Generate input file for adegenet:    
-`plink --ped 06-stacks_rx/batch_1.plink.ped --map 06-stacks_rx/batch_1.plink.map --maf 0.01 --recodeA --noweb --out 06-stacks_rx/batch_1`
+Convert plink to adegenet input:    
+`plink --ped 11-adegenet_analysis/populations.plink.ped --map 11-adegenet_analysis/populations.plink.map --maf 0.01 --recode --noweb --out 11-adegenet_analysis/populations_single_snp_HWE`      
 
-Go to the Rscript `01_scripts/adegenet.R` and load in the .raw file from plink.      
-This script will allow you to import the data, build a neighbour-joining tree, perform PCA, DAPC, and bootstrap Fst values for all populations. The script will end with a conversion to a genind object from genlight, and saving out as `11-other_stats/adegenet_output.RData`.    
+Open Rscript `01_scripts/adegenet.R` and load in the plink .raw file.      
+Build NJ tree, PCA, dAPC, bootstrapped Fst vals per population pair.       
+Will also output genlight, saved as `11-other_stats/adegenet_output.RData`      
 
-Next, use the script `01_scripts/adegenet_sep_pops.R` to import the genind object from above, then perform various stats on separated subcomponents of the full dataset. For example:    
+Open Rscript `01_scripts/adegenet_sep_pops.R` to import genind to analyze differentiation in several specific comparisons:        
 * All local samples from BC
 * Spatial vs. temporal in BC (Hisnit and Serpentine)
+
+Outputs with analysis-specific label to `11-other_stats`
+
+
+(#TODO#) To move to selection section:     
 * Selection experiment BC
 * Selection experiment France
 * Selection experiment China
-
-Result figures and tables will be labeled using their respective subcomponent, and placed in the `11-other_stats` folder.     
 
 
 ### B. Haplotype Analysis
