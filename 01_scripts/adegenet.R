@@ -323,50 +323,14 @@ nboots <- 1000
 
 save.image(file = "11-other_stats/adegenet_output.RData") # Save out this data
 
-
-
-
-
-# TO REMOVE
-# 
-# 
-# 
-# #### 9. Hobs vs Hexp ####
+# #### Other unused steps ####
 # # Descriptive Statistics on genind file
 # div <- summary(my.data.gid) # genetic diversity w/ adegenet
 # str(div) # What is contained within this summary object
 # # contains: sample size, sample size by pop, number loci and names, population IDs, % NA, Hobs, Hexp
 # 
-# # Plotting Hobs by Hexp
-# par(mfrow=c(1,3), mar=c(4,3,3,3))
-# plot(div$Hobs
-#      , xlab="Locus index", ylab="Obs. Het."
-#      , main = "Observed heterozygosity per locus"
-#      , ylim = c(0,1))
-# # Note that stacks calculates obs het diff than other programs.. (missing data is not considered properly)
-# plot(div$Hexp
-#      , xlab="Locus index", ylab="Exp. Het."
-#      , main = "Expected heterozygosity per locus"
-#      , ylim = c(0,1))
-# 
-# # Plot as a function of each other:
-# plot(div$Hobs, div$Hexp
-#      , xlab = "Obs. Het.", ylab="Exp. Het."
-#      , main = "Expected Heterozygosity vs. Observed"
-#      , ylim = c(0,1))
-# abline(0, 1, lty=2)
-# 
-# 
-# ##### 11. Other Fstats ####
-# # May also try diveRsity or StAMPP
-# 
-# # Another method, conduct pairwise fst on the data (using Nei's estimator)
-# my.data.fst <- pairwise.fst(x = my.data.gid, pop = pop(my.data.gid))
-# my.data.fst
-# is.euclid(my.data.fst) # False, there are zero distances (probably the negative values!)
-# 
 # # Provide three F statistics (Fst (pop/total), Fit (Ind/total), Fis (ind/pop))
-# # fstat(my.data.gid)
+# fstat(my.data.gid)
 # 
 # # which markers are greater than a specific Fst value?
 # val <- 0.1
