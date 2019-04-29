@@ -184,6 +184,7 @@ Population differentiation analysis:[General Stats](#hierfstat-and-adegenet)
 ```
 # Toggle on blacklist flag (-B) pointing to list of loci out of HWE
 # Toggle OFF single snp flag (--write-single-snp)
+# Toggle on radpainter output flag (--radpainter)
 
 # Compare number SNP vs number loci
 grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l
@@ -264,13 +265,10 @@ Outputs with analysis-specific label to `11-other_stats`
 
 ### B. Haplotype Analysis
 #### i. fineRADstructure
-Use multiple SNP per locus for fineRADstructure input (`06-stacks_rx/batch_1.haplotypes.tsv`)   
+Input: haplotype output to input to fineRADstructure         
 
-Make a new directory, move the haplotypes text file to this new directory, and format the file as an input to fineRADstructure:    
 ```
-mkdir 08-fineRADstructure
-cp 06-stacks_rx/batch_1.haplotypes.tsv 08-fineRADstructure
-# It is best to use the Stacks2fineRAD.py script to prepare stacks output into fineRADstructure input as this gives some info about the loci and removes instances of triploid alleles.   
+# fineRADstructure comes with a python script to prepare stacks output (Stacks2fineRAD.py; note: removes triploid loci)    
 python /home/ben/Programs/fineRADstructure/Stacks2fineRAD.py -i 08-fineRADstructure/batch_1.haplotypes.tsv -n 10 -m 30
 # This will output a file that has loci filtered based on ploidy, and samples filtered by missing data. 
 ```
