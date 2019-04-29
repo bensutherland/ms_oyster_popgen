@@ -284,7 +284,7 @@ rownames(all.data.hf) <- indNames(my.data.gid)
 
 ##### Pairwise Fst #####
 pairwise.wc.fst <- pairwise.WCfst(all.data.hf)
-write.csv(pairwise.wc.fst, file = paste0(output.dir, "all_data_wcfst.csv"))
+write.csv(x = pairwise.wc.fst, file = paste0(output.dir, "all_data_wcfst.csv"))
 
 # Bootstrapping
 nboots <- 1000
@@ -321,7 +321,7 @@ nboots <- 1000
 # heatmap.2(boot.fst.all.output)
 
 
-save.image(file = "11-other_stats/adegenet_output.RData") # Save out this data
+save.image(file = paste0(output.dir, "adegenet_output.RData")) # Save out this data
 
 # #### Other unused steps ####
 # # Descriptive Statistics on genind file
