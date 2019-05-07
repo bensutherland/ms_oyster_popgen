@@ -1,6 +1,12 @@
 #!/bin/bash
 # Run this script from within the stacks_workflow main repo
 
+# TODO # Fix the following issues:
+# -put the blacklist into a different folder, as now it gets removed from 07-filtered_vcfs with output data
+
+
+
+
 # 1. Identify loci out of HWE
 echo "Identifying loci out of HWE"
 populations --in-path 05-stacks --popmap 01-info_files/population_map_retained.txt \
@@ -16,31 +22,32 @@ awk -F"\t" ' $20 < 0.05 { print $1 "\t" $20 }' 07-filtered_vcfs/populations.sums
 awk -F"\t" '{ print $1 }' 07-filtered_vcfs/loci_out_of_hwe.txt | uniq > 07-filtered_vcfs/loci_out_of_hwe_blacklist.txt
 echo "List name: 07-filtered_vcfs/loci_out_of_hwe_blacklist.txt ; use this as blacklist"
 
-# 2. Filter and output loci for population genetic analysis (single SNP)
-echo "Filtering and outputing single SNP per locus using blacklist"
-populations --in-path 05-stacks --popmap 01-info_files/population_map_retained.txt \
-        --out-path 07-filtered_vcfs -t 8 \
-        -r 0.7 --min-populations 15 --min-maf 0.01 \
-        --vcf --fstats --smooth --plink \
-        --write-single-snp \
-        --hwe \
-        -B 07-filtered_vcfs/loci_out_of_hwe_blacklist.txt
+# # 2. Filter and output loci for population genetic analysis (single SNP)
+# echo "Filtering and outputing single SNP per locus using blacklist"
+# populations --in-path 05-stacks --popmap 01-info_files/population_map_retained.txt \
+#         --out-path 07-filtered_vcfs -t 8 \
+#         -r 0.7 --min-populations 15 --min-maf 0.01 \
+#         --vcf --fstats --smooth --plink \
+#         --write-single-snp \
+#         --hwe \
+#         -B 07-filtered_vcfs/loci_out_of_hwe_blacklist.txt
+# 
+# echo "Saving single-snp data"
+# mkdir 09-diversity_stats 2>/dev/null 
+# cp 07-filtered_vcfs/populations.snps.vcf 09-diversity_stats
+# 
+# mkdir 11-adegenet_analysis 2>/dev/null
+# cp 07-filtered_vcfs/*plink* 11-adegenet_analysis 
+# 
 
-echo "Saving single-snp data"
-mkdir 09-diversity_stats 2>/dev/null 
-cp 07-filtered_vcfs/populations.snps.vcf 09-diversity_stats
-
-mkdir 11-adegenet_analysis 2>/dev/null
-cp 07-filtered_vcfs/*plink* 11-adegenet_analysis 
-
-
-# 3. Filter and output loci for population genetic analysis (single SNP)
+# 3. Filter and output loci for population genetic analysis (haplotypes)
 echo "Filtering and outputting haplotypes per locus using blacklist"
 populations --in-path 05-stacks --popmap 01-info_files/population_map_retained.txt \
         --out-path 07-filtered_vcfs -t 8 \
         -r 0.7 --min-populations 15 --min-maf 0.01 \
         --vcf --fstats --smooth --plink \
         --hwe \
+        --radpainter \
         -B 07-filtered_vcfs/loci_out_of_hwe_blacklist.txt
 
 echo "Saving haplotype and all data to 08-fineRADstructure"
@@ -48,21 +55,21 @@ mkdir 08-fineRADstructure 2>/dev/null
 cp 07-filtered_vcfs/populations.haps.vcf 08-fineRADstructure
 
 echo "Saving all data to 21_haplotype_results"
-mkdir 21-haplotype-results 2>/dev/null
-mv 07-filtered_vcfs/* 21_haplotype_results
+mkdir 21-haplotype_results 2>/dev/null
+mv 07-filtered_vcfs/* 21-haplotype_results
  
-# 4. Filter and output loci for selection analysis (single SNP)
-echo "Filtering and outputting single SNP for selection analysis, no HWE filter"
-populations --in-path 05-stacks --popmap 01-info_files/population_map_retained.txt \
-        --out-path 07-filtered_vcfs -t 8 \
-        -r 0.7 --min-populations 15 --min-maf 0.01 \
-        --vcf --fstats --smooth --plink \
-        --write-single-snp \
-        --hwe 
-
-echo "Saving all data to 24-selection"
-mkdir 24-selection 2>/dev/null
-mv 07-filtered_vcfs/* 24-selection
+# # 4. Filter and output loci for selection analysis (single SNP)
+# echo "Filtering and outputting single SNP for selection analysis, no HWE filter"
+# populations --in-path 05-stacks --popmap 01-info_files/population_map_retained.txt \
+#         --out-path 07-filtered_vcfs -t 8 \
+#         -r 0.7 --min-populations 15 --min-maf 0.01 \
+#         --vcf --fstats --smooth --plink \
+#         --write-single-snp \
+#         --hwe 
+# 
+# echo "Saving all data to 24-selection"
+# mkdir 24-selection 2>/dev/null
+# mv 07-filtered_vcfs/* 24-selection
 
 
 echo "Done!"
