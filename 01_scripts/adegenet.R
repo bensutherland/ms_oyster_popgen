@@ -1,4 +1,5 @@
-# Import data from PLINK, conduct basic pop gen analyses, create a neighbour-joining tree, PCA, DAPC
+# Import data from PLINK, simple popgen stats on entire dataset, 
+#  (neighbour-joining tree, PCA, DAPC, Fst)
 
 #### Front Matter ####
 # Clean space
@@ -12,12 +13,12 @@
 # install.packages("seqinr")
 # install.packages("ggplot2")
 # install.packages("devtools")
+# install.packages("diveRsity")
 
 # Specifics for hierfstat and adegenet
 # require(devtools)
 # install_version("hierfstat", version = "0.04-22", repos = "http://cran.us.r-project.org") # compoplot functional
 # install_github("jgx65/hierfstat") # compoplot not functional
-
 # install.packages("hierfstat")
 library("hierfstat")
 
@@ -33,6 +34,7 @@ library("pegas")
 library("seqinr")
 library("ggplot2")
 library("devtools")
+library("diveRsity")
 
 
 # Set working directory for stark or xavier
@@ -52,10 +54,10 @@ if(Sys.info()["nodename"] == "stark"){
 
 # Set variables
 output.dir <- "11-adegenet_analysis/"
-
+input.FN <- "11-adegenet_analysis/populations_single_snp_HWE.raw"
 
 #### 1. Import data ####
-my.data <- read.PLINK(file = "11-adegenet_analysis/populations_single_snp_HWE.raw")
+my.data <- read.PLINK(file = input.FN)
 my.data
 
 ## Explore data attributes
@@ -66,21 +68,16 @@ nPop(my.data) # How many pops?
 unique(pop(my.data)) # What pops?
 locNames(my.data, withAlleles = T)[1:20] # What allele names?
 
-#### 1.1 Edit data attributes
-## Rename populations
-# example to edit populations
-# pop(my.data) <- gsub(x = indNames(my.data), pattern = "\\_.*", replacement = "") # create pop ID
 
-
-#### 2. Basic Analysis (adegenet) ####
+#### 2. Minor allele freq ####
 # Plot instances of minor allele across individuals and loci
 png(file = paste0(output.dir, "glPlot_all.png"), width = 924, height = 600)
 glPlot(x = my.data, posi="topleft") 
 dev.off()
 
 # Create density plot of minor allele frequencies
-myFreq <- glMean(my.data)
 pdf(file = paste0(output.dir, "maf_hist_all.pdf"), width = 6, height = 4)
+myFreq <- glMean(my.data)
 hist(myFreq, proba=T, col="gold", xlab = "Allele frequencies"
      , main = ""
      , ylim = c(0,50)
@@ -92,7 +89,7 @@ lines(temp$x, temp$y, lwd=3)
 dev.off()
 
 
-#### 3. Neighbour-joining tree, all loci ####
+#### 3. Neighbour-joining tree ####
 par(mfrow=c(1,1), mar=c(3,3,3,3))
 
 ## Calculate distance between individuals
@@ -114,11 +111,8 @@ pdf(file = paste0(output.dir, "nj_tree_all.pdf"), width = 11, height = 9)
 plot(nj(D), type="fan", cex=0.7)
 dev.off()
 
-# In the case of missing data
-# plot(njs(D), type ="fan", cex = 0.7)
 
-
-#### 4. Principle Components Analysis, all loci ####
+#### 4. Principle Components Analysis ####
 # Perform PCA
 pca1 <- glPca(my.data, nf = 3)
 
@@ -164,33 +158,14 @@ tiplabels(pch=20, col=myCol, cex=4)
 dev.off()
 
 
-#### to remove ####
-# Define colours
-# my.pops <- levels(dapc1$grp)
-# my.cols <- c("darkseagreen4", "darkseagreen3" #china1
-#              , "blue3" #dpb
-#              , "gold1", "gold3" #FRA and FRAF (darker = derived)
-#              , "darkslategray2" #GUR
-#              , "mediumpurple3" #HIS
-#              , "turquoise4" #JPN
-#              , "purple1", "purple4" #PEN PENF
-#              , "darkviolet" #PIP 
-#              ,"darkseagreen1" #QDC
-#              , "red" #ROS
-#              , "darkseagreen" #china2
-#              , "orchid2"
-#              )
-# 
-# my.cols.df <- as.data.frame(cbind(my.pops, my.cols))
-# write.csv(my.cols.df, file = "01-info_files/my_cols.csv", quote = F, row.names = F)
-
-#### 5. Discriminant Analysis of Principal Components (DAPC) ####
-# Transforms data (?), performs PCA, performs Linear Discriminant Analysis (LDA) with PCs
+#### 5. Discriminant Analysis of Principal Components ####
+# Transforms data (centers), performs PCA, performs Linear Discriminant Analysis (LDA) with PCs, calc allele contributions
 dapc1 <- dapc(my.data, n.pca = 10, n.da = 1) # n.pca = number axes to be retained; n.da = number of axes retained in Discriminant Analysis step
 dapc1 # Provides information such as proportion conserved variance and object details
 
-# Density plot of samples along discriminant function 1
+# Plot density plot of samples along discriminant function 1
 pdf(file = paste0(output.dir, "dapc_all_pops.pdf"), width = 10.5, height = 7)
+par(mfrow=c(1,1))
 scatter(dapc1, scree.da = F, bg = "white", legend = T
         , txt.leg=rownames(dapc1$means)
         , posi.leg = "topright"
@@ -198,71 +173,50 @@ scatter(dapc1, scree.da = F, bg = "white", legend = T
         )
 dev.off()
 
-# assignplot hasn't been explored/implemented here yet
-# plot showing the probababilities of assignment of individuals to the different clusters
-# assignplot(x = dapc1)
-
-## compoplot not currently working
-# ## Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
-# # compoplot requires a specific library
-# install_version("hierfstat", version = "0.04-22", repos = "http://cran.us.r-project.org") # compoplot functional
-# library(hierfstat)
-# 
-# install_version("adegenet", version = "2.0.1", repos = "http://cran.us.r-project.org") # compoplot functional
-# library("adegenet")
-# 
-# par(mar=c(10,3,3,3))
-# pdf(file = paste0(output.dir, "compoplot_all_samples.pdf"), width = 24, height = 8)
-# compoplot(dapc1
-#           #, lab="" # comment out if you want sample labels
-#           , txt.leg = rownames(dapc1$means)
-#           , posi = "topright"
-# #          , cex = 0.7
-#           , cex.names = 0.6 
-#           )
-# dev.off()
-
 # Loading plot # Plot marker variance contribution to DAPC
-par(mfrow=c(1,1), mar=c(3,4,3,3))
+par(mfrow=c(1,1), mar=c(5,5,3,3))
 
 # Plot the loading values of the different markers into the DAPC
-loadingplot(dapc1$var.contr, thres=1e-3)
+pdf(file = paste0(output.dir, "dapc_loadings.pdf"), width = 10.5, height = 7)
+loadingplot(dapc1$var.contr, thres=1e-3, xlab = "Loci", ylab = "Locus contribution", las = 1
+            , main = "")
+# This plots names for any variable with contribution > 1e-3 (0.001)
+dev.off()
 
-# # Save out the loading values for the dapc linked to the marker names
-# par(mar=c(5,5,4,4))
-# dapc1$pca.loadings[1:5,]
-# max(dapc1$pca.loadings[,1])
-# max(dapc1$var.contr) # this is what's being plotted
-# plot(dapc1$pca.loadings[,1], dapc1$var.contr ) # absolute value of pca loadings are 
-# plot(abs(dapc1$pca.loadings[,1]), dapc1$var.contr ) # absolute value of pca loadings are highly correlated to the 'var.contrib'
-# # Where are the locus names? They aren't included in this, which seems to just take the 'index' of the locus. 
-# # Therefore, we have to currently assume that the order is the same as in my.data
-# locus.and.dapc1.var.contrib <- as.data.frame(cbind(locNames(my.data), dapc1$var.contr))
-# colnames(locus.and.dapc1.var.contrib) <- c("mname","dapc1.var.contr")
-# write.csv(x = locus.and.dapc1.var.contrib, file = "11-other_stats/locus_and_dapc1_var_contrib.csv"
-#           , quote = F, row.names = F)
+# To get all data, change the threshold, (not for plotting)
+# Note: this needs to be proven that these are indeed in the same order (index and names)
+dapc_loadings_all <- loadingplot(dapc1$var.contr, threshold = 0)
+dapc_loadings_vals <- dapc_loadings_all$var.values # obtain var.contr vals
+names(dapc_loadings_vals) <- names(dapc1$pca.cent) # bring in loci names instead of just index
+head(dapc_loadings_vals)
+dapc_loadings_vals <- as.data.frame(dapc_loadings_vals) # make a df
+head(dapc_loadings_vals)
+colnames(dapc_loadings_vals) <- "var.contr" # rename column
+head(dapc_loadings_vals)
+dapc_loadings_vals$mname <- rownames(x = dapc_loadings_vals) # make rownames a vector within df
+head(dapc_loadings_vals)
+
+# Write out, without rownames
+write.table(x = dapc_loadings_vals, file = "11-adegenet_analysis/dapc_loadings.csv"
+            , sep = ",", quote = F, col.names = T, row.names = F)
 
 
-####6. Convert genlight to genind object (indiv. genotypes) ####
-# First, convert to matrix
+####6. Genlight to genind conversion (indiv. genotypes) ####
+# Convert genlight to matrix
 my.data.mat <- as.matrix(my.data)
 my.data.mat[1:5,1:5]
 
-# Second, translate the number of minor allele to genind format
+# Translate the number of minor allele to genind format
 my.data.mat[my.data.mat == 0] <- "1/1" #homozygote reference
 my.data.mat[my.data.mat == 1] <- "1/2" #heterozygote
 my.data.mat[my.data.mat == 2] <- "2/2" #homozygote alternate
-#my.data.mat[my.data.mat == "NA"] <- "NA" # NA
 my.data.mat[1:5,1:5]
 
 # Convert matrix to genind
 my.data.gid <- df2genind(my.data.mat, sep = "/", ploidy = 2) # convert df to genind
 
-# Generate population attributes for genind
-pop(my.data.gid) # currently null
-pop(my.data.gid) <- pop(my.data) # use pop from the my.data object
-# or alternately:
-# pop(my.data.gid) <- gsub(x = indNames(my.data.gid), pattern = "\\_.*", replacement = "") # create pop ID
+# Transfer pop attributes
+pop(my.data.gid) <- pop(my.data) 
 
 # Show sample size per population
 table(pop(my.data.gid))
@@ -277,36 +231,41 @@ barplot(table(pop(my.data.gid)), col=funky(17)
 #abline(h = c(10,20,30), lty=2)
 dev.off()
 
-# Change from genind to hierfstat
+# Convert genind to hierfstat
 all.data.hf <- genind2hierfstat(my.data.gid)
 rownames(all.data.hf) <- indNames(my.data.gid)
 
+# Convert genind to genepop
+all_data.gen <- genind2genpop(x = my.data.gid, pop = pop(my.data.gid))
 
-##### Pairwise Fst #####
+# Now have data in either hf format, genind, and genepop
+# all.data.hf # hf
+# my.data.gid # genind
+# all_data.gen # genepop
+
+
+##### 7. Pairwise Fst #####
+# Hierfstat
 pairwise.wc.fst <- pairwise.WCfst(all.data.hf)
 write.csv(x = pairwise.wc.fst, file = paste0(output.dir, "all_data_wcfst.csv"))
 
 # Bootstrapping
 nboots <- 1000
-# requires latest hierfstat (v0.04-29) otherwise get error
-# library(devtools)
-# install_github("jgx65/hierfstat")
-# library("hierfstat")
 
-# boot.fst.all <- boot.ppfst(dat = all.data.hf, nboot = 1000, quant = c(0.025,0.975))
-# boot.fst.all
-# # note that nboot = 1000 is about the same as nboot = 10,000 (very marginally different)
-# 
-# # Collect output
-# lower.limit <- t(boot.fst.all$ll)
-# upper.limit <- boot.fst.all$ul
-# upper.limit[is.na(upper.limit)] <- 0
-# lower.limit[is.na(lower.limit)] <- 0
-# boot.fst.all.output <- upper.limit + lower.limit
-# boot.fst.all.output
-# 
-# filename <- paste0("11-other_stats/all_data_fst_nboot_", nboots, ".csv")
-# write.csv(x = boot.fst.all.output, file = filename)
+boot.fst.all <- boot.ppfst(dat = all.data.hf, nboot = 1000, quant = c(0.025,0.975))
+boot.fst.all
+# note that nboot = 1000 is about the same as nboot = 10,000 (very marginally different)
+
+# Collect output
+lower.limit <- t(boot.fst.all$ll)
+upper.limit <- boot.fst.all$ul
+upper.limit[is.na(upper.limit)] <- 0
+lower.limit[is.na(lower.limit)] <- 0
+boot.fst.all.output <- upper.limit + lower.limit
+boot.fst.all.output
+
+filename <- paste0("11-adegenet_analysis/all_data_fst_nboot_", nboots, ".csv")
+write.csv(x = boot.fst.all.output, file = filename)
 
 # Heatmap output
 # install.packages("plsgenomics")
@@ -321,28 +280,43 @@ nboots <- 1000
 # heatmap.2(boot.fst.all.output)
 
 
-save.image(file = paste0(output.dir, "adegenet_output.RData")) # Save out this data
+## diveRsity
+library(devtools)
+install_github("romunov/zvau")
+library("zvau")
+?writeGenPop()
 
-# #### Other unused steps ####
-# # Descriptive Statistics on genind file
-# div <- summary(my.data.gid) # genetic diversity w/ adegenet
-# str(div) # What is contained within this summary object
-# # contains: sample size, sample size by pop, number loci and names, population IDs, % NA, Hobs, Hexp
-# 
-# # Provide three F statistics (Fst (pop/total), Fit (Ind/total), Fis (ind/pop))
-# fstat(my.data.gid)
-# 
-# # which markers are greater than a specific Fst value?
-# val <- 0.1
-# rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
-# high.fst.markers <- rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
-# length(high.fst.markers)
-# 
-# # extract these from the genlight object
-# head(locNames(my.data.gid))
-# high.fst.markers.true <- gsub(x = high.fst.markers, pattern = "^X", replacement = "", perl = T)
-# 
-# my.data.high.fst <- my.data.gid[, loc=high.fst.markers.true]
-# my.data.high.fst
-# 
-# 
+writeGenPop(gi = my.data.gid, file.name = "test.gen", comment = "test")
+
+diff_stats <- diffCalc(infile = "test.gen"
+                       , outfile = "my_results"
+                       , fst = TRUE, pairwise = TRUE
+                       , bs_pairwise = TRUE, boots = 1000, ci_type = "individuals"
+                       , para = TRUE)
+
+
+##### 8. Additional Summary Statistics #####
+# Descriptive Statistics on genind file
+div <- summary(my.data.gid) # genetic diversity w/ adegenet
+str(div) # What is contained within this summary object
+# contains: sample size, sample size by pop, number loci and names, population IDs, % NA, Hobs, Hexp
+
+# Provide three F statistics (Fst (pop/total), Fit (Ind/total), Fis (ind/pop))
+fstat(my.data.gid)
+
+# which markers are greater than a specific Fst value?
+val <- 0.1
+rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
+high.fst.markers <- rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
+length(high.fst.markers)
+
+# extract these from the genlight object
+head(locNames(my.data.gid))
+high.fst.markers.true <- gsub(x = high.fst.markers, pattern = "^X", replacement = "", perl = T)
+
+my.data.high.fst <- my.data.gid[, loc=high.fst.markers.true]
+my.data.high.fst
+
+
+##### 9. Save Results ####
+save.image(file = paste0(output.dir, "adegenet_output.RData"))

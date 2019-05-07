@@ -1,42 +1,53 @@
 # Separate Analysis of individual populations
+# To be run after 'adegenet.R'
+# Still need to update colors
+# Still need to run selection analysis on non-HWE dataset
 
 #### Front Matter ####
 # Clean space
 # rm(list=ls())
 
-# Resource packages required:
-#install.packages("purrr")
+#install.packages("gplots")
+
+# Load required libraries
 library("purrr")
-#install.packages("dplyr")
 library("dplyr")
-
-# require(devtools)
-# install_version("hierfstat", version = "0.04-22", repos = "http://cran.us.r-project.org") # compoplot functional
-# install_github("jgx65/hierfstat") # compoplot not functional
-library(hierfstat)
-
 library("ape")
 library("pegas")
 library("seqinr")
 library("ggplot2")
-
-# install_version("adegenet", version = "2.0.1", repos = "http://cran.us.r-project.org") # compoplot functional
-# install.packages("adegenet") # compoplot not functional
+library("devtools")
+library("hierfstat")
 library("adegenet")
 
-# Set working directory
-# Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data")
+# Set working directory for stark or xavier
+# if on a different system, prompt for working directory
+if(Sys.info()["nodename"] == "stark"){ 
+  print("On Stark, ready to go")
+  setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/") # stark
+} else if(Sys.info()["nodename"] == "Xavier"){
+  print("On Xavier, ready to go")
+  setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data/") # Xavier
+} else {
+  print("You are on an unrecognized system, please set working directory manually")
+}
 
+## Info
+# sessionInfo()
+
+# Set variables
+output.dir <- "11-adegenet_analysis/"
+
+#### 01. Input data and prepare
 # Load part 1 results
-load("11-other_stats/adegenet_output.RData")
+load(file = paste0(output.dir, "adegenet_output.RData"))
 
 my.data.gid
 
-# fix colors dataframe
-my.cols.df$my.pops <- as.character(my.cols.df$my.pops)
-my.cols.df$my.cols <- as.character(my.cols.df$my.cols)
-str(my.cols.df)
+# # fix colors dataframe
+# my.cols.df$my.pops <- as.character(my.cols.df$my.pops)
+# my.cols.df$my.cols <- as.character(my.cols.df$my.cols)
+# str(my.cols.df)
 
 # Read in database with sample phenotypes, most notably the Size_Class attribute
 sample.data <- read.csv(file = "../ms_oyster_popgen/00_archive/master_list_all_samples.csv", header = T)
@@ -64,7 +75,7 @@ datatype.list[["bc.wild.size.gid"]] <- repool(sep.obj$PEN, sep.obj$HIS) # NOTE: 
 
 datatype.list[["all.ch.gid"]] <- repool(sep.obj$CHN, sep.obj$CHNF, sep.obj$QDC, sep.obj$RSC)
 
-# selection experiments
+# # selection experiments
 datatype.list[["bc.sel.gid"]] <- repool(sep.obj$PEN, sep.obj$PENF)
 datatype.list[["fr.gid"]] <- repool(sep.obj$FRA, sep.obj$FRAF)
 datatype.list[["ch.gid"]] <- repool(sep.obj$CHN, sep.obj$CHNF)
@@ -88,8 +99,8 @@ for(i in 1:length(datatype.list)){
   # Get the colors for this datatype
   pops.involved <- levels(datatype.list[[datatype]]$pop) # identify pops in this datatype
   pops.involved.df <- as.data.frame(pops.involved) # make the vector of pops involved a df so that can use merge
-  my.cols.per.datatype.df <- merge(x = pops.involved.df, y = my.cols.df, by.x = "pops.involved", by.y = "my.pops", sort = F)
-  cols <- my.cols.per.datatype.df[,"my.cols"]
+  # my.cols.per.datatype.df <- merge(x = pops.involved.df, y = my.cols.df, by.x = "pops.involved", by.y = "my.pops", sort = F)
+  # cols <- my.cols.per.datatype.df[,"my.cols"]
   
 # Otherwise, select one of the following individual dataset to work with
 # Individual runs:
@@ -152,7 +163,7 @@ indNames(data.gid)
 pop(data.gid)
 
 # Show sample size per population
-filename <- paste("11-other_stats/", datatype, "_sample_size_per_pop.pdf", sep = "")
+filename <- paste(output.dir, datatype, "_sample_size_per_pop.pdf", sep = "")
 pdf(file = filename, width = 7, height = 4)
 par(mfrow=c(1,1), mar=c(8,5,3,3))
 barplot(table(pop(data.gid)), col=funky(17)
@@ -171,7 +182,7 @@ rownames(data.hf) <- indNames(data.gid)
 y <- indpca(data.hf, ind.labels = rownames(data.hf))
 #y <- indpca(data.hf, ind.labels = pop(data.gid)) # this allows to view the size class type, if wanted
 
-filename <- paste("11-other_stats/", datatype, "_sample_PCA.pdf", sep = "")
+filename <- paste(output.dir, datatype, "_sample_PCA.pdf", sep = "")
 pdf(file = filename, width = 11, height = 6)
 plot(y, cex = 0.7)
 dev.off()
@@ -179,16 +190,17 @@ dev.off()
 # DAPC
 dapc <- dapc(data.gid, n.pca = 10, n.da = 1)
 
-filename <- paste("11-other_stats/", datatype, "_sample_DAPC.pdf", sep = "")
+filename <- paste(output.dir, datatype, "_sample_DAPC.pdf", sep = "")
 pdf(file = filename, width = 11, height = 6)
 scatter(dapc, scree.da = F, bg = "white", legend = T
         , txt.leg=rownames(dapc$means)
         , posi.leg = "topleft"
-        , col = cols)
+        #, col = cols
+        )
 dev.off()
 
 # Composition plot (barplot showing the probabilities of assignments of individuals to the different clusters)
-filename <- paste("11-other_stats/", datatype, "_compoplot.pdf", sep = "")
+filename <- paste(output.dir, datatype, "_compoplot.pdf", sep = "")
 pdf(file = filename, width = 11, height = 6)
 par(mar=c(10,3,3,3))
 compoplot(dapc
@@ -199,7 +211,7 @@ compoplot(dapc
 dev.off()
 
 # Loading plot # Plot marker variance contribution to DAPC
-filename <- paste("11-other_stats/", datatype, "_DAPC_loadings.pdf", sep = "")
+filename <- paste(output.dir, datatype, "_DAPC_loadings.pdf", sep = "")
 pdf(file = filename, width = 11, height = 4)
 par(mfrow=c(1,1), mar=c(3,4,3,3))
 loadingplot(dapc$var.contr, thres=1e-3, las = 1)
@@ -208,14 +220,14 @@ dev.off()
 # Pairwise Fst (hierfstat)
 pairwise.wc.fst <- pairwise.WCfst(data.hf)
 
-filename <- paste("11-other_stats/", datatype, "_pairwise_wc_fst.csv", sep = "")
+filename <- paste(output.dir, datatype, "_pairwise_wc_fst.csv", sep = "")
 write.csv(pairwise.wc.fst, file = filename)
 
 # Pairwise Fst w/ bootstrapping (hierfstat)
 # requires latest hierfstat (v0.04-29) otherwise get error
 # library(devtools)
 # install_github("jgx65/hierfstat")
-library("hierfstat")
+#library("hierfstat")
 boot.fst <- boot.ppfst(dat = data.hf, nboot = 1000, quant = c(0.025,0.975))
 boot.fst
 
@@ -227,7 +239,7 @@ lower.limit[is.na(lower.limit)] <- 0
 boot.fst.output <- upper.limit + lower.limit
 boot.fst.output
 
-filename <- paste("11-other_stats/", datatype, "_boot_fst_output.csv", sep = "")
+filename <- paste(output.dir, datatype, "_boot_fst_output.csv", sep = "")
 write.csv(x = boot.fst.output, file = filename)
 
 # Heatmap output
@@ -235,7 +247,7 @@ write.csv(x = boot.fst.output, file = filename)
 # require(plsgenomics)
 # matrix.heatmap(mat = boot.fst.all.output)
 
-filename <- paste("11-other_stats/", datatype, "_levelplot_fst_heatmap.pdf", sep = "")
+filename <- paste(output.dir, datatype, "_levelplot_fst_heatmap.pdf", sep = "")
 pdf(file = filename, width = 10.5, height = 6)
 require("lattice")
 levelplot(boot.fst.output, scales=list(x=list(rot=90))
@@ -252,7 +264,7 @@ perloc.stats <- basic.stats(data.hf, diploid = T, digits = 4)
 str(perloc.stats$perloc) # this is the key data from this analysis
 
 # Per loc Fst figure
-filename <- paste("11-other_stats/", datatype, "_per_loc_overall_fst.pdf", sep = "")
+filename <- paste(output.dir, datatype, "_per_loc_overall_fst.pdf", sep = "")
 pdf(file = filename, width = 9, height = 6)
 par(mfrow=c(1,1), mar=c(5,5,2.5,3))
 plot(perloc.stats$perloc$Fst, ylab = "Fst", las = 1) # Plot Fst
@@ -264,7 +276,7 @@ dev.off()
 
 # Save out these Fst values per locus to match to location in the genome
 perloc.stats.df <- perloc.stats$perloc # save df w/ Ho, Hs, Ht, Dst, Htp, Dstp, Fst, Fstp, Fis, Dest (from hierfstat)
-filename <- paste("11-other_stats/", datatype, "_perloc_stats.csv", sep = "")
+filename <- paste(output.dir, datatype, "_perloc_stats.csv", sep = "")
 write.csv(x = perloc.stats.df, file = filename)
 # match these to their genomic location and plot in Rscript (#todo)
 
