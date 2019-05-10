@@ -95,7 +95,7 @@ output <- coancestry(genotype.data = my.data.related$gdata
                      ) # all settings default from website
 
 # Save out results
-#save.image(file = "kinship_analysis_2019-05-09.R")
+#save.image(file = "kinship_analysis_2019-05-09.Rdata")
 
 ## Values: 
 # relatedness: df w/ all pairwise est. of relatedness
@@ -134,18 +134,16 @@ colours <- as.character(test$colour)
 
 
 ## Set up a wrapper to plot all types
-datatypes <- c("wang", "lynchli", "ritland","quellergt", "dyadml")
+datatypes <- c("wang", "ritland","quellergt")
 # datatype <- "wang"
-# datatype <- "lynchli"
 # datatype <- "ritland"
 # datatype <- "quellergt"
-# datatype <- "dyadml"
 
 ## Loop
 for(i in 1:length(datatypes)){
   datatype <- datatypes[i]
   
-  pdf(file = paste0("relatedness_", datatype, ".pdf"), width = 12, height = 8)
+  pdf(file = paste0(output.dir, "relatedness_", datatype, ".pdf"), width = 12, height = 8)
   boxplot(output$relatedness[[datatype]] ~ output$relatedness$group
           , col = colours
           , las = 2
