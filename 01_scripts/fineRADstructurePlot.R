@@ -30,10 +30,10 @@
 
 
 ### 1) EDIT THE FOLLOWING THREE LINES TO PROVIDE PATHS TO THE fineRADstructure OUTPUT 
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data/08-fineRADstructure") ## The directory where the files are located
-chunkfile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out" ## RADpainter output file
-mcmcfile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml" ## finestructure mcmc file
-treefile<-"batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmcTree.xml" ## finestructure tree file
+setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/21-haplotype_results") ## The directory where the files are located
+chunkfile<-"populations.haps_chunks.out" ## RADpainter output file
+mcmcfile<-"populations.haps_chunks.out.mcmc.xml" ## finestructure mcmc file
+treefile<-"populations.haps_chunks.out.mcmcTree.xml" ## finestructure tree file
 
 ### 2) EDIT THIS PATH TO WHERE YOU WANT THE PLOTS:
 plotsFolder <- ""
@@ -43,7 +43,7 @@ analysisName <- "batch_1";  maxIndv <- 10000; maxPop<-10000
 
 
 ### 4) EDIT THE PATH TO YOUR COPY of FinestructureLibrary.R
-source("~/Documents/01_moore_oyster_project/ms_oyster_popgen/01_scripts/FinestructureLibrary.R", chdir = TRUE) # read in the R functions, which also calls the needed packages
+source("/mnt/data/01_moore_oyster_project/ms_oyster_popgen/01_scripts/FinestructureLibrary.R", chdir = TRUE) # read in the R functions, which also calls the needed packages
 
 ### 5) EXECUTE THE CODE ABOVE AND THE REST OF THE CODE BELOW
 ## make some colours
