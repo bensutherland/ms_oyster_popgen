@@ -265,27 +265,21 @@ Outputs with analysis-specific label to `11-other_stats`
 
 ### B. Haplotype Analysis
 #### i. fineRADstructure
-Input: haplotype output to input to fineRADstructure         
-
-```
-# fineRADstructure comes with a python script to prepare stacks output (Stacks2fineRAD.py; note: removes triploid loci)    
-python /home/ben/Programs/fineRADstructure/Stacks2fineRAD.py -i 08-fineRADstructure/batch_1.haplotypes.tsv -n 10 -m 30
-# This will output a file that has loci filtered based on ploidy, and samples filtered by missing data. 
-```
-
-If you want to drop individuals from this analysis to reduce the total size of the graphs, this is best done after the haplotypes.tsv has been translated to the fiiltered fineRADpainter input file (i.e. after the Stacks2fineRAD step). Then one can use `fineRADstructure_input_reduction.R`. PLEASE NOTE: this Rscript will write over the original input of the Stacks2fineRAD step.    
+Input: haplotype output from stacks populations as input to fineRADstructure         
+Depends that you have run the runall script, and at the haplotype output of the populations module, it will output into SimpleMatrix format.     
 
 In general, follow instructions from the fineRADstructure tutorial (http://cichlid.gurdon.cam.ac.uk/fineRADstructure.html), but in brief:  
 1) Calculate co-ancestry matrix:     
-` RADpainter paint 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt.txt`
+`RADpainter paint 21-haplotype_results/populations.haps.radpainter`      
 2) Assign individuals to populations:     
-`finestructure -x 100000 -y 100000 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml`     
-note: this uses by default a Markov chain Monte Carlo (mcmc) without a tree. By default it assumes the data comes from one population (-I 1), and uses 100000 burn in (-x) and sample iterations (-y) for the MCMC.    
-3) Build tree: `finestructure -m T -x 10000 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.out 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmc.xml 08-fineRADstructure/batch_1.haplotypes.tsv.fineRADpainter.lociFilt.samples30%missFilt_chunks.mcmcTree.xml`     
+`finestructure -x 100000 -y 100000 21-haplotype_results/populations.haps_chunks.out 21-haplotype_results/populations.haps_chunks.out.mcmc.xml`
+Uses Markov chain Monte Carlo (mcmc) without a tree, assumes data is from one pop (-I 1).    
+3) Build tree:        
+`finestructure -m T -x 10000 21-haplotype_results/populations.haps_chunks.out 21-haplotype_results/populations.haps_chunks.out.mcmc.xml 21-haplotype_results/populations.haps_chunks.out.mcmcTree.xml`      
 
-Then plot using the Rscripts available from the following website shown above:    
-`fineRADstructurePlot.R` (follow instructions here)    
-`FinestructureLibrary.R`
+Then plot using the Rscripts adapted from the fineRADstructure site (see above)   
+`01_scripts/fineRADstructurePlot.R` (follow instructions here)      
+`01_scripts/FinestructureLibrary.R`     
 This will produce plots in the working directory.    
 
 
