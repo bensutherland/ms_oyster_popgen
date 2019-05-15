@@ -244,7 +244,7 @@ Then use the RScript `../ms_oyster_popgen/diversity_comparison.R`
 Input: single SNP populations output in plink format to input to adegenet.    
 
 Convert plink to adegenet input:    
-`plink --ped 11-adegenet_analysis/populations.plink.ped --map 11-adegenet_analysis/populations.plink.map --maf 0.01 --recode --noweb --out 11-adegenet_analysis/populations_single_snp_HWE`      
+`plink --ped 11-adegenet_analysis/populations.plink.ped --map 11-adegenet_analysis/populations.plink.map --maf 0.01 --recodeA --noweb --out 11-adegenet_analysis/populations_single_snp_HWE`      
 
 Open Rscript `01_scripts/adegenet.R` and load in the plink .raw file.      
 Build NJ tree, PCA, dAPC, bootstrapped Fst vals per population pair.       
@@ -257,7 +257,12 @@ Open Rscript `01_scripts/adegenet_sep_pops.R` to import genind to analyze differ
 Outputs with analysis-specific label to `11-other_stats`
 
 
-(#TODO#) To move to selection section:     
+Input: single SNP populations output without HWE filter in plink format to input into adegenet.     
+Convert plink to adegenet input:     
+`plink --ped 24-selection/populations.plink.ped --map 24-selection/populations.plink.map --maf 0.01 --recodeA --noweb --out 24-selection/populations_single_snp`     
+
+Open Rscript `01_scripts/adegenet_sep_pops_selection.R` to import to genind, this will be then fed into the `01_scripts/adegenet_sep_pops.R` script to run with the rest of the data in a loop.        
+
 * Selection experiment BC
 * Selection experiment France
 * Selection experiment China
