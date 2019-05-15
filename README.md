@@ -196,7 +196,7 @@ cp 07-filtered_vcfs/populations.haps.vcf 08-fineRADstructure
 ```
 
 Provides output for:    
-Relatedness via shared haplotypes [fineRADstructure](#fineradstructure)      
+Relatedness via shared coancestry with SNPs (related) and haplotypes (fineRADstructure) [fineRADstructure](#fineradstructure)      
 
 **4. Filter and output loci for selection/domestication analysis**      
 ```
@@ -209,7 +209,8 @@ mv 07-filtered_vcfs/* 24-selection
 ```
 
 Provides output for:    
-Selection detection [to_add](#to_add)      
+`adegenet_sep_pops.R`      
+
 
 ## 4. Diversity analysis
 ### A. Nucleotide diversity
@@ -239,37 +240,46 @@ Calculate the inbreeding coefficient 'F' for each individual with vcftools:
 
 Then use the RScript `../ms_oyster_popgen/diversity_comparison.R`    
 
+
 ## 5. Genetic differentiation and relatedness
 ### A. Genetic differentiation
-Input: single SNP populations output in plink format to input to adegenet.    
+Input 1: single SNP populations output (HWE filter) in plink format to input to adegenet.    
+Input 2: single SNP populations output (no HWE filter) in plink format to input to adegenet for selection.    
 
-Convert plink to adegenet input:    
+Single SNP, HWE filter; use plink to convert to adegenet:    
 `plink --ped 11-adegenet_analysis/populations.plink.ped --map 11-adegenet_analysis/populations.plink.map --maf 0.01 --recodeA --noweb --out 11-adegenet_analysis/populations_single_snp_HWE`      
 
-Open Rscript `01_scripts/adegenet.R` and load in the plink .raw file.      
-Build NJ tree, PCA, dAPC, bootstrapped Fst vals per population pair.       
-Will also output genlight, saved as `11-other_stats/adegenet_output.RData`      
-
-Open Rscript `01_scripts/adegenet_sep_pops.R` to import genind to analyze differentiation in several specific comparisons:        
-* All local samples from BC
-* Spatial vs. temporal in BC (Hisnit and Serpentine)
-
-Outputs with analysis-specific label to `11-other_stats`
-
-
-Input: single SNP populations output without HWE filter in plink format to input into adegenet.     
-Convert plink to adegenet input:     
+Single SNP, no HWE filter; use plink to convert to adegenet:    
 `plink --ped 24-selection/populations.plink.ped --map 24-selection/populations.plink.map --maf 0.01 --recodeA --noweb --out 24-selection/populations_single_snp`     
 
-Open Rscript `01_scripts/adegenet_sep_pops_selection.R` to import to genind, this will be then fed into the `01_scripts/adegenet_sep_pops.R` script to run with the rest of the data in a loop.        
+Rscript to prepare HWE data:      
+`01_scripts/adegenet.R` to load in `11-adegenet_analysis/populations_single_snp_HWE.raw`      
+(all data cursory: builds NJ tree, PCA, dAPC, bootstrapped Fst vals per population pair)       
+Outputs multiple formats (e.g. genlight) as `11-other_stats/adegenet_output.RData`      
 
-* Selection experiment BC
-* Selection experiment France
-* Selection experiment China
+Rscript to prepare non-HWE data:    
+`01_scripts/adegenet_sep_pops_selection.R` to load in `24-selection/populations_single_snp.raw`     
+Outputs genind format in `24-selection/my_sel_data.Rdata`    
+
+**Analyze**
+Open Rscript `01_scripts/adegenet_sep_pops.R` to import the two Rdata obj above. Allows analysis of the following contrasts:        
+* Global with one representative from BC `global`
+* All BC naturalized samples `bc_all`    
+* BC spatial vs. temporal in BC (Hisnit and Serpentine) `bc_size`     
+* All China `ch_all`
+* BC, France, and China transfer to farm from nature `bc_sel`, `fr_sel`, `chr_sel`
+* Domestication signatures for DPB vs PEN, ROS vs PIP, QDC vs CHN, RSC vs CHN, and GUR vs FRA    
+
+Outputs with analysis-specific label to `11_adegenet_analysis`.     
 
 
-### B. Haplotype Analysis
-#### i. fineRADstructure
+### B. Relatedness
+#### i. Shared coancestry by related
+Input: single SNP, HWE filtered from adegenet output (adegenet_output.RData). Note: must run differentiation analysis first.     
+Open Rscript `01_scripts/relatedeness.R` to translate the genlight obj to demerelate, then translate to related input via `readgenotypedata()` of `related`, then calculate coancestry per population, and plot a number of relatedness metrics.       
+Output: See `11_adegenet_analysis/relatedness_*.pdf`   
+
+#### ii. Shared haplotypes by fineRADstructure
 Input: haplotype output from stacks populations as input to fineRADstructure         
 Depends that you have run the runall script, and at the haplotype output of the populations module, it will output into SimpleMatrix format.     
 
@@ -286,6 +296,7 @@ Then plot using the Rscripts adapted from the fineRADstructure site (see above)
 `01_scripts/fineRADstructurePlot.R` (follow instructions here)      
 `01_scripts/FinestructureLibrary.R`     
 This will produce plots in the working directory.    
+
 
 
 ## Other Utilities 
