@@ -1,7 +1,5 @@
 # Separate Analysis of individual populations
-# To be run after 'adegenet.R'
-# Still need to update colors
-# Still need to run selection analysis on non-HWE dataset
+# Requires the running of 'adegenet.R'
 
 #### Front Matter ####
 # Clean space
@@ -59,10 +57,12 @@ head(sample.data)
 sep.obj <- seppop(x = my.data.gid)
 names(sep.obj)
 
-# Load markers not tested for HWE for selection analysis
-load("24-selection/my_sel_data.Rdata")
-my.sel.data.gid
-sep.sel.obj <- seppop(x = my.sel.data.gid)
+# # The following is to input markers that are not in HWP
+# # Load markers not tested for HWE for selection analysis
+# load("24-selection/my_sel_data.Rdata")
+# my.sel.data.gid
+# sep.sel.obj <- seppop(x = my.sel.data.gid)
+# # End section
 
 # Create list of various combinations of repooled pops
 datatype.list <- list()
@@ -79,23 +79,23 @@ datatype.list[["bc_size"]] <- repool(sep.obj$PEN, sep.obj$HIS)
 datatype.list[["ch_all"]] <- repool(sep.obj$CHN, sep.obj$CHNF, sep.obj$QDC, sep.obj$RSC)
 
 # and selection items (w/ loci out of HWE still included):
-datatype.list[["bc_sel"]] <- repool(sep.sel.obj$PEN, sep.sel.obj$PENF)
+datatype.list[["bc_sel"]] <- repool(sep.obj$PEN, sep.obj$PENF)
 
-datatype.list[["fr_sel"]] <- repool(sep.sel.obj$FRA, sep.sel.obj$FRAF)
+datatype.list[["fr_sel"]] <- repool(sep.obj$FRA, sep.obj$FRAF)
 
-datatype.list[["ch_sel"]] <- repool(sep.sel.obj$CHN, sep.sel.obj$CHNF)
+datatype.list[["ch_sel"]] <- repool(sep.obj$CHN, sep.obj$CHNF)
 
-datatype.list[["dpb_sel"]] <- repool(sep.sel.obj$DPB, sep.sel.obj$PEN)
+datatype.list[["dpb_sel"]] <- repool(sep.obj$DPB, sep.obj$PEN)
 
-datatype.list[["ros_sel"]] <- repool(sep.sel.obj$ROS, sep.sel.obj$PIP)
+datatype.list[["ros_sel"]] <- repool(sep.obj$ROS, sep.obj$PIP)
 
-datatype.list[["qdc_sel"]] <- repool(sep.sel.obj$QDC, sep.sel.obj$CHN)
+datatype.list[["qdc_sel"]] <- repool(sep.obj$QDC, sep.obj$CHN)
 
-datatype.list[["rsc_sel"]] <- repool(sep.sel.obj$RSC, sep.sel.obj$CHN)
+datatype.list[["rsc_sel"]] <- repool(sep.obj$RSC, sep.obj$CHN)
 
-datatype.list[["gur_sel"]] <- repool(sep.sel.obj$GUR, sep.sel.obj$FRA)
+datatype.list[["gur_sel"]] <- repool(sep.obj$GUR, sep.obj$FRA)
 
-rm(sep.sel.obj)
+# rm(sep.obj)
 
 
 #### 02. Analyze each datatype ####
@@ -181,7 +181,6 @@ for(i in 1:length(datatype.list)){
   abline(h = c(10,20,30), lty=2)
   dev.off()
 
-  #### Looped analysis starts ####
   # Change from genind file to hfstat
   data.hf <- genind2hierfstat(data.gid)
   rownames(data.hf) <- indNames(data.gid)
