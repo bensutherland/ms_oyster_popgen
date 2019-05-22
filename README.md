@@ -1,6 +1,6 @@
 # Moore Oyster Project - Population Genetics
 Manuscript analysis instruction guide and associated scripts for the Moore Oyster Project Population Genetics analysis.      
-Primarily uses the repo https://github.com/bensutherland/stacks_workflow, which is a fork of the original repo by Eric Normandeau https://github.com/enormandeau/stacks_workflow but customized for Stacks v2.0.       
+Primarily uses the repo https://github.com/bensutherland/stacks_workflow, which is a fork of the original repo by Eric Normandeau in Labo Bernatchez https://github.com/enormandeau/stacks_workflow but customized for Stacks v2.0.       
 
 
 ### Requirements    
@@ -12,10 +12,10 @@ Primarily uses the repo https://github.com/bensutherland/stacks_workflow, which 
 `stacks (v2.3e)` http://catchenlab.life.illinois.edu/stacks/     
 `fineRADstructure` http://cichlid.gurdon.cam.ac.uk/fineRADstructure.html     
 `ape` (install within R)     
-`libxml2-dev` (req'd for XML, install w/ apt-get)       
+`libxml2-dev` (req'd for XML, install Linux w/ apt-get)       
 `XML`    
 `fastStructure`    http://rajanil.github.io/fastStructure/     
-`stacks_workflow` from E. Normandeau, use fork: https://github.com/bensutherland/stacks_workflow        
+`stacks_workflow` original from E. Normandeau, but for Stacks v2 use fork: https://github.com/bensutherland/stacks_workflow        
 
 All analysis is done within the `stacks_workflow` repo, which should be contained within the same parent directory as this repo (at the same level).       
 
@@ -125,16 +125,7 @@ _Update: this may be no longer necessary because of the two tiers allowed in the
 ```
 
 ## 3. Genotype
-Edit the following scripts:
-(#TODO: to add...)     
--r 0.7       
--p 15      
--m 4      
--a 0.01     
---plink     
---in-vcf     
-
-### Run Stacks v2.0 individual steps:     
+### a. Run Stacks v2.0 individual steps:     
 ```
 # Genotype using alignments 
 ./00-scripts/stacks2_1_gstacks.sh
@@ -143,24 +134,30 @@ Edit the following scripts:
 ```
 
 ### Obtain data for different analyses: 
-The following steps will provide the outputs needed for downstream analyses. Each individual numbered step will provide a different output needed. All edits required are to: `./00-scripts/stacks2_2_populations.sh`       
+The following steps will provide the outputs needed for downstream analyses. Each individual numbered step will provide a different output needed. All edits required are to successive runs of: `./00-scripts/stacks2_2_populations.sh`       
 
-For simplicity, an output script has been created that will iteratively run populations with the following changes identified below. Run the following script in replacement of the following steps:      
+For simplicity, an output script has been created that will successively run populations with the following changes identified below. Therefore, instead of running the following steps, use the script:      
 `./../ms_oyster_popgen/01_scripts/runall_outputs.sh`     
+
+**Make some output directories:**     
+```
+mkdir 08-fineRADstructure
+mkdir 09-diversity_stats
+mkdir 11-adegenet_analysis
+mkdir 24-selection
+```
 
 **1. Identify loci out of HWE**
 ```
-# Add flag --hwe
+# Obtain list of loci out of HWE to use as blacklist
+# Toggle ON flag --hwe
 # Re-run
 ./00-scripts/stacks2_2_populations.sh
-
-# Gain list of loci out of HWE
-# Use as blacklist in future steps
 ```
 
-**2. Filter and output loci for population genetic analysis (single SNP)**
+**2. Filter and output single SNP per locus**
 ```
-# Toggle on blacklist flag (-B) pointing to list of loci out of HWE
+# Toggle ON blacklist flag (-B) pointing to list of loci out of HWE
 # Toggle on single snp flag (--write-single-snp)
 # Re-run
 ./00-scripts/stacks2_2_populations.sh
@@ -169,10 +166,7 @@ For simplicity, an output script has been created that will iteratively run popu
 awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uniq -c | less
 
 # Save outputs to analysis folder
-mkdir 09-diversity_stats    
 cp 07-filtered_vcfs/populations.snps.vcf 09-diversity_stats
-
-mkdir 11-adegenet_analysis
 cp 07-filtered_vcfs/*plink* 11-adegenet_analysis
 ```
 
@@ -180,37 +174,21 @@ Provides output for:
 Diversity analysis: [Diversity Analysis](#nucleotide-diversity)     
 Population differentiation analysis:[General Stats](#hierfstat-and-adegenet)
 
-**3. Filter and output loci for population genetic analysis (multiple SNP)**
+**3. Filter and output microhaplotypes per locus**
 ```
-# Toggle on blacklist flag (-B) pointing to list of loci out of HWE
+# Toggle ON blacklist flag (-B) pointing to list of loci out of HWE
 # Toggle OFF single snp flag (--write-single-snp)
-# Toggle on radpainter output flag (--radpainter)
+# Toggle ON radpainter output flag (--radpainter)
 
 # Compare number SNP vs number loci
 grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l
 grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l
 
 # Save outputs to analysis folder
-mkdir 08-fineRADstructure
 cp 07-filtered_vcfs/populations.haps.vcf 08-fineRADstructure
 ```
-
 Provides output for:    
 Relatedness via shared coancestry with SNPs (related) and haplotypes (fineRADstructure) [fineRADstructure](#fineradstructure)      
-
-**4. Filter and output loci for selection/domestication analysis**      
-```
-# Toggle OFF blacklist flag (-B) pointing to list of loci out of HWE
-# Toggle on single snp flag (--write-single-snp)
-
-# Save outputs to analysis folder
-mkdir 24-selection
-mv 07-filtered_vcfs/* 24-selection
-```
-
-Provides output for:    
-`adegenet_sep_pops.R`      
-
 
 ## 4. Diversity analysis
 ### A. Nucleotide diversity
@@ -243,26 +221,17 @@ Then use the RScript `../ms_oyster_popgen/diversity_comparison.R`
 
 ## 5. Genetic differentiation and relatedness
 ### A. Genetic differentiation
-Input 1: single SNP populations output (HWE filter) in plink format to input to adegenet.    
-Input 2: single SNP populations output (no HWE filter) in plink format to input to adegenet for selection.    
+Input: single SNP populations output (HWE filter) in plink format to input to adegenet.    
 
 Single SNP, HWE filter; use plink to convert to adegenet:    
 `plink --ped 11-adegenet_analysis/populations.plink.ped --map 11-adegenet_analysis/populations.plink.map --maf 0.01 --recodeA --noweb --out 11-adegenet_analysis/populations_single_snp_HWE`      
 
-Single SNP, no HWE filter; use plink to convert to adegenet:    
-`plink --ped 24-selection/populations.plink.ped --map 24-selection/populations.plink.map --maf 0.01 --recodeA --noweb --out 24-selection/populations_single_snp`     
-
-Rscript to prepare HWE data:      
-`01_scripts/adegenet.R` to load in `11-adegenet_analysis/populations_single_snp_HWE.raw`      
-(all data cursory: builds NJ tree, PCA, dAPC, bootstrapped Fst vals per population pair)       
+Open Rscript `01_scripts/adegenet.R` to begin popgen analysis, loading `11-adegenet_analysis/populations_single_snp_HWE.raw`      
+Builds NJ tree, PCA, dAPC, bootstrapped Fst vals per population pair       
 Outputs multiple formats (e.g. genlight) as `11-other_stats/adegenet_output.RData`      
 
-Rscript to prepare non-HWE data:    
-`01_scripts/adegenet_sep_pops_selection.R` to load in `24-selection/populations_single_snp.raw`     
-Outputs genind format in `24-selection/my_sel_data.Rdata`    
-
-**Analyze**
-Open Rscript `01_scripts/adegenet_sep_pops.R` to import the two Rdata obj above. Allows analysis of the following contrasts:        
+Open Rscript `01_scripts/adegenet_sep_pops.R` to import the Rdata from previous step.      
+Analyzes the following contrasts:        
 * Global with one representative from BC `global`
 * All BC naturalized samples `bc_all`    
 * BC spatial vs. temporal in BC (Hisnit and Serpentine) `bc_size`     
@@ -274,10 +243,11 @@ Outputs with analysis-specific label to `11_adegenet_analysis`.
 
 
 ### B. Relatedness
+Note: must run differentiation analysis first.    
 #### i. Shared coancestry by related
-Input: single SNP, HWE filtered from adegenet output (adegenet_output.RData). Note: must run differentiation analysis first.     
-Open Rscript `01_scripts/relatedeness.R` to translate the genlight obj to demerelate, then translate to related input via `readgenotypedata()` of `related`, then calculate coancestry per population, and plot a number of relatedness metrics.       
-Output: See `11_adegenet_analysis/relatedness_*.pdf`   
+Input: single SNP, HWE filtered from adegenet output (adegenet_output.RData).      
+Open Rscript `01_scripts/relatedeness.R` to translate the genlight obj to related format, and calculate coancestry per population, plotting per-population relatedness metrics.       
+Output: See `09-diversity_stats/relatedness_*.pdf`   
 
 #### ii. Shared haplotypes by fineRADstructure
 Input: haplotype output from stacks populations as input to fineRADstructure         
