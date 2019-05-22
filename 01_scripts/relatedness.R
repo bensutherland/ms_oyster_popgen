@@ -37,11 +37,12 @@ if(Sys.info()["nodename"] == "stark"){
 # sessionInfo()
 
 # Set variables
-output.dir <- "11-adegenet_analysis/"
+input.dir <- "11-adegenet_analysis/"
+output.dir <- "09-diversity_stats/"
 
 #### 01. Input data and prepare
 # Load part 1 results
-load(file = paste0(output.dir, "adegenet_output.RData"))
+load(file = paste0(input.dir, "adegenet_output.RData"))
 
 # Your genlight data:
 my.data
@@ -95,7 +96,12 @@ output <- coancestry(genotype.data = my.data.related$gdata
                      ) # all settings default from website
 
 # Save out results
-#save.image(file = "kinship_analysis_2019-05-09.Rdata")
+date <- format(Sys.time(), "%Y-%m-%d")
+save.image(file = paste0(output.dir, "kinship_analysis_", date, ".Rdata"))
+# Load results back up (#to build)
+# load(file = paste0(output.dir))
+
+
 
 ## Values: 
 # relatedness: df w/ all pairwise est. of relatedness
@@ -143,7 +149,7 @@ datatypes <- c("wang", "ritland","quellergt")
 for(i in 1:length(datatypes)){
   datatype <- datatypes[i]
   
-  pdf(file = paste0(output.dir, "relatedness_", datatype, ".pdf"), width = 12, height = 8)
+  pdf(file = paste0(output.dir, "relatedness_", datatype, "_", date, ".pdf"), width = 12, height = 8)
   boxplot(output$relatedness[[datatype]] ~ output$relatedness$group
           , col = colours
           , las = 2
