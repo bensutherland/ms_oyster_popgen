@@ -144,7 +144,6 @@ For simplicity, an output script has been created that will successively run pop
 mkdir 08-fineRADstructure
 mkdir 09-diversity_stats
 mkdir 11-adegenet_analysis
-mkdir 24-selection
 ```
 
 **1. Identify loci out of HWE**
@@ -268,12 +267,38 @@ Then plot using the Rscripts adapted from the fineRADstructure site (see above)
 This will produce plots in the working directory.    
 
 
+## 6. Plotting outliers along the chromosome-level assembly
+### A. Align loci against the reference genome
+The populations run above (single snp) will output a fasta file with a consensus sequence per locus, entitled `09-diversity_stats/populations.loci.fa`. Align this against the most complete reference genome:      
+
+Make a folder to work within:    
+`mkdir 12_genome_plot`      
+
+Move marker file to the folder:    
+`cp 09-diversity_stats/populations.loci.fa 12_genome_plot`      
+
+First download the assembly from http://dx.doi.org/10.12770/dbf64e8d-45dd-437f-b734-00b77606430a 
+Citation: Gagnaire _et al._, 2018. Analysis of Genome-Wide Differentiation between Native and Introduced Populations of the Cupped Oysters _Crassostrea gigas_ and _Crassostrea angulata_, Genome Biology and Evolution, *10*(9), pp. 2518–2534, https://doi.org/10.1093/gbe/evy194 .     
+
+Index the genome:    
+`bwa index C_gigas_Assembly_1.fa.gz`      
+
+Align all loci (single consensus locus per marker) against the reference genome:        
+```
+bwa mem -t 6 $GENOME 12_genome_plot/populations.loci.fa > 12_genome_plot/populations.loci.sam
+samtools view -Sb -F 4 -q 1 12_genome_plot/populations.loci.sam > 12_genome_plot/populations.loci.bam
+```
+
+Obtain alignment info per marker:      
+`samtools view 12_genome_plot/populations.loci.bam | awk '{ print $1 "," $3 "," $4 }' - > 12_genome_plot/aligned_marker_info.csv`     
+
 
 ## Other Utilities 
-Proceed to:   
+Jump to:    
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
-[Obtain a single read per locus](#obtain-a-single-read-per-locus)    
+[Run fastStructure](#run-faststructure)
+
 
 ## Evaluate position of SNPs in tags
 Curious as to where the SNPs are in your tags?    
@@ -302,31 +327,6 @@ Note: make sure to calculate this on only the samples used after removing those 
 
 Evaluate total number of mappings    
 `awk '{ print $2 }' 04-all_samples/mappings_per_sample_table.txt | paste -sd+ - | bc`
-
-## Obtain a single read per locus
-Use a whitelist to generate a single accession per locus fasta file
-* Use the vcf that only has a single SNP per locus    
-* Identify the catalog locus IDs from the vcf (3rd column, first unit (second unit is the position of the SNP in the tag))    
-`grep -vE '^#' 06-stacks_rx/batch_1.vcf | awk ' { print $3 } ' - | awk -F_ ' { print $1 } ' - > 06-stacks_rx/whitelist.txt`
-* Edit populations to use -W flag and point towards the whitelist. Turn on .fasta output and turn off vcf output. (todo: give a one-liner for this instead of using script)    
-* Obtain a single Allele 0 record per locus from the fasta output    
-`grep -E '^>' 06-stacks_rx/batch_1.fa | awk -FSample_ '{ print $1 }' - | uniq > 06-stacks_rx/obtain_one_record_per_accn_list.txt`
-* Obtain the single record:    
-`while read p; do grep -A1 -m1 $p".*Allele_0" 06-stacks_rx/batch_1.fa ; done < 06-stacks_rx/obtain_one_record_per_accn_list.txt > 06-stacks_rx/batch_1_filtered_single_record.fa`    
-
-## Identify position of loci in a reference genome
-e.g. find loci that are high loading for dapc1
-`awk -F"," ' $2 > 0.001 { print $1 }' 11-other_stats/locus_and_dapc1_var_contrib.csv | grep -vE '^mname' | awk -F"_" '{ print $1"_"$2 }' - > 11-other_stats/high_dapc_var_loci_to_keep.csv`
-
-This can be used as a white list to export a fasta and get a single record per locus as described above from the populations module. This will produce `06-stacks_rx/batch_1_filtered_single_record.fa` 
-This type of file is also produced by the previous section 'Obtain a single read per locus', and this probably makes more sense to use, as there is no point in doing this multiple times, just do it for all markers at once.    
-
-Align against the reference genome:    
-`bwa mem -t 6 ~/Documents/genomes/C_gigas_assembly_1_all_chr.fa 06-stacks_rx/batch_1_filtered_single_record.fa > 06-stacks_rx/batch_1_filtered_single_record.sam`    
-`samtools view -Sb -F 4 -q 5 06-stacks_rx/batch_1_filtered_single_record.sam > 06-stacks_rx/batch_1_filtered_single_record_q.bam`
-
-Obtain info from the alignment
-`samtools view 06-stacks_rx/batch_1_filtered_single_record_q.bam | awk '{ print $1 "," $3 "," $4 }' - > 11-other_stats/aligned_marker_info.csv`
 
 
 ## Run fastStructure
