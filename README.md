@@ -1,5 +1,5 @@
 # Moore Oyster Project - Population Genetics
-Manuscript analysis instruction guide and associated scripts for the Moore Oyster Project Population Genetics analysis.      
+Manuscript analysis instruction guide and associated scripts for the Moore Oyster Project Population Genetics analysis. This pipeline is still in development stage, and comes with no guarantees.            
 Primarily uses the repo https://github.com/bensutherland/stacks_workflow, which is a fork of the original repo by Eric Normandeau in Labo Bernatchez https://github.com/enormandeau/stacks_workflow but customized for Stacks v2.0.       
 
 
