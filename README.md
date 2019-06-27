@@ -277,6 +277,9 @@ Make a folder to work within:
 Move marker file to the folder:    
 `cp 09-diversity_stats/populations.loci.fa 12_genome_plot`      
 
+Do a bit of an update on the fasta file to make sure that all of your records are unique:    
+`cat 12_genome_plot/populations.loci.fa | awk '{ print $1"-"$2 }' - | sed 's/\[//g' | sed 's/\,//g' | sed 's/-$//g' | grep -vE '^#' - > 12_genome_plot/populations.loci_fullname.fa`     
+
 First download the assembly from http://dx.doi.org/10.12770/dbf64e8d-45dd-437f-b734-00b77606430a 
 Citation: Gagnaire _et al._, 2018. Analysis of Genome-Wide Differentiation between Native and Introduced Populations of the Cupped Oysters _Crassostrea gigas_ and _Crassostrea angulata_, Genome Biology and Evolution, *10*(9), pp. 2518–2534, https://doi.org/10.1093/gbe/evy194 .     
 
@@ -285,11 +288,11 @@ Index the genome:
 
 Align all loci (single consensus locus per marker) against the reference genome:        
 ```
-bwa mem -t 6 $GENOME 12_genome_plot/populations.loci.fa > 12_genome_plot/populations.loci.sam
+GENOME=/home/ben/Documents/genomes/C_gigas_Assembly_1.fa.gz ; bwa mem -t 6 $GENOME 12_genome_plot/populations.loci_fullname.fa > 12_genome_plot/populations.loci.sam
 samtools view -Sb -F 4 -q 1 12_genome_plot/populations.loci.sam > 12_genome_plot/populations.loci.bam
 ```
 
-Obtain alignment info per marker:      
+Obtain alignment info per marker, saving the top mapq:      
 `samtools view 12_genome_plot/populations.loci.bam | awk '{ print $1 "," $3 "," $4 }' - > 12_genome_plot/aligned_marker_info.csv`     
 
 
