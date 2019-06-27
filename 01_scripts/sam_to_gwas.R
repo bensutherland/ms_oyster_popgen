@@ -1,4 +1,6 @@
 # Identify cumulative positions of markers on fasta
+# uses input as all_data, and ref genome in fasta
+head(all_data)
 
 #### Front Matter ####
 # Clean space
@@ -13,16 +15,8 @@ source("http://bioconductor.org/biocLite.R")
 #install.packages("seqinr")
 require("seqinr")
 
-# Set working directory
-# Xavier
-setwd("~/Documents/01_moore_oyster_project/stacks_workflow_no_Qc/")
-
 # Provide full path to genome
-genome.path <- "~/Documents/genomes/C_gigas_assembly_1_all_chr.fa"
-
-# # Read in genome
-# rfsq <- ref.DNAseq(FASTA.file = genome.path, subselect.contigs = F)
-# length(rfsq)
+genome.path <- "~/Documents/genomes/C_gigas_Assembly_1.fa"
 
 # Read in genome
 rfsq <- read.fasta(file = genome.path, seqtype = "DNA")
@@ -42,18 +36,37 @@ chr.info$cum.lengths <- cumsum(chr.info$chr.lengths)
 str(chr.info)
 
 
+##### Bring in alignment data #####
+head(all_data)
+all_data$target.chr <- as.character(all_data$target.chr)
+str(head(all_data))
+
+# Isolate needed sections
+marker.info <- all_data[, c("matching.mname", "target.chr", "target.loc", "Fst")]
+head(marker.info)
+colnames(marker.info) <- c("mname","chr","pos", "Fst")
 
 #### Read in alignment info ####
-marker.info <- read.csv(file = "11-other_stats/aligned_marker_info.csv", header = F, col.names = c("mname","chr","pos"))
-marker.info
-dim(marker.info)
-head(marker.info)
+# marker.info <- read.csv(file = "11-other_stats/aligned_marker_info.csv", header = F, col.names = c("mname","chr","pos"))
+# marker.info
+# dim(marker.info)
+# head(marker.info)
 
 # Sort by chromosome, then position
 marker.info <- marker.info[order(marker.info$chr, marker.info$pos), ]
 tail(marker.info)
 
 # TODO: should also sort the chr.info file
+
+### subset rows that did not map
+unplaced.marker.info <- marker.info[which(is.na(marker.info$chr)) , ]
+dim(unplaced.marker.info)
+dim(marker.info)
+
+marker.info <- marker.info[which(!is.na(marker.info$chr)) , ]
+dim(marker.info)
+head(marker.info)
+tail(marker.info)
 
 # Add a new column to marker.info that is a continuous value of total position on the genome
 cum.pos <- NULL; cum.pos.string <- NULL; chr <- NULL; identical.row <- NULL; adding.factor <- NULL
@@ -91,112 +104,78 @@ position.of.chr.label[is.na(position.of.chr.label)] <- (chr.info$chr.lengths[1] 
 position.of.chr.label
 
 
+# Plot
+plot(x = marker.info$cum.pos, y = marker.info$Fst, xlab = "cumulative pos (bp)", ylab = "Fst"
+     , las = 1, ylim = c(-0.02, 0.4)
+     , cex = 0.6)
 
-#### BRING IN DATA ####
-datatypes <- c("ch.gid", "fr.gid", "bc.sel.gid")
-
-pdf(file = "11-other_stats/selection_fst.pdf", width = 7, height = 12)
-par(mfrow=c(3,1))
-
-# loop to try all three
-for(i in 1:length(datatypes)){
-  datatype <- datatypes[i]
-
-filename <- paste("11-other_stats/", datatype, "_perloc_stats.csv", sep = "")
-
-# Matching names, marker info
-match1 <- gsub(pattern = "CLocus_", replacement = "", x = marker.info$mname)
-match2 <- gsub(pattern = "\\_.*", "", x = match1)
-marker.info$mname <- match2
-head(marker.info)
-
-# Selected data
-perloc_stats <- read.csv(file = filename)
-head(perloc_stats)
-
-# matching names, perloc stats
-match3 <- gsub(pattern = "X", replacement = "", x = perloc_stats$X)
-match4 <- gsub(pattern = "\\_.*", "", x = match3)
-perloc_stats$X <- match4 
-colnames(perloc_stats)[1] <- "mname"
-
-head(perloc_stats)
-
-# Merge together the data
-positional.and.fst.data <- merge(x = marker.info, y = perloc_stats, by = "mname")
-positional.and.fst.data <- positional.and.fst.data[order(positional.and.fst.data$chr, positional.and.fst.data$pos), ]
-head(positional.and.fst.data)
-dim(positional.and.fst.data)
-
-#Plot
-plot(x = positional.and.fst.data$cum.pos, y = positional.and.fst.data$Fst
-    , xlab = "Cumulative Position (bp)", ylab = "Fst"
-    , las = 1, ylim = c(-0.2, 0.4))
 abline(v = chr.info$cum.lengths)
-text(x = position.of.chr.label, y = 0.4, labels = chr.info$chr.names)
-text(x = chr.info[nrow(chr.info), "cum.lengths"] / 2 , y = 0.35, labels = datatype)
-abline(h = 0.15, lty = 2)
-}
-
-dev.off()
+abline(h = outlier_thresh_2xSD, lty = 2)
+text(x = position.of.chr.label, y = 0.35, labels = chr.info$chr.names)
 
 
 
-#### Directly compare data without any genome information ####
-datatypes <- c("ch.gid", "fr.gid", "bc.sel.gid")
-perloc_stats_list <- list()
 
-# Loop
-for(i in 1:length(datatypes)){
-  datatype <- datatypes[i]
-  print(datatype)
-  filename <- paste("11-other_stats/", datatype, "_perloc_stats.csv", sep = "")
 
-  # Selected data
-  perloc_stats <- read.csv(file = filename)
-  perloc_stats_list[[datatype]]  <- perloc_stats
-}
 
-str(perloc_stats_list)
 
-pdf(file = "11-other_stats/selection_expt_all_by_all.pdf", width = 8, height = 8)
-par(mfrow=c(2,2))
 
-# France vs China
-plot(perloc_stats_list[["ch.gid"]]["Fst"]$Fst ~ perloc_stats_list[["fr.gid"]]["Fst"]$Fst
-     , ylim = c(0, 0.3)
-     , xlim = c(0, 0.3)
-     , ylab = "China (Fst)", xlab = "France (Fst)")
-abline(h = 0.1, lty = 3)
-abline(v = 0.1, lty = 3)
 
-# BC vs France
-plot(perloc_stats_list[["bc.sel.gid"]]["Fst"]$Fst ~ perloc_stats_list[["fr.gid"]]["Fst"]$Fst
-     , ylim = c(0, 0.3)
-     , xlim = c(0, 0.3)
-     , ylab = "BC (Fst)", xlab = "France (Fst)")
-abline(h = 0.1, lty = 3)
-abline(v = 0.1, lty = 3)
 
-# BC vs China
-plot(perloc_stats_list[["bc.sel.gid"]]["Fst"]$Fst ~ perloc_stats_list[["ch.gid"]]["Fst"]$Fst
-     , ylim = c(0, 0.3)
-     , xlim = c(0, 0.3)
-     , ylab = "BC (Fst)", xlab = "China (Fst)")
-abline(h = 0.1, lty = 3)
-abline(v = 0.1, lty = 3)
-dev.off()
 
-# Find out which markers correspond to this:
-perloc_ch.gid <- as.data.frame(perloc_stats_list$ch.gid)
-perloc_fr.gid <- as.data.frame(perloc_stats_list$fr.gid)
-perloc_bc.sel.gid <- as.data.frame(perloc_stats_list$bc.sel.gid)
 
-FR <- perloc_fr.gid[which(perloc_fr.gid$Fst > 0.1), "X"]
-BC <- perloc_bc.sel.gid[which(perloc_bc.sel.gid$Fst > 0.1), "X"]
 
-intersect(x = FR, y = BC) # tells you which markers
 
+
+
+
+# #### BRING IN DATA ####
+# datatypes <- c("ch.gid", "fr.gid", "bc.sel.gid")
+# 
+# pdf(file = "11-other_stats/selection_fst.pdf", width = 7, height = 12)
+# par(mfrow=c(3,1))
+# 
+# # loop to try all three
+# for(i in 1:length(datatypes)){
+#   datatype <- datatypes[i]
+# 
+# filename <- paste("11-other_stats/", datatype, "_perloc_stats.csv", sep = "")
+# 
+# # Matching names, marker info
+# match1 <- gsub(pattern = "CLocus_", replacement = "", x = marker.info$mname)
+# match2 <- gsub(pattern = "\\_.*", "", x = match1)
+# marker.info$mname <- match2
+# head(marker.info)
+# 
+# # Selected data
+# perloc_stats <- read.csv(file = filename)
+# head(perloc_stats)
+# 
+# # matching names, perloc stats
+# match3 <- gsub(pattern = "X", replacement = "", x = perloc_stats$X)
+# match4 <- gsub(pattern = "\\_.*", "", x = match3)
+# perloc_stats$X <- match4 
+# colnames(perloc_stats)[1] <- "mname"
+# 
+# head(perloc_stats)
+# 
+# # Merge together the data
+# positional.and.fst.data <- merge(x = marker.info, y = perloc_stats, by = "mname")
+# positional.and.fst.data <- positional.and.fst.data[order(positional.and.fst.data$chr, positional.and.fst.data$pos), ]
+# head(positional.and.fst.data)
+# dim(positional.and.fst.data)
+# 
+# #Plot
+# plot(x = positional.and.fst.data$cum.pos, y = positional.and.fst.data$Fst
+#     , xlab = "Cumulative Position (bp)", ylab = "Fst"
+#     , las = 1, ylim = c(-0.2, 0.4))
+# abline(v = chr.info$cum.lengths)
+# text(x = position.of.chr.label, y = 0.4, labels = chr.info$chr.names)
+# text(x = chr.info[nrow(chr.info), "cum.lengths"] / 2 , y = 0.35, labels = datatype)
+# abline(h = 0.15, lty = 2)
+# }
+# 
+# dev.off()
 
 
 
