@@ -90,8 +90,16 @@ for i in $(ls 02-raw/*.fastq.gz) ; do echo $i ; gunzip -c $i | wc -l ; done
 Make directory to remove samples:    
 `mkdir 04-all_samples/removed_samples`
 
-1. Remove specific individuals (e.g. one with low alignments):   
-`mv 04-all_samples/PIP_631.* 04-all_samples/removed_samples/`   
+1. Remove specific individuals    
+```
+# Remove an individual with low alignments:   
+mv 04-all_samples/PIP_631.* 04-all_samples/removed_samples/   
+
+# Remove duplicate individuals (identified previously through shared microhaps)
+mv 04-all_samples/GUR_539.* 04-all_samples/removed_samples/
+mv 04-all_samples/PENF_214.* 04-all_samples/removed_samples/
+
+```
 
 2. Remove individuals with too few reads:     
 (_note: requires 'Inspect alignment results' output_).      
@@ -127,8 +135,8 @@ _Update: this may be no longer necessary because of the two tiers allowed in the
 ## 3. Genotype
 ### a. Run Stacks v2.0 individual steps:     
 ```
-# Genotype using alignments 
-./00-scripts/stacks2_1_gstacks.sh
+# Genotype using alignments using 8 cores
+./00-scripts/stacks2_1_gstacks.sh 8
 # Filter identified variants
 ./00-scripts/stacks2_2_populations.sh
 ```
