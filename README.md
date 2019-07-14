@@ -118,19 +118,22 @@ mv 04-all_samples/samples_to_remove.txt 04-all_samples/mappings_per_sample_table
 
 ### d. Characterize input samples and populations 
 ```
+# Essential steps:    
 # Calculate the number of samples per population
-ls -1 04-all_samples/*.bam | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c
-# Reconstruct population map with only retained individuals 
-../ms_oyster_popgen/01_scripts/redo_population_map.sh
+ls -1 04-all_samples/*.bam | awk -F"/" '{ print $2 }' - | awk -F"_" '{ print $1 }' - | sort -n | uniq -c > 01-info_files/samples_per_pop.txt      
+
+# Reduce pop map to only include the retained individuals
+./../ms_oyster_popgen/01_scripts/redo_population_map.sh
 # Produces: 01-info_files/population_map_retained.txt
+
+# Rename pop map to have names instead of numeric codes
+`R --slave -e 'source("./../ms_oyster_popgen/01_scripts/translate_popmap_numeric_to_names.R")'`
+
 ```
-Optional to merge closely-related collections in the population map based on previous analyses:     
-_Update: this may be no longer necessary because of the two tiers allowed in the map file_
-```
-./rename_populations_in_map.R
-# Produces: 01-info_files/population_map_retained_renamed.txt
-# This can be useful for the populations module (below)
-```
+
+
+No longer used (originally to merge specif. pops: `./../ms_oyster_popgen/01_scripts/z-unused/rename_populations_in_map.R`)         
+
 
 ## 3. Genotype
 ### a. Run Stacks v2.0 individual steps:     
@@ -141,112 +144,87 @@ _Update: this may be no longer necessary because of the two tiers allowed in the
 ./00-scripts/stacks2_2_populations.sh
 ```
 
-### Obtain data for different analyses: 
-The following steps will provide the outputs needed for downstream analyses. Each individual numbered step will provide a different output needed. All edits required are to successive runs of: `./00-scripts/stacks2_2_populations.sh`       
+### b. Filters and different outputs: 
+Create output directories for your data:     
+`mkdir 09-diversity_stats 11-adegenet_analysis 08-fineRADstructure`      
 
-For simplicity, an output script has been created that will successively run populations with the following changes identified below. Therefore, instead of running the following steps, use the script:      
-`./../ms_oyster_popgen/01_scripts/runall_outputs.sh`     
+To identify loci out of HWE then run multiple outputs, use the following runall script:       
+`./../ms_oyster_popgen/01_scripts/runall_outputs.sh`        
 
-**Make some output directories:**     
-```
-mkdir 08-fineRADstructure
-mkdir 09-diversity_stats
-mkdir 11-adegenet_analysis
-```
-
-**1. Identify loci out of HWE**
-```
-# Obtain list of loci out of HWE to use as blacklist
-# Toggle ON flag --hwe
-# Re-run
-./00-scripts/stacks2_2_populations.sh
-```
-
-**2. Filter and output single SNP per locus**
-```
-# Toggle ON blacklist flag (-B) pointing to list of loci out of HWE
-# Toggle on single snp flag (--write-single-snp)
-# Re-run
-./00-scripts/stacks2_2_populations.sh
-
-# Observe number of samples per populations remaining
-awk -F_ '{ print $1 }' 01-info_files/population_map_retained.txt | sort -n | uniq -c | less
-
-# Save outputs to analysis folder
-cp 07-filtered_vcfs/populations.snps.vcf 09-diversity_stats
-cp 07-filtered_vcfs/*plink* 11-adegenet_analysis
-```
+This will:     
+* Identify loci out of HWE using stacks calculated HWE p-values
+* Output single SNP per locus (filtered)
+* Output multiple SNP per locus (filtered)
 
 Provides output for:
 Diversity analysis: [Diversity Analysis](#nucleotide-diversity)     
-Population differentiation analysis:[General Stats](#hierfstat-and-adegenet)
+in `09-diversity_stats`    
 
-**3. Filter and output microhaplotypes per locus**
-```
-# Toggle ON blacklist flag (-B) pointing to list of loci out of HWE
-# Toggle OFF single snp flag (--write-single-snp)
-# Toggle ON radpainter output flag (--radpainter)
+Population differentiation analysis:[General Stats](#hierfstat-and-adegenet)     
+in `11-adegenet_analysis`       
 
-# Compare number SNP vs number loci
-grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l
-grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l
-
-# Save outputs to analysis folder
-cp 07-filtered_vcfs/populations.haps.vcf 08-fineRADstructure
-```
-Provides output for:    
 Relatedness via shared coancestry with SNPs (related) and haplotypes (fineRADstructure) [fineRADstructure](#fineradstructure)      
+in `08-fineRADstructure`
+
+
+### Obtain some summary data
+#### Sample size per type    
+`01_scripts/characterize_samples.R`    
+
+#### Compare number SNP vs number loci
+`grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l`    
+`grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l`       
 
 ## 4. Diversity analysis
 ### A. Nucleotide diversity
-Uses the single SNP VCF moved to `09-diversity_stats` (above).    
+Uses: single SNP VCF        
 
 #### i. Per-site nucleotide diversity
-Use automated script to get sample names for each data subset, then use vcftools to calculate per-site nucleotide diversity (Pi) for all sites in the VCF file for each subset.       
-`../ms_oyster_popgen/01_scripts/nuc_diversity.sh`     
+Calculate per-site nucleotide diversity (Pi) for all sites in VCF data subsets with vcftools:       
+`./../ms_oyster_popgen/01_scripts/nuc_diversity.sh`     
 
-The script will generate a per locus pi value for the following sets of samples:      
-1. Hisnit/Pendrell/Pipestem/Serpentine 
-2. BC wild-to-farm (PENF)
-3. Rosewall
-4. DeepBay
-5. FranceW
-6. FranceC
-7. China Farm 1 (QDC)
-8. China Farm 2 (RSC)
-9. China Wild (CHN)
+Data subsets:     
+1. BC naturalized: Hisnit/Pendrell/Pipestem/Serpentine 
+2. BC naturalized-to-farm (PENF)
+3. BC farm (Rosewall)
+4. BC farm (DeepBay)
+5. France naturalized
+6. France naturalized-to-farm (FRAF)
+7. China farm 1 (QDC)
+8. China farm 2 (RSC)
+9. China wild (CHN)
 10. China wild-to-farm (CHNF)
-11. Guernsey
-12. Japan        
+11. UK hatchery (Guernsey)
+12. Japan wild        
 
 #### ii. Per-individual heterozygosity
 Calculate the inbreeding coefficient 'F' for each individual with vcftools:      
 `../ms_oyster_popgen/01_scripts/heterozygosity.sh`      
 
-Then use the RScript `../ms_oyster_popgen/diversity_comparison.R`    
+#### iii. Plot results for diversity and heterozygosity
+Results will be in `09_diversity_stats`
+`R --slave -e 'source("./../ms_oyster_popgen/01_scripts/diversity_comparison.R")'`
 
 
 ## 5. Genetic differentiation and relatedness
 ### A. Genetic differentiation
-Input: single SNP populations output (HWE filter) in plink format to input to adegenet.    
-
-Single SNP, HWE filter; use plink to convert to adegenet:    
+Uses: single SNP plink       
+Convert from plink to adegenet:     
 `plink --ped 11-adegenet_analysis/populations.plink.ped --map 11-adegenet_analysis/populations.plink.map --maf 0.01 --recodeA --noweb --out 11-adegenet_analysis/populations_single_snp_HWE`      
+Run adegenet analysis (start):     
+`R --slave -e 'source("./../ms_oyster_popgen/01_scripts/adegenet.R")'`       
+...which will build a NJ tree, conduct PCA and dAPC, and calculate bootstrapped Fst vals per population pair. Will also prep for data subset-specific analysis         
 
-Open Rscript `01_scripts/adegenet.R` to begin popgen analysis, loading `11-adegenet_analysis/populations_single_snp_HWE.raw`      
-Builds NJ tree, PCA, dAPC, bootstrapped Fst vals per population pair       
-Outputs multiple formats (e.g. genlight) as `11-other_stats/adegenet_output.RData`      
-
-Open Rscript `01_scripts/adegenet_sep_pops.R` to import the Rdata from previous step.      
-Analyzes the following contrasts:        
-* Global with one representative from BC `global`
-* All BC naturalized samples `bc_all`    
-* BC spatial vs. temporal in BC (Hisnit and Serpentine) `bc_size`     
-* All China `ch_all`
-* BC, France, and China transfer to farm from nature `bc_sel`, `fr_sel`, `chr_sel`
-* Domestication signatures for DPB vs PEN, ROS vs PIP, QDC vs CHN, RSC vs CHN, and GUR vs FRA    
-
-Outputs with analysis-specific label to `11_adegenet_analysis`.     
+Run adegenet analysis (data subset-specific):     
+`R --slave -e 'source("./../ms_oyster_popgen/01_scripts/adegenet_sep_pops.R")'`       
+...which will analyzes the following contrasts:        
+* Global analysis (only one pop from BC) `global`    
+* BC naturalized analysis `bc_all`    
+* BC naturalized spatial vs. temporal (Hisnit and Serpentine) `bc_size`     
+* China analysis `ch_all`     
+* Parallel naturalized-to-farm (i.e. BC, France, and China) `bc_sel`, `fr_sel`, `chr_sel`
+* Domestication (i.e. `DPB vs PEN`, `ROS vs PIP`, `QDC vs CHN`, `RSC vs CHN`, and `GUR vs FRA`    
+Results will be in `11_adegenet_analysis`      
 
 
 ### B. Relatedness
