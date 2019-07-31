@@ -57,16 +57,17 @@ output.dir <- "11-adegenet_analysis/"
 input.FN <- "11-adegenet_analysis/populations_single_snp_HWE.raw"
 
 #### 1. Import data ####
+print(paste0("Loading data from ", input.FN))
 my.data <- read.PLINK(file = input.FN)
 my.data
 
-## Explore data attributes
-nInd(my.data) # How many individuals?
-nLoc(my.data) # How many loci?
-indNames(my.data)[1:20] # What individuals?
-nPop(my.data) # How many pops?
-unique(pop(my.data)) # What pops?
-locNames(my.data, withAlleles = T)[1:20] # What allele names?
+# ## Explore data attributes
+# nInd(my.data) # How many individuals?
+# nLoc(my.data) # How many loci?
+# indNames(my.data)[1:20] # What individuals?
+# nPop(my.data) # How many pops?
+# unique(pop(my.data)) # What pops?
+# locNames(my.data, withAlleles = T)[1:20] # What allele names?
 
 
 #### 2. Minor allele freq ####
@@ -280,42 +281,42 @@ write.csv(x = boot.fst.all.output, file = filename)
 # heatmap.2(boot.fst.all.output)
 
 
-## diveRsity
-library(devtools)
-install_github("romunov/zvau")
-library("zvau")
-?writeGenPop()
-
-writeGenPop(gi = my.data.gid, file.name = "test.gen", comment = "test")
-
-diff_stats <- diffCalc(infile = "test.gen"
-                       , outfile = "my_results"
-                       , fst = TRUE, pairwise = TRUE
-                       , bs_pairwise = TRUE, boots = 1000, ci_type = "individuals"
-                       , para = TRUE)
-
+# ## diveRsity
+# library(devtools)
+# install_github("romunov/zvau")
+# library("zvau")
+# ?writeGenPop()
+# 
+# writeGenPop(gi = my.data.gid, file.name = "test.gen", comment = "test")
+# 
+# diff_stats <- diffCalc(infile = "test.gen"
+#                        , outfile = "my_results"
+#                        , fst = TRUE, pairwise = TRUE
+#                        , bs_pairwise = TRUE, boots = 1000, ci_type = "individuals"
+#                        , para = TRUE)
+# 
 
 ##### 8. Additional Summary Statistics #####
 # Descriptive Statistics on genind file
-div <- summary(my.data.gid) # genetic diversity w/ adegenet
-str(div) # What is contained within this summary object
+#div <- summary(my.data.gid) # genetic diversity w/ adegenet
+#str(div) # What is contained within this summary object
 # contains: sample size, sample size by pop, number loci and names, population IDs, % NA, Hobs, Hexp
 
 # Provide three F statistics (Fst (pop/total), Fit (Ind/total), Fis (ind/pop))
-fstat(my.data.gid)
+#fstat(my.data.gid)
 
 # which markers are greater than a specific Fst value?
-val <- 0.1
-rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
-high.fst.markers <- rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
-length(high.fst.markers)
-
-# extract these from the genlight object
-head(locNames(my.data.gid))
-high.fst.markers.true <- gsub(x = high.fst.markers, pattern = "^X", replacement = "", perl = T)
-
-my.data.high.fst <- my.data.gid[, loc=high.fst.markers.true]
-my.data.high.fst
+# val <- 0.1
+# rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
+# high.fst.markers <- rownames(basicstat$perloc)[which(basicstat$perloc[, "Fst"] > val)]
+# length(high.fst.markers)
+# 
+# # extract these from the genlight object
+# head(locNames(my.data.gid))
+# high.fst.markers.true <- gsub(x = high.fst.markers, pattern = "^X", replacement = "", perl = T)
+# 
+# my.data.high.fst <- my.data.gid[, loc=high.fst.markers.true]
+# my.data.high.fst
 
 
 ##### 9. Save Results ####
