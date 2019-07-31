@@ -9,5 +9,5 @@ SAMPLE_DIR="04-all_samples"
 ls $SAMPLE_DIR/*.fq.gz | awk -F"/" '{ print $2 }' - | sed 's/\.fq\.gz//g' - > $INFO_DIR/all_retained_samples.txt
 
 # Second, keep only the lines of the population map that are in the retained samples
-grep -f $INFO_DIR/all_retained_samples.txt $INFO_DIR/population_map.txt > $INFO_DIR/population_map_retained.txt
+grep -f $INFO_DIR/all_retained_samples.txt $INFO_DIR/population_map.txt > $INFO_DIR/population_map_retained_numeric.txt
 
