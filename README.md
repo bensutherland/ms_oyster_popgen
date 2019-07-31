@@ -136,13 +136,9 @@ No longer used (originally to merge specif. pops: `./../ms_oyster_popgen/01_scri
 
 
 ## 3. Genotype
-### a. Run Stacks v2.0 individual steps:     
-```
-# Genotype using alignments using 8 cores
-./00-scripts/stacks2_1_gstacks.sh 8
-# Filter identified variants
-./00-scripts/stacks2_2_populations.sh
-```
+### a. Run Stacks v2.0 genotyper:     
+Genotype using alignments, with 8 cores:      
+`./00-scripts/stacks2_1_gstacks.sh 8`      
 
 ### b. Filters and different outputs: 
 Create output directories for your data:     
@@ -167,13 +163,11 @@ Relatedness via shared coancestry with SNPs (related) and haplotypes (fineRADstr
 in `08-fineRADstructure`
 
 
-### Obtain some summary data
+### c. Obtain summary info 
 #### Sample size per type    
+. # 2019-07-22 todo: automate using Rscript, and output reports not just to screen
 `01_scripts/characterize_samples.R`    
 
-#### Compare number SNP vs number loci
-`grep -vE '^#' 06-stacks_rx/batch_1.vcf | wc -l`    
-`grep -vE '^#' 06-stacks_rx/batch_1.haplotypes.vcf | wc -l`       
 
 ## 4. Diversity analysis
 ### A. Nucleotide diversity
@@ -226,6 +220,9 @@ Run adegenet analysis (data subset-specific):
 * Domestication (i.e. `DPB vs PEN`, `ROS vs PIP`, `QDC vs CHN`, `RSC vs CHN`, and `GUR vs FRA`    
 Results will be in `11_adegenet_analysis`      
 
+Private alleles are identified using the following:     
+`../ms_oyster_popgen/01_scripts/private_alleles.R`       
+This uses the output from the adegenet analysis above, and will output a graph of private alleles and their individual counts for both a bare minimum analysis and an all-BC compared to farms analysis. (#todo finalize code)     
 
 ### B. Relatedness
 Note: must run differentiation analysis first.    
@@ -266,6 +263,19 @@ Move marker file to the folder:
 Do a bit of an update on the fasta file to make sure that all of your records are unique:    
 `cat 12_genome_plot/populations.loci.fa | awk '{ print $1"-"$2 }' - | sed 's/\[//g' | sed 's/\,//g' | sed 's/-$//g' | grep -vE '^#' - > 12_genome_plot/populations.loci_fullname.fa`     
 
+The fasta has all loci, including those that were not passing filters, so use the VCF to identify the names of the filtered loci:      
+`cp 09-diversity_stats/populations.snps.vcf 12_genome_plot/`    
+
+Then format the names to match the fullname fasta above:    
+`grep -vE '^#' 12_genome_plot/populations.snps.vcf | awk '{ print ">CLocus_" $3 "-" $1 }' -  | awk -F":" '{ print $1 $3}' - | sed 's/\+/\-/g' | sed 's/\-\-/\-/g' > 12_genome_plot/markers_in_vcf.txt`
+
+And use xargs to extract only the relevant lines from the renamed fasta:    
+`cat 12_genome_plot/markers_in_vcf.txt | xargs -I{} grep -A1 {} 12_genome_plot/populations.loci_fullname.fa | grep -vE '^--$' - > 12_genome_plot/markers_in_vcf.fa`
+
+Your fasta is now ready for alignment.     
+
+#### Alignment ####
+
 First download the assembly from http://dx.doi.org/10.12770/dbf64e8d-45dd-437f-b734-00b77606430a 
 Citation: Gagnaire _et al._, 2018. Analysis of Genome-Wide Differentiation between Native and Introduced Populations of the Cupped Oysters _Crassostrea gigas_ and _Crassostrea angulata_, Genome Biology and Evolution, *10*(9), pp. 2518–2534, https://doi.org/10.1093/gbe/evy194 .     
 
@@ -274,12 +284,30 @@ Index the genome:
 
 Align all loci (single consensus locus per marker) against the reference genome:        
 ```
-GENOME=/home/ben/Documents/genomes/C_gigas_Assembly_1.fa.gz ; bwa mem -t 6 $GENOME 12_genome_plot/populations.loci_fullname.fa > 12_genome_plot/populations.loci.sam
-samtools view -Sb -F 4 -q 1 12_genome_plot/populations.loci.sam > 12_genome_plot/populations.loci.bam
+GENOME="/home/ben/Documents/genomes/C_gigas_Assembly_1.fa.gz" ; bwa mem -t 6 $GENOME 12_genome_plot/markers_in_vcf.fa > 12_genome_plot/markers_in_vcf.sam
+
+# Extract only the markers that map:   
+samtools view -Sb -F 4 -q 1 12_genome_plot/markers_in_vcf.sam > 12_genome_plot/markers_in_vcf_filtered.bam
+
+# Obtain alignment info per marker for plotting, saving only the top mapq:   
+samtools view 12_genome_plot/markers_in_vcf_filtered.bam | awk '{ print $1 "," $3 "," $4 }' - > 12_genome_plot/aligned_marker_info.csv
+
+# Get a quick overview of how many markers on which chromosomes:    
+awk -F, '{ print $2 }' 12_genome_plot/aligned_marker_info.csv | sort | uniq -c
+
+# Sum up the number of alignments
+awk -F, '{ print $2 }' 12_genome_plot/aligned_marker_info.csv | sort | uniq -c | awk '{ print $1 }' - | paste -sd+ - | bc
+
+# Compare to the markers going into the alignment:   
+wc -l 12_genome_plot/markers_in_vcf.txt
+
 ```
 
-Obtain alignment info per marker, saving the top mapq:      
-`samtools view 12_genome_plot/populations.loci.bam | awk '{ print $1 "," $3 "," $4 }' - > 12_genome_plot/aligned_marker_info.csv`     
+The next steps involve:   
+1) `01_scripts/plot_markers_across_genome.R`     
+2) `01_scripts/sam_to_gwas.R`
+
+
 
 
 ## Other Utilities 
