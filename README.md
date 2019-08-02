@@ -16,6 +16,7 @@ Primarily uses the repo https://github.com/bensutherland/stacks_workflow, which 
 `XML`    
 `fastStructure`    http://rajanil.github.io/fastStructure/     
 `stacks_workflow` original from E. Normandeau, but for Stacks v2 use fork: https://github.com/bensutherland/stacks_workflow        
+`pcadapt`       
 
 All analysis is done within the `stacks_workflow` repo, which should be contained within the same parent directory as this repo (at the same level).       
 
@@ -249,8 +250,33 @@ Then plot using the Rscripts adapted from the fineRADstructure site (see above)
 `01_scripts/FinestructureLibrary.R`     
 This will produce plots in the working directory.    
 
+## 6. Selection analysis
+Input: copy the file populations.snps.vcf to a new folder entitled `13_selection`      
+Also make a folder for subsetting samples: `13_selection/sets/`
 
-## 6. Plotting outliers along the chromosome-level assembly
+Prepare a file, within `../ms_oyster_popgen/00_archive/selection_contrasts.txt` that is a space or tab separated text file that shows the contrasts of interest, e.g. 
+PEN PENF
+QDC CHN
+
+Run the following:     
+```
+# Identify what samples are in your vcf
+bcftools query -l 13_selection/populations.snps.vcf > 13_selection/sets/all_samples.txt
+
+# Create set lists of samples within contrasts of interest using the selection_contrasts.txt file
+./../ms_oyster_popgen/01_scripts/set_selection_comparisons.sh
+# outputs will be VCF files in 13_selection
+```
+
+Use the Rscript to calculate outliers per contrast:     
+`01_scripts/outlier_detection.R` 
+
+
+
+
+
+
+## 7. Plotting outliers along the chromosome-level assembly
 ### A. Align loci against the reference genome
 The populations run above (single snp) will output a fasta file with a consensus sequence per locus, entitled `09-diversity_stats/populations.loci.fa`. Align this against the most complete reference genome:      
 
