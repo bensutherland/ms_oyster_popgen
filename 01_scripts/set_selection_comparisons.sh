@@ -20,8 +20,12 @@ cat $INFO_FILES_FOLDER/$SET_CONTRASTS_FILE |
 
         SET_FILENAME="$POP1"_"$POP2".txt         
 
+        # Add underscore to ensure capturing correct population
+        POP1_restrict=$POP1"_"
+        POP2_restrict=$POP2"_"
+
         # Create set lists
-        grep -E "$POP1|$POP2" $SEL_FOLDER/$SET_FOLDER/all_samples.txt \
+        grep -E "$POP1_restrict|$POP2_restrict" $SEL_FOLDER/$SET_FOLDER/all_samples.txt \
                > $SEL_FOLDER/$SET_FOLDER/$SET_FILENAME
 
         # Make restricted VCF files for each contrast
