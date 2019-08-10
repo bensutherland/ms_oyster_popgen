@@ -88,7 +88,9 @@ for(i in 1:length(pcadapt.out.list)){
   
   # Use screeplot
   pdf(file = paste0("13_selection/", contrast.of.interest, "_screeplot_K20.pdf"), width = 5, height = 5)
-  plot(pcadapt.out.list[[i]], option = "screeplot", K = 20)
+  print(
+    plot(pcadapt.out.list[[i]], option = "screeplot", K = 20)
+  )
   dev.off()
   
   # Use scoreplot
@@ -127,26 +129,34 @@ for(i in 1:length(pcadapt.obj.list)){
   # Save outputs
   # Manhattan plot
   pdf(file = paste0("13_selection/", contrast.of.interest, "_manhattan.pdf"), width = 5, height = 4)
-  pcadapt::manhattan_plot(x = pcadapt.out_dynamic_K.list[[contrast.of.interest]]
+  print(
+      pcadapt::manhattan_plot(x = pcadapt.out_dynamic_K.list[[contrast.of.interest]]
                           , chr.info = NULL # Note: could supply chr info here
                           , snp.info = NULL
                           , plt.pkg = "ggplot"
                           )
+  )
   dev.off()
   
   # qqplot
   pdf(file = paste0("13_selection/", contrast.of.interest, "_qqplot.pdf"), width = 5, height = 4)
-  pcadapt::qq_plot(x = pcadapt.out_dynamic_K.list[[contrast.of.interest]])
+  print(
+    pcadapt::qq_plot(x = pcadapt.out_dynamic_K.list[[contrast.of.interest]])
+  )
   dev.off()
   
   # pval hist
   pdf(file = paste0("13_selection/", contrast.of.interest, "_pval_hist.pdf"), width = 5, height = 4)
-  hist(pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues, xlab = "p-values", main = NULL, breaks = 50, col = "orange")
+  print(
+    hist(pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues, xlab = "p-values", main = NULL, breaks = 50, col = "orange")
+  )
   dev.off()
   
   # stat distrib
   pdf(file = paste0("13_selection/", contrast.of.interest, "_stat_distrib.pdf"), width = 5, height = 4)
-  plot(pcadapt.out_dynamic_K.list[[contrast.of.interest]], option = "stat.distribution")
+  print(
+    plot(pcadapt.out_dynamic_K.list[[contrast.of.interest]], option = "stat.distribution")
+  )
   dev.off()
   
 }
@@ -155,7 +165,7 @@ for(i in 1:length(pcadapt.obj.list)){
 
 
 #### Choosing cutoff for outlier detection ####
-qvals <- NULL; outliers.list <- list(); pval_and_qval.df <- NULL; num_outliers.list <- list()
+qvals <- NULL; outliers.list <- list(); pval_and_qval.df <- NULL; num_outliers.list <- list(); mname.df <- NULL
 # Extract qvals
 for(i in 1:length(pcadapt.out_dynamic_K.list)){
   
@@ -169,6 +179,16 @@ for(i in 1:length(pcadapt.out_dynamic_K.list)){
   # Combine pval with qvalue
   pval_and_qval.df <- as.data.frame(cbind(pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues, qvals), stringsAsFactors = F)
   colnames(pval_and_qval.df) <- c("pval", "qval")
+  
+  # Bring in marker name
+  mname.df <- read.table(file = paste0("13_selection/", contrast.of.interest, "_mnames.txt"), header = F, sep = "\t")
+  mname.df$V2 <- seq(1:length(mname.df$V1))
+  colnames(mname.df) <- c("mname", "index")
+  
+  # TODO: add test to make sure the two df match before combining them
+  
+  # Combine pval/qval with marker name
+  pval_and_qval.df <- cbind(mname.df, pval_and_qval.df)
   
   write.table(file = paste0("13_selection/", "qvals_", contrast.of.interest, ".csv")
               , x = pval_and_qval.df, sep = ",", col.names = T, row.names = F
