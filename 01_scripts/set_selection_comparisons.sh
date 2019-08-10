@@ -33,11 +33,16 @@ cat $INFO_FILES_FOLDER/$SET_CONTRASTS_FILE |
             --keep $SEL_FOLDER/$SET_FOLDER/$SET_FILENAME \
             --out $SEL_FOLDER/${SET_FILENAME%.txt} \
             --recode
+
+        # Identify markers and index for each restricted VCF
+        grep -vE '^#' $SEL_FOLDER/${SET_FILENAME%.txt}".recode.vcf" |\
+            awk '{ print ">CLocus_" $3 "-" $1 }' - |\
+            awk -F":" '{ print $1 $3}' - |\
+            sed 's/\+/\-/g' |\
+            sed 's/\-\-/\-/g' > $SEL_FOLDER/${SET_FILENAME%.txt}"_mnames.txt"
+
         # Cleanup
         mv $SEL_FOLDER/*.log $SEL_FOLDER/$SET_FOLDER/
 
 done
-
-
-
 
