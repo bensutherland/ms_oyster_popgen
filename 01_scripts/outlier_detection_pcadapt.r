@@ -1,5 +1,5 @@
 # Method to detect outliers, developed by Anne-Laure Ferchaud (U Laval) and Ben Sutherland (DFO)
-# Uses pcadaptmethods as described here: https://cran.r-project.org/web/packages/pcadapt/vignettes/pcadapt.html
+# Uses pcadapt methods as described here: https://cran.r-project.org/web/packages/pcadapt/vignettes/pcadapt.html
 
 #### Front Matter ####
 # Clean space

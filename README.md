@@ -17,6 +17,7 @@ Primarily uses the repo https://github.com/bensutherland/stacks_workflow, which 
 `fastStructure`    http://rajanil.github.io/fastStructure/     
 `stacks_workflow` original from E. Normandeau, but for Stacks v2 use fork: https://github.com/bensutherland/stacks_workflow        
 `pcadapt`       
+`bayescan`   cmpg.unibe.ch/software/BayeScan/download.html
 
 All analysis is done within the `stacks_workflow` repo, which should be contained within the same parent directory as this repo (at the same level).       
 
@@ -268,11 +269,11 @@ bcftools query -l 13_selection/populations.snps.vcf > 13_selection/sets/all_samp
 # outputs will be VCF files in 13_selection
 ```
 
-Use the Rscript to calculate outliers per contrast:     
-`01_scripts/outlier_detection.R` 
+Use the Rscript to calculate outliers per contrast using pcadapt:     
+`01_scripts/outlier_detection_pcadapt.r` 
 
 
-
+bayescan
 
 
 
