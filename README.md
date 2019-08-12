@@ -272,6 +272,7 @@ bcftools query -l 13_selection/populations.snps.vcf > 13_selection/sets/all_samp
 Use the Rscript to calculate outliers per contrast using pcadapt:     
 `01_scripts/outlier_detection_pcadapt.r` 
 
+This data will be used by <TO ADD> 
 
 bayescan
 
@@ -331,9 +332,11 @@ wc -l 12_genome_plot/markers_in_vcf.txt
 ```
 
 The next steps involve:   
-1) `01_scripts/plot_markers_across_genome.R`     
-2) `01_scripts/sam_to_gwas.R`
+1) `../ms_oyster_popgen/01_scripts/gwas_01_load_constant_info.r`     
+2) `../ms_oyster_popgen/01_scripts/gwas_02_load_set_contrasts_info.r`     
+3) `../ms_oyster_popgen/01_scripts/gwas_03_plot.r`       
 
+This will output a bunch of selection plots in `13_selection`
 
 
 
