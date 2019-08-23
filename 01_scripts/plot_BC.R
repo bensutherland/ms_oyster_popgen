@@ -1,11 +1,23 @@
 # This is a script to plot a map with points on it, then add labels to the plot, and connect points with lines
 # specifically here for the Moore Oyster Project
 
+#### 00. Front Matter ####
 # Clean space
 # rm(list=ls())
 
-setwd(dir = "~/Desktop")
+# Set working directory for stark or xavier
+# if on a different system, prompt for working directory
+if(Sys.info()["nodename"] == "stark"){ 
+  print("On Stark, ready to go")
+  setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/") # stark
+} else if(Sys.info()["nodename"] == "Xavier"){
+  print("On Xavier, ready to go")
+  setwd("/hdd/01_moore_oyster_project/stacks_workflow/") # Xavier
+} else {
+  print("You are on an unrecognized system, please set working directory manually")
+}
 
+# Install libraries
 library(devtools)
 devtools::install_github("dkahle/ggmap")
 devtools::install_github("hadley/ggplot2")

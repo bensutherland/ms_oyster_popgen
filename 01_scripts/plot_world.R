@@ -1,10 +1,21 @@
 # This is a script to plot a map with points on it, then add labels to the plot, and connect points with lines
 # specifically here for the Moore Oyster Project
 
+#### 00. Front Matter ####
 # Clean space
 # rm(list=ls())
 
-setwd(dir = "~/Desktop")
+# Set working directory for stark or xavier
+# if on a different system, prompt for working directory
+if(Sys.info()["nodename"] == "stark"){ 
+  print("On Stark, ready to go")
+  setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/") # stark
+} else if(Sys.info()["nodename"] == "Xavier"){
+  print("On Xavier, ready to go")
+  setwd("/hdd/01_moore_oyster_project/stacks_workflow/") # Xavier
+} else {
+  print("You are on an unrecognized system, please set working directory manually")
+}
 
 # Install libraries
 library("ggmap")
@@ -20,6 +31,9 @@ comparisons <- c("PEN-ROS", "PEN-DPB", "PEN-GUR"
                  , "CHN-JPN", "PEN-JPN"
                  , "CHN-QDC", "CHN-RSC")
 length(comparisons)
+
+### TODO: could automate this from the FST result table..
+### Currently is done manually
 fst.vals <- c(0.008, 0.058, 0.030
               , 0.003, 0.003, 0.017
               , 0.024, 0.006
@@ -31,8 +45,6 @@ comparisons_fst.df
 rownames(comparisons_fst.df) <- comparisons_fst.df$comparisons
 comparisons_fst.df
 
-# todo:
-#make second map, smaller one, with BC locations
 
 #### 1. Identify locations ####
 # Identify locations to put points (actual sampling sites)
@@ -43,6 +55,7 @@ ll.visited
 # pull out vectors for plotting purposes
 visit.x <- ll.visited$lon
 visit.y <- ll.visited$lat
+
 
 #### 2. Starting mapping ####
 # Using GGPLOT, plot the Base World Map
