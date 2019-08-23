@@ -21,17 +21,25 @@ if(Sys.info()["nodename"] == "stark"){
 
 
 #### 1. Nucleotide Diversity ####
-# Set datatypes
+
+### 1.1 Set up nucleotide diversity data ####
+## Set datatypes (and order)
 datatypes <- c("bc_wild", "bc_wild_to_farm"
+               , "deepbay", "rosewall"
+               , "france_wild", "france_wild_to_farm"
+               , "guernsey"
                , "chinaQDC", "chinaRSC", "china_wild", "china_wild_to_farm"
-               , "deepbay", "france_wild", "france_wild_to_farm", "guernsey", "rosewall")
+               )
 
 datatypes.short <- c("BCW", "BCWF"
-               , "QDC", "RSC", "CHN", "CHNF"
-               , "DPB", "FRA", "FRAF", "GUR", "ROS")
+                      , "DPB", "ROS" 
+                      , "FRA", "FRAF" 
+                      , "GUR"
+                      , "QDC", "RSC", "CHN", "CHNF"
+                      )
 
 
-# Import each of the datatypes
+## Import each of the datatypes
 datatypes.list <- list(); datatype <- NULL
 for(i in 1:length(datatypes)){
   
@@ -46,31 +54,22 @@ for(i in 1:length(datatypes)){
   
 }
 
-names(datatypes.list)
-head(datatypes.list[["bc_wild"]])
+names(datatypes.list) # these are the data types
+head(datatypes.list[["bc_wild"]]) # this is what the data looks like
 
-# Set colors for datatypes
-#my.cols <- read.csv("../01-info_files/my_cols.csv")
+## Set colors for datatypes
+my.cols <- read.csv(file = "../../ms_oyster_popgen/00_archive/my_cols.csv")
+rownames(my.cols) <- my.cols$my.pops
 
-datatypes
-#cols <- as.character(my.cols[c(9,10,12,14,1,2,3,4,5,6,8,13), 2]) # select colors into the same order that they are plotted
-# in names(data)
+datatypes.short
+cols <- as.character(my.cols[c("PEN", "PENF", "DPB", "ROS", "FRA", "FRAF", "GUR", "QDC", "RSC", "CHN", "CHNF"), 2]) # select colors into the same order that they are plotted
 
-cols <- c("mediumorchid1"
-          , "purple1"
-          , "darkseagreen1", "darkseagreen"
-          , "darkseagreen4"
-          , "darkseagreen3"
-          , "dodgerblue2"
-          , "gold1", "gold3"
-          , "darkslategray2"
-          , "turquoise4"
-          , "red")
 
-## Extract from datatype list ##
+## Extract data from list into dataframe
 data <- NULL
 
 # Start the data set by extracting the Pi (3rd address) value for the first population (1)
+# This is required because cannot fill into an empty list
 data <-  as.data.frame(list.extract(datatypes.list, 1))[3]
 summary(data$PI)
 
@@ -87,25 +86,28 @@ for(i in 2:length(datatypes.list)){
 }
 
 # Rename the dataframe columns with the datatypes value
-str(data)
-colnames(data) <- datatypes
-colnames(data)
+head(data)
+colnames(data) <- datatypes.short
+head(data)
 
-##### Plotting nucleotide diversity #####
-### Per locus, compare all individual sets against the bc wild Pi
-pdf(file = "Pi_per_locus_all_comp_to_bc_wild.pdf", width = 15, height = 7)
+
+#### 1.2 Plot nucleotide diversity ####
+### 1.2.1 Plot pi per locus all pops vs BC wild (PEN) ####
+
+pdf(file = "pi_per_locus_all_vs_BCW.pdf", width = 15, height = 7)
 par(mfrow=c(3,4), mar=c(5,5,3,3))
 for(i in 2:length(datatypes)){
-  plot(data$bc_wild ~ data[,i]
+  plot(data$BCW ~ data[,i]
        , xlab = colnames(data)[i]
        , ylab = "bc_wild")
 }
 dev.off()
 
-### Per population, plot Pi values in boxplot
-pdf(file = "Pi_per_pop_mean.pdf", width = 8, height = 5)
-par(mfrow=c(1,1), mar = c(8,4,3,3))
-boxplot(data, las = 3, ylab = "Nucleotide Diversity"
+### 1.2.2 Plot pi per population each pop individually ####
+
+pdf(file = "pi_per_pop_mean.pdf", width = 8, height = 5)
+par(mfrow=c(1,1), mar = c(5,5,3,3))
+boxplot(data, las = 1, ylab = "Nucleotide Diversity (pi)"
         , col = cols
         , xaxt = "n"
         , ylim = c(0,0.6)
@@ -113,102 +115,100 @@ boxplot(data, las = 3, ylab = "Nucleotide Diversity"
 axis(side = 1, at = c(1:length(datatypes.short)), labels = datatypes.short, las = 2)
 dev.off()
 
-##### Nucleotide diversity stats
-# # TODO #find most appropriate method to test nucleotide diversity between pops 
-# Put data into long form
-head(data)
-
-# Set nulls
-data.long <- NULL; data.long.pop <- NULL; data.long.df <- NULL
-
-for(i in 1:length(names(data))){
-  # Build
-  data.long <- c(data.long, data[,i])
-  data.long.pop <- c(data.long.pop, rep(colnames(data)[i], times = length(data[,i])))
-  
-  # combine the values and the population names
-  data.long.df <- as.data.frame(cbind(data.long.pop, data.long))
-  
-  # Rename
-  colnames(data.long.df) <- c("pop", "per.locus.pi")
-  
-  # Change to numeric
-  data.long.df$per.locus.pi <- as.numeric(as.character(data.long.df$per.locus.pi))
-  #data.long.df$pop <- as.character(data.long.df$pop)
-}
-
-head(data.long.df)
-str(data.long.df)
-
-
-# If unsure if long form worked, can check with boxplot
-# it should match the earlier boxplot
-boxplot(data.long.df$per.locus.pi ~ data.long.df$pop, ylim = c(0,0.6), col = cols, las = 2)
-
-# Run model
-mod.pi <- aov(data.long.df$per.locus.pi ~ data.long.df$pop) 
-summary(mod.pi)
-TukeyHSD(mod.pi)
-
-# What are the unique population names?
-unique(data.long.df$pop)
-
-# Other methods (rank sum)
-mod.kr.pi <- kruskal.test(data.long.df$per.locus.pi ~ data.long.df$pop)
-mod.kr.pi
-
-pairwise.wilcox.test(data.long.df$per.locus.pi, data.long.df$pop, p.adjust.method = "BH")
-
-# Just compare between deepbay and bc wild
-data.long.bcw.dpb <- data.long.df[data.long.df$pop=="bc_wild"|data.long.df$pop=="deepbay",]
-wilcox.test(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop)
-summary(aov(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop))
-
+#### 1.3 Nucleotide diversity stats ####
+# Note: Not yet implemented as not sure on the best approach. May just use descriptive statistics
+# head(data)
+# 
+# # Convert data into long form
+# data.long <- NULL; data.long.pop <- NULL; data.long.df <- NULL
+# 
+# for(i in 1:length(names(data))){
+#   # Extract the values for the population, and make a second column with the pop name
+#   data.long <- c(data.long, data[,i])
+#   data.long.pop <- c(data.long.pop, rep(colnames(data)[i], times = length(data[,i])))
+#   data.long.df <- as.data.frame(cbind(data.long.pop, data.long)) # combine
+#   
+#   # Name columns
+#   colnames(data.long.df) <- c("pop", "per.locus.pi")
+#   
+#   # Change the nucleotide diversity to numeric
+#   data.long.df$per.locus.pi <- as.numeric(as.character(data.long.df$per.locus.pi))
+#   #data.long.df$pop <- as.character(data.long.df$pop)
+# }
+# 
+# head(data.long.df)
+# str(data.long.df)
+# 
+# # Confirm the data still looks as expected via boxplot (need to set an order of levels)
+# pop.o <- ordered(data.long.df$pop, levels = c("BCW", "BCWF", "DPB", "ROS", "FRA", "FRAF", "GUR", "QDC", "RSC", "CHN", "CHNF"))
+# str(pop.o)
+# boxplot(per.locus.pi ~ pop.o, data = data.long.df, ylim = c(0,0.6), col = cols, las = 2)
+# 
+# ## The following also works, but it will not be in the correct order for comparison
+# # boxplot(data.long.df$per.locus.pi ~ data.long.df$pop, ylim = c(0,0.6), las = 2
+# #         )
+# 
+# # Run model
+# mod.pi <- aov(data.long.df$per.locus.pi ~ data.long.df$pop) 
+# summary(mod.pi)
+# TukeyHSD(mod.pi)
+# 
+# # What are the unique population names?
+# unique(data.long.df$pop)
+# 
+# # Other methods (rank sum)
+# mod.kr.pi <- kruskal.test(data.long.df$per.locus.pi ~ data.long.df$pop)
+# mod.kr.pi
+# 
+# pairwise.wilcox.test(data.long.df$per.locus.pi, data.long.df$pop, p.adjust.method = "BH")
+# 
+# # Just compare between deepbay and bc wild
+# data.long.bcw.dpb <- data.long.df[data.long.df$pop=="BCW"|data.long.df$pop=="DPB",]
+# wilcox.test(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop)
+# summary(aov(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop))
 
 
 #### 2. Heterozygosity ####
+### 2.1 Set up heterozygosity data ####
 het <- read.table("populations.snps.het", header = T, row.names = 1)
-head(het)
 het$sample <- rownames(het)
 head(het)
 
 # Add population to het object
-poptype <- NULL
-poptype <- sub(pattern = "\\_.*", replacement = "", het$sample)
-# poptype <- gsub(pattern = "HIS|PEN|PIP|SER", replacement = "BCWild", perl = T, x = poptype) # this could be an option..
-het <- cbind(het, poptype)
-head(het)
+het$poptype <- sub(pattern = "\\_.*", replacement = "", het$sample)
+het$poptype <- gsub(x = het$poptype, pattern = "HIS|PEN|PIP|SER", replacement = "BCW", perl = T) # merge all BC wild pops
+het <- het[grep(pattern = "JPN", x = het$poptype, invert = T), ] # drop japan due to low sample size
+het$poptype <- as.factor(het$poptype) # make factor for plotting
 
-# How many per
+head(het)
 table(het$poptype)
 
+### 2.2 Plot heterozygosity data ####
 # Conduct anova and pairwise tukeys to investigate differences among poptypes
 mod.fis <- aov(het$F ~ het$poptype)
 summary(mod.fis)
 result <- TukeyHSD(mod.fis)
+het_result <- result[[1]]
 
-write.csv(x = result$`het$poptype`, file = "tukeyHSD_poptype_het.csv")
+write.csv(x = het_result, file = "tukeyHSD_poptype_het.csv")
 
 # Based on these results, make significance value indicators for the plot (if doesn't share letter, sig diff p< 0.05)
-sig.indicators <- c("a", "a", "b", "bc", "bc"
-                  , "bc", "ab", "ab", "ac", "ac"
-                  , "ab", "ab", "bc", "ab", "ac")
+sig.indicators <- c("ac", "abc", "b", "ab", "abc", "ab", "ab", "abc", "ac", "c", "ac")
 length(sig.indicators)
 
 # Boxplot by population
 pdf(file = "Fis_per_pop_boxplot.pdf", width = 8, height = 5)
-boxplot(het$F ~ het$poptype, las = 1, ylab = "Fis"
-        #, col = as.character(my.cols$my.cols)
-        , ylim = c(-0.1,0.3)
-        , xaxt = "n")
-axis(side = 1, labels = levels(het$poptype), at = c(1:length(levels(het$poptype))), las = 2)
-text(x = seq(1:length(levels(het$poptype))), y = 0.25
+pop.o.het <- ordered(het$poptype, levels = c("BCW", "BCWF", "DPB", "ROS", "FRA", "FRAF", "GUR", "QDC", "RSC", "CHN", "CHNF")) # set order
+boxplot(F ~ pop.o.het, data = het 
+        , col = cols, las = 2
+        , ylim = c(-0.1, 0.3)
+        , ylab = "Fis")
+text(x = seq(1:length(levels(het$poptype))), y = 0.28
      , labels = sig.indicators
-     )
-
+      )
 dev.off()
 
-# Get some summaries
+#### 2.3 Summarize het data ###
 library("dplyr")
 summarized <- het %>%
   select(F, poptype) %>%
@@ -218,14 +218,16 @@ summarized <- het %>%
 summarized
 write.csv(x = summarized, file = "F_avg_and_median.csv", quote = F)
 
+
 ### 3. Plot Fis by read depth per sample
 pdf(file=paste("Fis_and_read_depth_per_indiv.pdf",sep=""), height=9, width=14)
 par(mar=c(6,5,3,3), mfrow=c(2,1))
+
+# First plot het by sample index
 plot(het$F, xaxt ="n", xlab = "", ylab = "Fis", las = 1)
 axis(side = 1, labels = rownames(het), at = c(1:nrow(het)), las = 2, cex.axis = 0.5)
 
-
-#### 3. Read depth per sample
+# Second plot het by reads
 options(scipen = 1)
 reads <- read.table("../04-all_samples/reads_per_sample_table.txt", col.names = c("sample","reads"))
 head(reads)
@@ -239,4 +241,33 @@ head(reads.het)
 #par(mfrow=c(1,1))
 plot(reads.het$F ~ reads.het$reads, las = 1, ylab = "F", xlab = "Reads per Sample")
 dev.off()
+
+
+#### 3. Plot both in same image
+# this is just copied from above for combining
+
+pdf(file = "genetic_diversity_all.pdf", width = 6, height = 8)
+par(mfrow=c(2,1), mar = c(4,4,3,3))
+
+# Plot 1 (pi)
+boxplot(data, las = 1, ylab = "Nucleotide Diversity (pi)"
+        , col = cols
+        , xaxt = "n"
+        , ylim = c(0,0.6)
+)
+axis(side = 1, at = c(1:length(datatypes.short)), labels = datatypes.short, las = 2)
+
+# Plot 2 (het)
+pop.o.het <- ordered(het$poptype, levels = c("BCW", "BCWF", "DPB", "ROS", "FRA", "FRAF", "GUR", "QDC", "RSC", "CHN", "CHNF")) # set order
+boxplot(F ~ pop.o.het, data = het 
+        , col = cols, las = 2
+        , ylim = c(-0.1, 0.3)
+        , ylab = "Inbreeding Coeff. (Fis)"
+        )
+text(x = seq(1:length(levels(het$poptype))), y = 0.28
+     , labels = sig.indicators
+)
+dev.off()
+
+
 
