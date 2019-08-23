@@ -4,7 +4,7 @@
 
 #### 0. Set up #####
 # Install packages
-#install.packages("rlist") # note: will require XML (may need to install XML via terminal)
+# install.packages("rlist") # note: will require XML (may need to install XML via terminal)
 require("rlist")
 
 # Set working directory for stark or xavier
@@ -14,22 +14,21 @@ if(Sys.info()["nodename"] == "stark"){
   setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/09-diversity_stats/") # stark
 } else if(Sys.info()["nodename"] == "Xavier"){
   print("On Xavier, ready to go")
-  setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data/09-diversity_stats/") # Xavier
+  setwd("/hdd/01_moore_oyster_project/stacks_workflow/09-diversity_stats/") # Xavier
 } else {
   print("You are on an unrecognized system, please set working directory manually")
 }
-
 
 
 #### 1. Nucleotide Diversity ####
 # Set datatypes
 datatypes <- c("bc_wild", "bc_wild_to_farm"
                , "chinaQDC", "chinaRSC", "china_wild", "china_wild_to_farm"
-               , "deepbay", "france_wild", "france_wild_to_farm", "guernsey", "japan", "rosewall")
+               , "deepbay", "france_wild", "france_wild_to_farm", "guernsey", "rosewall")
 
 datatypes.short <- c("BCW", "BCWF"
                , "QDC", "RSC", "CHN", "CHNF"
-               , "DPB", "FRA", "FRAF", "GUR", "JPN", "ROS")
+               , "DPB", "FRA", "FRAF", "GUR", "ROS")
 
 
 # Import each of the datatypes
