@@ -19,41 +19,44 @@ if(Sys.info()["nodename"] == "stark"){
 
 # Install libraries
 library(devtools)
-devtools::install_github("dkahle/ggmap")
-devtools::install_github("hadley/ggplot2")
+# devtools::install_github("dkahle/ggmap")
+# devtools::install_github("hadley/ggplot2")
 library("ggmap")
 library("ggplot2")
 
 
-#### 1. Manual Input Locations ####
-# May need to redo the boundary bay site (probably do all by hand..)
-pipestem <- c(-125.291863, 49.022070)
-hisnit <- c(-126.503, 49.7329)
-loc.df <- geocode(c("Pendrell Sound", "Boundary Bay"))
-loc.df
-loc.df <- rbind(loc.df, pipestem, hisnit)
-rownames(loc.df) <- c("PEN", "HIS", "BDB", "PIP")
-loc.df
+#### 1. Manually Input BC GPS Locations ####
+## Alternate automated method:
+# loc.df <- geocode(c("Pendrell Sound", "Boundary Bay")) # no longer working without registration
 
+PIP <- c(-125.291863, 49.022070)
+HIS <- c(-126.503, 49.7329)
+PEN <- c(-124.723141, 50.251223)
+SER <- c(-122.922485, 49.018080)
+
+loc.df <- rbind(PIP, HIS, PEN, SER)
+rownames(loc.df) <- c("PIP", "HIS", "PEN", "SER")
+loc.df <- as.data.frame(x = loc.df, stringsAsFactors = F)
+
+colnames(loc.df) <- c("lon", "lat")
+
+# Extract relevant info
 visit.x <- loc.df$lon
 visit.y <- loc.df$lat
 
 
-
 #### 2. Plotting ###
-myLocation <- c(lon = -125, lat = 50) # set the point of reference
-# Collect google map
-myMap <- get_map(location = myLocation, source = "google", maptype = "terrain", crop = FALSE, zoom = 7, color = "bw")
-# Collect stamen map
-myMap <- get_map(location = myLocation, source = "stamen", maptype = "terrain", crop = FALSE, zoom = 7, color = "bw")
-# Plot using ggmap
-ma <- ggmap(myMap)
-ma
+# Plot a map of BC
+# install.packages("maps")
+library(maps)
+# install.packages("mapdata")
+library(mapdata)
 
-# Insert the plot points
-ma <- ma + geom_point(aes(x=visit.x, y=visit.y), color="black", size=3) 
-ma
+# Plot locations
+pdf(file = "BC_map.pdf")
+map("worldHires","Canada", xlim=c(-130,-122), ylim=c(47.5,52.7), col="gray70", fill=TRUE)  #plot the region of Canada I want
+map("worldHires","usa", xlim=c(-130,-122),ylim=c(47.5,52.7), col="gray70", fill=TRUE, add=TRUE)  #add the adjacent parts of the US; can't forget my homeland
+points(loc.df$lon, loc.df$lat, pch=19, col="red", cex=1)  #plot my sample sites
+text(x = loc.df$lon, y = loc.df$lat, labels =  rownames(loc.df), adj = -0.2, cex = 1.2)
 
-# use ggrepel to add sample sizes per location
-# possibly sample sizes and fish sizes
-library(ggrepel)
+dev.off()
