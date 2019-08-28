@@ -272,10 +272,11 @@ bcftools query -l 13_selection/populations.snps.vcf > 13_selection/sets/all_samp
 Use the Rscript to calculate outliers per contrast using pcadapt:     
 `01_scripts/outlier_detection_pcadapt.r` 
 
-This data will be used by <TO ADD> 
 
-bayescan
-
+For bayescan, assuming you have already built your contrast strata files for pcadapt, use the following:     
+`./../ms_oyster_popgen/01_scripts/run_bayescan.sh`       
+...to make a pop map file, format the bayescan input from the VCF, put the bayescan input into its own folder, then run BayeScan within the folder to produce the standard bayescan output files.    
+Output file of note: `<CONTRAST>_fst.txt`
 
 
 ## 7. Plotting outliers along the chromosome-level assembly

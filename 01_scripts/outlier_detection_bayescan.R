@@ -20,11 +20,11 @@ if(Sys.info()["nodename"] == "stark"){
 ## Info
 # sessionInfo()
 
-### Load libraries
-#if (!require("devtools")) install.packages("devtools")
-#devtools::install_github("thierrygosselin/radiator")
-library(devtools)
-library(radiator)
+# ### Load libraries
+# #if (!require("devtools")) install.packages("devtools")
+# #devtools::install_github("thierrygosselin/radiator")
+# library(devtools)
+# library(radiator)
 
 # Identify contrast files
 contrasts <- list.files(path = "13_selection/sets/", pattern = ".txt")
@@ -127,131 +127,148 @@ for(i in 1:length(files)){
 # Use genomic_converter to prep Bayescan input per contrast based on the recoded VCF and the strata file (to be built)
 
 
-
-
-
-
-#run in terminal with pr_odd = 100
-./BayeScan2.1_macos64bits ../../FARM_SELECTION/FRA_FRAF_bayescan.txt ../../FARM_SELECTION/FRA_FRAF_bayescan -threads 5 -pr_odds 100
-
-
-CHN_CHNF = genomic_converter(data = "CHN_CHNF.recode.vcf",
-                             strata = "CHN_CHNF_strata.txt",
-                             output =c('bayescan'),
-                             monomorphic.out = FALSE,
-                             common.markers = FALSE,
-                             vcf.metadata = TRUE,
-                             filename = 'CHN_CHNF_bayescan'
-)
-#run in terminalwith pr_odd = 100
-./BayeScan2.1_macos64bits ../../FARM_SELECTION/CHN_CHNF_bayescan.txt ../../FARM_SELECTION/CHN_CHNF_bayescan -threads 5 -pr_odds 100
-
-
-PEN_PENF = genomic_converter(data = "PEN_PENF.recode.vcf",
-                             strata = "PEN_PENF_strata.txt",
-                             output =c('bayescan'),
-                             monomorphic.out = FALSE,
-                             common.markers = FALSE,
-                             vcf.metadata = TRUE,
-                             filename = 'PEN_PENF_bayescan'
-)
-#run in terminal with pr_odd = 100
-./BayeScan2.1_macos64bits ../../FARM_SELECTION/PEN_PENF_bayescan.txt ../../FARM_SELECTION/PEN_PENF_bayescan -threads 5 -pr_odds 100
-
-
-
-#### DOMESTIC SELECTION ####
-
-setwd('/Volumes/drobo2/Anne-Laure/PACIFIC_OYSTER/DOMESTIC_SELECTION')
-DBP_PEN = genomic_converter(data = "DBP_PEN.recode.vcf",
-                            strata = "DBP_PEN_strata.txt",
-                            output =c('bayescan'),
-                            monomorphic.out = FALSE,
-                            common.markers = FALSE,
-                            vcf.metadata = TRUE,
-                            filename = 'DBP_PEN_bayescan'
-)
-#run in terminal with pr_odd = 100
-./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/DBP_PEN_bayescan.txt -o ../../DOMESTIC_SELECTION/DBP_PEN_bayescan -threads 5 -pr_odds 100
-
-ROS_PIP = genomic_converter(data = "ROS_PIP.recode.vcf",
-                            strata = "ROS_PIP_strata.txt",
-                            output =c('bayescan'),
-                            monomorphic.out = FALSE,
-                            common.markers = FALSE,
-                            vcf.metadata = TRUE,
-                            filename = 'ROS_PIP_bayescan'
-)
-#run in terminal with pr_odd = 100
-./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/ROS_PIP_bayescan.txt -o ../../DOMESTIC_SELECTION/ROS_PIP_bayescan -threads 5 -pr_odds 100
-
-GUR_FRA = genomic_converter(data = "GUR_FRA.recode.vcf",
-                            strata = "GUR_FRA_strata.txt",
-                            output =c('bayescan'),
-                            monomorphic.out = FALSE,
-                            common.markers = FALSE,
-                            vcf.metadata = TRUE,
-                            filename = 'GUR_FRA_bayescan'
-)
-#run in terminal with pr_odd = 100
-./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/GUR_FRA_bayescan.txt -o ../../DOMESTIC_SELECTION/GUR_FRA_bayescan -threads 5 -pr_odds 100
-
-QDC_CHN = genomic_converter(data = "QDC_CHN.recode.vcf",
-                            strata = "QDC_CHN_strata.txt",
-                            output =c('bayescan'),
-                            monomorphic.out = FALSE,
-                            common.markers = FALSE,
-                            vcf.metadata = TRUE,
-                            filename = 'QDC_CHN_bayescan'
-)
-
-#run in terminal with pr_odd = 100
-./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/QDC_CHN_bayescan.txt -o ../../DOMESTIC_SELECTION/QDC_CHN_bayescan -threads 5 -pr_odds 100
-
-RSC_CHN = genomic_converter(data = "RSC_CHN.recode.vcf",
-                            strata = "RSC_CHN_strata.txt",
-                            output =c('bayescan'),
-                            monomorphic.out = FALSE,
-                            common.markers = FALSE,
-                            vcf.metadata = TRUE,
-                            filename = 'RSC_CHN_bayescan'
-)
-
-#run Bayescan in Terminal with pr_odd = 100
-./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/RSC_CHN_bayescan.txt -o ../../DOMESTIC_SELECTION/RSC_CHN_bayescan -threads 5 -pr_odds 100
+# 
+# 
+# 
+# 
+# #run in terminal with pr_odd = 100
+# ./BayeScan2.1_macos64bits ../../FARM_SELECTION/FRA_FRAF_bayescan.txt ../../FARM_SELECTION/FRA_FRAF_bayescan -threads 5 -pr_odds 100
+# 
+# 
+# CHN_CHNF = genomic_converter(data = "CHN_CHNF.recode.vcf",
+#                              strata = "CHN_CHNF_strata.txt",
+#                              output =c('bayescan'),
+#                              monomorphic.out = FALSE,
+#                              common.markers = FALSE,
+#                              vcf.metadata = TRUE,
+#                              filename = 'CHN_CHNF_bayescan'
+# )
+# #run in terminalwith pr_odd = 100
+# ./BayeScan2.1_macos64bits ../../FARM_SELECTION/CHN_CHNF_bayescan.txt ../../FARM_SELECTION/CHN_CHNF_bayescan -threads 5 -pr_odds 100
+# 
+# 
+# PEN_PENF = genomic_converter(data = "PEN_PENF.recode.vcf",
+#                              strata = "PEN_PENF_strata.txt",
+#                              output =c('bayescan'),
+#                              monomorphic.out = FALSE,
+#                              common.markers = FALSE,
+#                              vcf.metadata = TRUE,
+#                              filename = 'PEN_PENF_bayescan'
+# )
+# #run in terminal with pr_odd = 100
+# ./BayeScan2.1_macos64bits ../../FARM_SELECTION/PEN_PENF_bayescan.txt ../../FARM_SELECTION/PEN_PENF_bayescan -threads 5 -pr_odds 100
+# 
+# 
+# 
+# #### DOMESTIC SELECTION ####
+# 
+# setwd('/Volumes/drobo2/Anne-Laure/PACIFIC_OYSTER/DOMESTIC_SELECTION')
+# DBP_PEN = genomic_converter(data = "DBP_PEN.recode.vcf",
+#                             strata = "DBP_PEN_strata.txt",
+#                             output =c('bayescan'),
+#                             monomorphic.out = FALSE,
+#                             common.markers = FALSE,
+#                             vcf.metadata = TRUE,
+#                             filename = 'DBP_PEN_bayescan'
+# )
+# #run in terminal with pr_odd = 100
+# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/DBP_PEN_bayescan.txt -o ../../DOMESTIC_SELECTION/DBP_PEN_bayescan -threads 5 -pr_odds 100
+# 
+# ROS_PIP = genomic_converter(data = "ROS_PIP.recode.vcf",
+#                             strata = "ROS_PIP_strata.txt",
+#                             output =c('bayescan'),
+#                             monomorphic.out = FALSE,
+#                             common.markers = FALSE,
+#                             vcf.metadata = TRUE,
+#                             filename = 'ROS_PIP_bayescan'
+# )
+# #run in terminal with pr_odd = 100
+# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/ROS_PIP_bayescan.txt -o ../../DOMESTIC_SELECTION/ROS_PIP_bayescan -threads 5 -pr_odds 100
+# 
+# GUR_FRA = genomic_converter(data = "GUR_FRA.recode.vcf",
+#                             strata = "GUR_FRA_strata.txt",
+#                             output =c('bayescan'),
+#                             monomorphic.out = FALSE,
+#                             common.markers = FALSE,
+#                             vcf.metadata = TRUE,
+#                             filename = 'GUR_FRA_bayescan'
+# )
+# #run in terminal with pr_odd = 100
+# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/GUR_FRA_bayescan.txt -o ../../DOMESTIC_SELECTION/GUR_FRA_bayescan -threads 5 -pr_odds 100
+# 
+# QDC_CHN = genomic_converter(data = "QDC_CHN.recode.vcf",
+#                             strata = "QDC_CHN_strata.txt",
+#                             output =c('bayescan'),
+#                             monomorphic.out = FALSE,
+#                             common.markers = FALSE,
+#                             vcf.metadata = TRUE,
+#                             filename = 'QDC_CHN_bayescan'
+# )
+# 
+# #run in terminal with pr_odd = 100
+# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/QDC_CHN_bayescan.txt -o ../../DOMESTIC_SELECTION/QDC_CHN_bayescan -threads 5 -pr_odds 100
+# 
+# RSC_CHN = genomic_converter(data = "RSC_CHN.recode.vcf",
+#                             strata = "RSC_CHN_strata.txt",
+#                             output =c('bayescan'),
+#                             monomorphic.out = FALSE,
+#                             common.markers = FALSE,
+#                             vcf.metadata = TRUE,
+#                             filename = 'RSC_CHN_bayescan'
+# )
+# 
+# #run Bayescan in Terminal with pr_odd = 100
+# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/RSC_CHN_bayescan.txt -o ../../DOMESTIC_SELECTION/RSC_CHN_bayescan -threads 5 -pr_odds 100
 
 
 
 
 
 ####  STEP 2:  work with BAYESCAN results ####
+source("/home/ben/programs/BayeScan2.1/R functions/plot_R.r")
+#source("/Users/ALF/Documents/10-PROGRAMS/BayeScan2.1/R functions/plot_R.r")
 
-source ("/Users/ALF/Documents/10-PROGRAMS/BayeScan2.1/R functions/plot_R.r")
+setwd("/mnt/data/01_moore_oyster_project/example_bayescan_files_2019-08-09/")
 
-#### FARM SELECTION ###
-setwd('/Users/ALF/Dropbox/03-QUEBEC/16-PACIFIC_OYSTER/BAYESCAN/FARM_SELECTION')
-
-#example w/ CHN / CHNF
-
-#CHN_CHNF results####
-bayescan_plot_CHN_CHNF = plot_bayescan("CHN_CHNF_bayescan_fst.txt", FDR = 0.01)
-
-bayescan_res_CHN_CHNF= read.table("CHN_CHNF_bayescan_fst.txt")
-SNPb_CHN_CHNF=read.table("CHN_CHNF_bayescan_markers_dictionary.tsv",header=T)
-bayescan_CHN_CHNF=cbind(SNPb_CHN_CHNF$MARKERS, bayescan_res_CHN_CHNF)
-colnames(bayescan_CHN_CHNF)=c("SNP","POST_PROB","LOG10_PO","Q_VALUE","ALPHA","FST")
-
+bayescan_plot <- plot_bayescan("bayes_input_fst.txt", FDR = 0.01)
+bayescan_res <- read.table("bayes_input_fst.txt")
+dim(bayescan_res)
+SNPs <- read.table("snpkey.txt", header = F)
+head(SNPs)
+dim(SNPs)
+colnames(SNPs) <- c("order", "mname")
+annot_res <- cbind(SNPs$mname, bayescan_res)
+head(annot_res)
+colnames(annot_res) <- c("SNP", "POST_PROB", "LOG10_PO", "Q_VALUE", "ALPHA", "FST")
+head(annot_res)
 # POST_PROB = 1 & Q_VALUE = 0 == 0.0001 
-attach(bayescan_CHN_CHNF)
-class(bayescan_CHN_CHNF$Q_VALUE)
-bayescan_CHN_CHNF$Q_VALUE <- as.numeric(bayescan_CHN_CHNF$Q_VALUE)
-bayescan_CHN_CHNF[bayescan_CHN_CHNF$Q_VALUE<=0.0001,"Q_VALUE"]=0.0001
+str(annot_res)
+annot_res[annot_res$Q_VALUE<=0.0001,"Q_VALUE"]=0.0001 # replaces with floor (does not exist)
 
-bayescan_CHN_CHNF$POST_PROB <- (round(bayescan_CHN_CHNF$POST_PROB, 4))
-bayescan_CHN_CHNF$LOG10_PO <- (round(bayescan_CHN_CHNF$LOG10_PO, 4))
-bayescan_CHN_CHNF$Q_VALUE <- (round(bayescan_CHN_CHNF$Q_VALUE, 4))
-bayescan_CHN_CHNF$ALPHA <- (round(bayescan_CHN_CHNF$ALPHA, 4))
-bayescan_CHN_CHNF$FST <- (round(bayescan_CHN_CHNF$FST, 6))
+#Note still need to do 'BUNCH OF ROUNDING'
+
+# #CHN_CHNF results####
+# bayescan_plot_CHN_CHNF = plot_bayescan("CHN_CHNF_bayescan_fst.txt", FDR = 0.01)
+# bayescan_res_CHN_CHNF= read.table("CHN_CHNF_bayescan_fst.txt")
+# SNPb_CHN_CHNF=read.table("CHN_CHNF_bayescan_markers_dictionary.tsv",header=T)
+# bayescan_CHN_CHNF=cbind(SNPb_CHN_CHNF$MARKERS, bayescan_res_CHN_CHNF)
+# colnames(bayescan_CHN_CHNF)=c("SNP","POST_PROB","LOG10_PO","Q_VALUE","ALPHA","FST")
+
+
+
+
+
+# attach(bayescan_CHN_CHNF)
+# class(bayescan_CHN_CHNF$Q_VALUE)
+# bayescan_CHN_CHNF$Q_VALUE <- as.numeric(bayescan_CHN_CHNF$Q_VALUE)
+# bayescan_CHN_CHNF[bayescan_CHN_CHNF$Q_VALUE<=0.0001,"Q_VALUE"]=0.0001
+
+# BUNCH OF ROUNDING
+# bayescan_CHN_CHNF$POST_PROB <- (round(bayescan_CHN_CHNF$POST_PROB, 4))
+# bayescan_CHN_CHNF$LOG10_PO <- (round(bayescan_CHN_CHNF$LOG10_PO, 4))
+# bayescan_CHN_CHNF$Q_VALUE <- (round(bayescan_CHN_CHNF$Q_VALUE, 4))
+# bayescan_CHN_CHNF$ALPHA <- (round(bayescan_CHN_CHNF$ALPHA, 4))
+# bayescan_CHN_CHNF$FST <- (round(bayescan_CHN_CHNF$FST, 6))
 
 # ADD a column for selection grouping
 bayescan_CHN_CHNF$SELECTION <- ifelse(bayescan_CHN_CHNF$ALPHA>=0&bayescan_CHN_CHNF$Q_VALUE<=0.05,"diversifying",ifelse(bayescan_CHN_CHNF$ALPHA>=0&bayescan_CHN_CHNF$Q_VALUE>0.05,"neutral","balancing"))
