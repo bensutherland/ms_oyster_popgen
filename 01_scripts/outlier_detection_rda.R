@@ -25,20 +25,46 @@ library(vegan)
 # Set datatypes
 datatypes <- c("FARM", "DOMESTICATION")
 
+
+#### 01. Read in data ####
+
 for(i in 1:length(datatypes)){
   
   # Select your datatype
   datatype <- datatypes[i]
+  print(paste0("Working on ", datatype))
+  
   
   ##  Read in genotype data ##
   geno.FN <- paste0("13_selection/rda_analysis/", datatype, "_geno.012")
-  geno <- read.table(file = geno.FN)
-  ind <- geno[,1]
-  gen <- as.matrix(geno[,2:ncol(geno)])
+  ind.FN <- paste0("13_selection/rda_analysis/", datatype, "_geno.012.indv")
+  snp.FN <- paste0("13_selection/rda_analysis/", datatype, "_geno.012.pos")
+  
+  geno <- read.table(file = geno.FN, sep = "\t")
+  geno[1:5,1:5]
+  geno <- geno[, -1] # drop the index column (counts from 0)
+  
+  ## Read in the individuals data and use as rownames for the geno obj
+  ind <- read.table(file = ind.FN)
+  row.names(geno) <- ind$V1
+  geno[1:5,1:5]
+
+  ## Read in the marker names and use as column names
+  snp <- read.table(file = snp.FN)
+  snp <- paste(snp$V1, snp$V2, sep = "_")
+  colnames(geno) <- snp
+  geno[1:5,1:5]
+  
+  # Convert to matrix
+  gen <- as.matrix(geno)
+  gen[1:5,1:5]
+  
+  
+  
   
   # Identify NAs
   sum(is.na(gen)) # no NAs
-  gen[gen == -1] <- NA
+  gen[gen == -1] <- NA # when using --012 format from VCFtools, NA are designated -1
   sum(is.na(gen)) # NAs now in data
   
   # Impute
@@ -46,21 +72,26 @@ for(i in 1:length(datatypes)){
   # work over columns (replace the missing data with the most common genotype in the dataset (?))
   sum(is.na(gen.imp))
   
-  #### Make env data ####
+  #### 02. Make pop level data (env.df) ####
+
   # e.g. in the following format:
   # INDIVIDUALS	POP	FARM
   # CHN_1551	CHN	WILD
   # CHN_1552	CHN	WILD
-  # CHN_1553	CHN	WILD
-  # CHN_1554	CHN	WILD
-  
+
+  ### OLD METHOD ###
   # Read in the samples in this comparison
-  env.FN <- paste0("13_selection/rda_analysis/", datatype, ".txt")
-  env <- read.table(env.FN)
-  env.df <- as.data.frame(env)
-  env.df$V2 <- gsub(pattern = "_.*", replacement = "", x =  env.df$V1)
+  # env.FN <- paste0("13_selection/rda_analysis/", datatype, ".txt")
+  # env <- read.table(env.FN)
+  ### END OLD METHOD ###
+  
+  # Use the gen object itself to identify individuals
+  INDIVIDUALS <- rownames(gen.imp)
+  env.df <- as.data.frame(INDIVIDUALS)
+  env.df$POP <- gsub(pattern = "_.*", replacement = "", x =  env.df$INDIVIDUALS)
   head(env.df)
   
+  # Identify which pops are farm in either dataset
   if(datatype=="FARM"){
     # Identify the farm pops
     selection_pops <- c("CHNF", "PENF", "FRAF")
@@ -70,27 +101,30 @@ for(i in 1:length(datatypes)){
   }
   
   # Identify which are the selection pops
-  env.df$V3[env.df$V2 %in% selection_pops] <- "FARM"
-  env.df$V3[!env.df$V2 %in% selection_pops] <- "WILD" # find opposite of the above
-  
-  colnames(env.df) <- c("INDIVIDUALS", "POP", "FARM")
-  
-  # OLD METHOD:
-  # env.df$V3[grep(pattern = "F_", x = env.df$V1)] <- "FARM"
-  # env.df$V3[grep(pattern = "F_", x = env.df$V1, invert = T)] <- "WILD"
-  # END OLD METHOD
-  
-  # Inspect
-  # env.df
+  env.df$FARM[env.df$POP %in% selection_pops] <- "FARM"
+  env.df$FARM[!env.df$POP %in% selection_pops] <- "WILD" # find opposite of the above
   head(env.df)
   tail(env.df)
+  
+  # Bring in colour info
+  my_cols.df <- read.csv(file = "../ms_oyster_popgen/00_archive/my_cols.csv", stringsAsFactors = F) 
+  str(my_cols.df)
+  
+  # Combine colour info
+  env.df <- merge(x = env.df, y = my_cols.df, by.x = "POP", by.y = "my.pops", sort = F, all.x = T)
+  head(env.df)
+  
+  # Create shape to plot
+  env.df$shape <- env.df$FARM
+  env.df$shape <- gsub(pattern = "FARM", replacement = "18", x = env.df$shape)
+  env.df$shape <- gsub(pattern = "WILD", replacement = "17", x = env.df$shape)
+  env.df$shape <- as.numeric(env.df$shape)
   
   # Create factor level to go with the data
   farm <- as.factor(env.df[,"FARM"])
 
-  
-  #### RDA Analysis ####
-  FARM_RDA <- rda(gen.imp ~ farm)
+  #### 03. Perform RDA analysis ####
+  FARM_RDA <- rda(gen.imp ~ env.df$FARM)
   FARM_RDA
   
   # Perform ANOVA-like perm test for Constrained Correspondence Analysis (cca), Redundancy Analysis (rda), or...
@@ -99,82 +133,65 @@ for(i in 1:length(datatypes)){
   # Perform ANOVA-like perm test for rda, testing marginal effects of the terms
   anova.cca(FARM_RDA, by="margin", parallel=2)
   
-  # 
+  # Pull out the rsquared value
   RsquareAdj(FARM_RDA)
   
-  
-  #### Plotting ####
+  #### 04. Plot ####
+  # Set plotting variables
   bg = c("tomato1", "dodgerblue2")
-  # [1] "#7FC97F" "#BEAED4" "#FDC086"
   
-  ### RDA graph by pop ###
-  # pdf("POP_RDA1-2_FARM.pdf", 9, 9)
+  ### Plot RDA graph by samples ###
+  RDA_plot.FN <- paste0("13_selection/rda_analysis/RDA_plot_", datatype, ".pdf")
+  pdf(file = RDA_plot.FN, width = 6, height = 6)
   plot(FARM_RDA, type="n", scaling=3) # blank plot
-  
-  # add points
-  points(FARM_RDA, display="species", pch=20, cex=0.7, col="gray32", scaling=3)           # the SNPs
-  points(FARM_RDA, display="sites", pch=17, cex=1, scaling=3, col=bg[farm]) 		# the fish
-  points(FARM_RDA, scaling=3, display="cn", pch =17, col="black", cex=1.5
+  points(FARM_RDA, display="species", pch=20, cex=0.7, col="gray32", scaling=3)       # species = SNPs
+  points(FARM_RDA, display="sites", pch=env.df$shape, cex=1, scaling=3, col=env.df$my.cols) 		# sites   = samples
+  points(FARM_RDA, scaling=3, display="cn", pch = 17, col="black", cex=1.5             # cn = centroids of factor constraints
          # , pos=c(3,3,3)
          )                          # the predictors
-  legend("bottomright", inset=c(0, 0), legend=levels(farm), bty="n", col=bg, pch=17, cex=1, pt.bg=bg)
-  # dev.off()
-  
-  ### Question: 
-  ## What does the PCA vs RDA mean? Need more detail on interp. 
-  
-  ### RDA graph (farm status: symbol; pop: colour)
-  #Create colors
-  library(RColorBrewer)
-  n <- length(unique(x = env.df$POP)) # the number unique colours needed
-  qual_col_pals = brewer.pal.info[brewer.pal.info$category == 'qual',]
-  bg = unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
-  bg = bg[1:n]
-  
-  # bc = c("17","18") # not sure what this is.. (bjgs)
-  
-  pop <- as.factor(env.df[,2])
-  
-  ### RDA graph by pop with colours
-  #pdf("POP_RDA1-2_FARM_by_pop.pdf", 9, 9)
-  plot(FARM_RDA, type="n", scaling=3)
-  
-  # add points
-  points(FARM_RDA, display="species", pch=20, cex=0.7, col="gray32", scaling=3)           # the SNPs
-  points(FARM_RDA, display="sites", pch=c(17, 18)[as.factor(farm)], cex=1, scaling=3, col=bg[pop]) 		# the fish
-  legend("bottomleft", 
-         legend = unique(pop), 
-         col = bg, 
-         pch = 17,  # TO FIX DYNAMIC *#TODO* BJGS
-         bty = "n", 
-         pt.cex = 2, 
-         cex = 1.2, 
-         text.col = "black", 
-         horiz = F , 
-         inset = c(0.01, 0.01))
-  # dev.off()
+  legend("bottomright", legend=unique(env.df$POP)
+         #, bty="n"
+         , col=unique(env.df$my.cols)
+         , pch=16, cex=0.8
+         , pt.bg=bg
+         , bg = "white")
+  dev.off()
   
   
-  ##### HERE TODAY #####
+  ### Identify outliers and plot RDA loadings ###
+  load.rda <- summary(FARM_RDA)$species[, c("RDA1", "PC1", "PC2", "PC3")]  # extract the loadings for these axes/projections
+  str(load.rda)
   
-  # RDA GRAPH by SNPs
-  load.rda <- summary(FARM_RDA)$species[,1:4] 
-  hist(load.rda[,1], main="Loadings on RDA1")
-  
-  outliers <- function(x,z){
-    lims <- mean(x) + c(-1, 1) * z * sd(x)     # find loadings +/-z sd from mean loading     
-    x[x < lims[1] | x > lims[2]]               # locus names in these tails
+  #### Identify outliers ####
+  # Make a function to identify outliers
+  outliers <- function(loadings, num_sd){
+    lims <- mean(loadings) + c(-1, 1) * num_sd * sd(loadings)     # find loadings +/-z sd from mean loading     
+    loadings[loadings < lims[1] | loadings > lims[2]]               # locus names in these tails
   }
   
-  #Choose SD
-  SD=3.5
-  cand1 <- outliers(load.rda[,1], 3.5) #46
-  ncand <- length(cand1)  #46
+  # Set variables
+  SD <- 3.5
+  cand1 <- outliers(loadings = load.rda[,"RDA1"], num_sd = 3.5)
+  ncand <- length(cand1)  
   
-  cand <- cbind.data.frame(rep(1,times=length(cand1)), names(cand1), unname(cand1))
-  colnames(cand) <- c("axis","snp","loading")
-  # write.table(cand, file="listeCandidat_with_farm.txt", row.names = F)
-  # OUTPUT
+  # Plot loadings
+  hist.FN <- paste0("13_selection/rda_analysis/RDA_loading_hist_", datatype, ".pdf") 
+  pdf(file = hist.FN, width = 5, height = 5)
+  hist_info <- hist(load.rda[, "RDA1"], main = "", xlab = "Loadings on RDA1") # Plot loadings
+  text(  x = max(hist_info$mids) - max(hist_info$mids)*0.2
+       , y = max(hist_info$counts) - max(hist_info$counts)*0.2
+       , labels = paste0("n = ", ncand, " outliers")
+       )
+  abline(v = mean(load.rda[, "RDA1"]) + 3.5 * sd(load.rda[, "RDA1"]), lty = 2, col = "red")
+  abline(v = mean(load.rda[, "RDA1"]) - 3.5 * sd(load.rda[, "RDA1"]), lty = 2, col = "red")
+  dev.off()
   
-}
+  ## Save Results ####
+  results.FN <- paste0("13_selection/rda_analysis/RDA_loading_vals_", datatype, ".csv") 
+  load.rda.df <- as.data.frame(load.rda)
+  load.rda.df$mname <- rownames(load.rda.df)
+  write.table(x = load.rda.df, file = results.FN, append = F, quote = F, row.names = F, sep = ",")
+
+  
+  }
 
