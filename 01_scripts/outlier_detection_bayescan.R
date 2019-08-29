@@ -20,215 +20,57 @@ if(Sys.info()["nodename"] == "stark"){
 ## Info
 # sessionInfo()
 
-# ### Load libraries
-# #if (!require("devtools")) install.packages("devtools")
-# #devtools::install_github("thierrygosselin/radiator")
-# library(devtools)
-# library(radiator)
+### Load libraries
+source("/home/ben/programs/BayeScan2.1/R functions/plot_R.r") # load bayescan plotting functions
 
 # Identify contrast files
-contrasts <- list.files(path = "13_selection/sets/", pattern = ".txt")
-contrasts <- contrasts[grep(pattern = "all_samples.txt", x = contrasts, invert = T)] # remove the all_samples file, is not a contrast
-contrasts <- gsub(pattern = "\\.txt", replacement = "", x = contrasts) # remove the .txt
+# All BayeScan analyses should have a pop_map file
+contrasts <- list.files(path = "13_selection/", pattern = "_pop_map.txt")
+contrasts <- gsub(pattern = "\\_pop\\_map\\.txt", replacement = "", x = contrasts)
 
-#### 1. Make Strata file for each contrast ####
-# Set nulls
-strata.list <- list(); samples <- NULL
+# Temp
+contrasts <- contrasts[1:3]
 
-# Loop
-for(i in 1:length(contrasts)){
-  
-  # Identify samples per contrast
-  contrast.FN <- paste0("13_selection/sets/", contrasts[i], ".txt")
-  samples.df <- read.table(file = contrast.FN, stringsAsFactors = FALSE)
-  samples.df$V2 <- gsub(samples.df$V1, pattern = "_.*", replacement = "")
-  colnames(samples.df) <- c("INDIVIDUALS", "STRATA")
+#### 1. Read in results ####
+data.FN <- paste0("13_selection/", contrasts[1], "/", contrasts[1], "_fst.txt")
+data.df <- read.table(file = fst.FN, header = TRUE
+                   #, row.names = TRUE
+                   )
+dim(data.df)
 
-  # Save the strata list in the selection folder
-  strata.FN <- paste0("13_selection/", contrasts[i], "_strata.txt")
-  write.table(x = samples.df, file = strata.FN, quote = FALSE, sep = "\t", col.names = TRUE, row.names = FALSE)
-  
-}
-
-#### 2. Prepare BayeScan input ####
-
-##### WORKING HERE #####
-for(i in 1:length(contrasts)){
-  
-  
-  
-}
-
-
-genomic_converter(data = "13_selection/CHN_CHNF.recode.vcf"
-                  , strata = "13_selection/CHN_CHNF_strata.txt"
-                  , output = c('bayescan')
-                  , filename = 'CHN_TEST_bayescan'
-                  )
-
-
-
-
-### EXAMPLE FROM ANNE-LAURE
-#### FARM SELECTION ####
-FRA_FRAF = genomic_converter(data = "13_selection/FRA_FRAF.recode.vcf",
-                             strata = "13_selection/FRA_FRAF_strata.txt",
-                             output =c('bayescan'),
-                             monomorphic.out = FALSE,
-                             common.markers = FALSE,
-                             vcf.metadata = TRUE,
-                             filename = 'FRA_FRAF_bayescan'
-)
-#### END EXAMPLE ####
-
-
-
-# Identify files
-files <- list.files(path = "13_selection/", pattern = "recode.vcf", full.names = T)
-
-
-
-
-
-####  STEP 1: make input and run BAYESCAN ####
-
-
-# e.g. ##
-# set nulls
-pcadapt.obj <- NULL; pcadapt.FN <- NULL; pcadapt.out <- NULL
-pcadapt.out.list <- list(); obj.name <- NULL; pcadapt.obj.list <- list()
-
-for(i in 1:length(files)){
-  
-  # Select file
-  pcadapt.FN <- files[i]
-  print(paste0("Working on ", pcadapt.FN))
-  
-  # Create object name
-  obj.name <- gsub(pattern = ".*//", replacement = "", x = files[i])
-  obj.name <- gsub(pattern = "\\..*", replacement = "", x = obj.name)
-  
-  # Read in data
-  pcadapt.obj <- read.pcadapt(input = pcadapt.FN, type = "vcf")
-  
-  # Save input
-  pcadapt.obj.list[[obj.name]] <- pcadapt.obj
-  
-  # Run pcadapt
-  print("Running pcadapt with K = 20")
-  pcadapt.out <- pcadapt(input = pcadapt.obj, K = 20)
-  
-  # Save output
-  pcadapt.out.list[[obj.name]] <- pcadapt.out
-  
-}
+## e.g. ##
+# # set nulls
+# pcadapt.obj <- NULL; pcadapt.FN <- NULL; pcadapt.out <- NULL
+# pcadapt.out.list <- list(); obj.name <- NULL; pcadapt.obj.list <- list()
+# 
+# for(i in 1:length(files)){
+#   
+#   # Select file
+#   pcadapt.FN <- files[i]
+#   print(paste0("Working on ", pcadapt.FN))
+#   
+#   # Create object name
+#   obj.name <- gsub(pattern = ".*//", replacement = "", x = files[i])
+#   obj.name <- gsub(pattern = "\\..*", replacement = "", x = obj.name)
+#   
+#   # Read in data
+#   pcadapt.obj <- read.pcadapt(input = pcadapt.FN, type = "vcf")
+#   
+#   # Save input
+#   pcadapt.obj.list[[obj.name]] <- pcadapt.obj
+#   
+#   # Run pcadapt
+#   print("Running pcadapt with K = 20")
+#   pcadapt.out <- pcadapt(input = pcadapt.obj, K = 20)
+#   
+#   # Save output
+#   pcadapt.out.list[[obj.name]] <- pcadapt.out
+#   
+# }
 # end e.g. ##
 
-# Use genomic_converter to prep Bayescan input per contrast based on the recoded VCF and the strata file (to be built)
-
-
-# 
-# 
-# 
-# 
-# #run in terminal with pr_odd = 100
-# ./BayeScan2.1_macos64bits ../../FARM_SELECTION/FRA_FRAF_bayescan.txt ../../FARM_SELECTION/FRA_FRAF_bayescan -threads 5 -pr_odds 100
-# 
-# 
-# CHN_CHNF = genomic_converter(data = "CHN_CHNF.recode.vcf",
-#                              strata = "CHN_CHNF_strata.txt",
-#                              output =c('bayescan'),
-#                              monomorphic.out = FALSE,
-#                              common.markers = FALSE,
-#                              vcf.metadata = TRUE,
-#                              filename = 'CHN_CHNF_bayescan'
-# )
-# #run in terminalwith pr_odd = 100
-# ./BayeScan2.1_macos64bits ../../FARM_SELECTION/CHN_CHNF_bayescan.txt ../../FARM_SELECTION/CHN_CHNF_bayescan -threads 5 -pr_odds 100
-# 
-# 
-# PEN_PENF = genomic_converter(data = "PEN_PENF.recode.vcf",
-#                              strata = "PEN_PENF_strata.txt",
-#                              output =c('bayescan'),
-#                              monomorphic.out = FALSE,
-#                              common.markers = FALSE,
-#                              vcf.metadata = TRUE,
-#                              filename = 'PEN_PENF_bayescan'
-# )
-# #run in terminal with pr_odd = 100
-# ./BayeScan2.1_macos64bits ../../FARM_SELECTION/PEN_PENF_bayescan.txt ../../FARM_SELECTION/PEN_PENF_bayescan -threads 5 -pr_odds 100
-# 
-# 
-# 
-# #### DOMESTIC SELECTION ####
-# 
-# setwd('/Volumes/drobo2/Anne-Laure/PACIFIC_OYSTER/DOMESTIC_SELECTION')
-# DBP_PEN = genomic_converter(data = "DBP_PEN.recode.vcf",
-#                             strata = "DBP_PEN_strata.txt",
-#                             output =c('bayescan'),
-#                             monomorphic.out = FALSE,
-#                             common.markers = FALSE,
-#                             vcf.metadata = TRUE,
-#                             filename = 'DBP_PEN_bayescan'
-# )
-# #run in terminal with pr_odd = 100
-# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/DBP_PEN_bayescan.txt -o ../../DOMESTIC_SELECTION/DBP_PEN_bayescan -threads 5 -pr_odds 100
-# 
-# ROS_PIP = genomic_converter(data = "ROS_PIP.recode.vcf",
-#                             strata = "ROS_PIP_strata.txt",
-#                             output =c('bayescan'),
-#                             monomorphic.out = FALSE,
-#                             common.markers = FALSE,
-#                             vcf.metadata = TRUE,
-#                             filename = 'ROS_PIP_bayescan'
-# )
-# #run in terminal with pr_odd = 100
-# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/ROS_PIP_bayescan.txt -o ../../DOMESTIC_SELECTION/ROS_PIP_bayescan -threads 5 -pr_odds 100
-# 
-# GUR_FRA = genomic_converter(data = "GUR_FRA.recode.vcf",
-#                             strata = "GUR_FRA_strata.txt",
-#                             output =c('bayescan'),
-#                             monomorphic.out = FALSE,
-#                             common.markers = FALSE,
-#                             vcf.metadata = TRUE,
-#                             filename = 'GUR_FRA_bayescan'
-# )
-# #run in terminal with pr_odd = 100
-# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/GUR_FRA_bayescan.txt -o ../../DOMESTIC_SELECTION/GUR_FRA_bayescan -threads 5 -pr_odds 100
-# 
-# QDC_CHN = genomic_converter(data = "QDC_CHN.recode.vcf",
-#                             strata = "QDC_CHN_strata.txt",
-#                             output =c('bayescan'),
-#                             monomorphic.out = FALSE,
-#                             common.markers = FALSE,
-#                             vcf.metadata = TRUE,
-#                             filename = 'QDC_CHN_bayescan'
-# )
-# 
-# #run in terminal with pr_odd = 100
-# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/QDC_CHN_bayescan.txt -o ../../DOMESTIC_SELECTION/QDC_CHN_bayescan -threads 5 -pr_odds 100
-# 
-# RSC_CHN = genomic_converter(data = "RSC_CHN.recode.vcf",
-#                             strata = "RSC_CHN_strata.txt",
-#                             output =c('bayescan'),
-#                             monomorphic.out = FALSE,
-#                             common.markers = FALSE,
-#                             vcf.metadata = TRUE,
-#                             filename = 'RSC_CHN_bayescan'
-# )
-# 
-# #run Bayescan in Terminal with pr_odd = 100
-# ./BayeScan2.1_macos64bits ../../DOMESTIC_SELECTION/RSC_CHN_bayescan.txt -o ../../DOMESTIC_SELECTION/RSC_CHN_bayescan -threads 5 -pr_odds 100
-
-
-
-
-
-####  STEP 2:  work with BAYESCAN results ####
-source("/home/ben/programs/BayeScan2.1/R functions/plot_R.r")
-#source("/Users/ALF/Documents/10-PROGRAMS/BayeScan2.1/R functions/plot_R.r")
-
-setwd("/mnt/data/01_moore_oyster_project/example_bayescan_files_2019-08-09/")
+####  2:  work with BAYESCAN results ####
+bayescan_plot <- plot_bayescan(res = data.FN, FDR = 0.01)
 
 bayescan_plot <- plot_bayescan("bayes_input_fst.txt", FDR = 0.01)
 bayescan_res <- read.table("bayes_input_fst.txt")

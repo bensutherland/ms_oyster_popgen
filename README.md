@@ -279,6 +279,31 @@ For bayescan, assuming you have already built your contrast strata files for pca
 Output file of note: `<CONTRAST>_fst.txt`
 
 
+### RDA ###
+First need to make a VCF with only the farms:     
+Make a directory for your work and change into this directory:     
+```
+mkdir 13_selection/rda_analysis
+cd 13_selection/rda_analysis
+cat ../sets/CHN_CHNF.txt ../sets/PEN_PENF.txt ../sets/FRA_FRAF.txt > FARM.txt
+
+# Also do for domestication, but make sure to only keep a single copy of each sample here:     
+cat ../sets/DPB_PEN.txt ../sets/GUR_FRA.txt ../sets/QDC_CHN.txt ../sets/ROS_PIP.txt ../sets/RSC_CHN.txt | sort | uniq > DOMESTICATION.txt
+
+
+# Now select only the FARM.txt samples
+vcftools --vcf ./../populations.snps.vcf --keep ./FARM.txt --out FARM --recode
+vcftools --vcf ./../populations.snps.vcf --keep ./DOMESTICATION.txt --out DOMESTICATION --recode
+
+# convert to a genotype matrix, one row per individual
+vcftools --vcf FARM.recode.vcf --012 --out FARM_geno
+vcftools --vcf DOMESTICATION.recode.vcf --012 --out DOMESTICATION_geno
+
+``` 
+
+Then go to `../ms_oyster_popgen/01_scripts/outlier_detection_rda.R`       
+
+
 ## 7. Plotting outliers along the chromosome-level assembly
 ### A. Align loci against the reference genome
 The populations run above (single snp) will output a fasta file with a consensus sequence per locus, entitled `09-diversity_stats/populations.loci.fa`. Align this against the most complete reference genome:      
