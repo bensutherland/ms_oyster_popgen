@@ -2,15 +2,14 @@
 # Load constant info files
 # inputs include:
 
+#### Front Matter ####
+# Clean space
+# rm(list=ls())
+
 # Load libraries
 require("tidyr")
 #install.packages("seqinr")
 require("seqinr")
-
-
-#### Front Matter ####
-# Clean space
-# rm(list=ls())
 
 # Set working directory for stark or xavier
 # if on a different system, prompt for working directory

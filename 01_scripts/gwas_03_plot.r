@@ -7,7 +7,6 @@ head(plotting_data[[1]])
 datatypes # datatypes
 
 ##### Plot data #####
-###TODO # Should not use all_data, already a variable
 all_data <- NULL 
 metric_plot.FN <- NULL
 
@@ -18,6 +17,8 @@ for(i in 1:length(datatypes)){
   
   # Make sure in same format
   all_data$chr <- as.character(all_data$chr)
+  
+  head(all_data)
   
   # Plot
   metric_plot.FN <- paste0("13_selection/", datatypes[i], "_sel_genome_plot.pdf")

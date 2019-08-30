@@ -1,6 +1,34 @@
 # Plot differentiation statistics across genome
 ## REQUIRES: already run gwas_01_load_constant_info.r
 
+#### 1.0 Read in rda analysis output ####
+DOMESTICATION.rda_loadings <- read.csv("13_selection/rda_analysis/RDA_loading_vals_DOMESTICATION.csv")
+head(DOMESTICATION.rda_loadings)
+
+FARM.rda_loadings <- read.csv("13_selection/rda_analysis/RDA_loading_vals_FARM.csv")
+head(FARM.rda_loadings)
+
+# put into list
+rda_results.list <- NULL
+as.list(rda_results.list)
+rda_results.list[["DOMESTICATION"]] <- DOMESTICATION.rda_loadings
+rda_results.list[["FARM"]] <- FARM.rda_loadings
+
+
+## Bring in correspondence file to link the rda to the genome plot
+correspondence.df <- read.csv("13_selection/chrom_pos_id.csv", header = F)
+colnames(correspondence.df) <- c("CHROM", "POS", "ID")
+head(correspondence.df)
+
+# Create identifier same as that used by genome plot
+correspondence.df$plot.id <- paste0("CLocus_", correspondence.df$ID, "-", correspondence.df$CHROM)
+head(correspondence.df)
+
+# Create identifier same as that used by rda_loadings
+correspondence.df$rda.id <- paste0(correspondence.df$CHROM, "_", correspondence.df$POS)
+head(correspondence.df)
+
+
 #### 2. Read in contrast files  ####
 ## Identify file names for contrasts
 # Identify sel_perloc_stats, as these are all the contrasts to be used
@@ -12,10 +40,12 @@ pcadapt_qvals.files <- list.files(path = "13_selection/", pattern = "qvals_")
 rosetta <- as.data.frame(pcadapt_qvals.files, stringsAsFactors = F)
 rosetta$datatypes <- c("ch", "dpb", "fr", "gur", "bc", "qdc", "ros", "rsc")
 rosetta # confirm that these are corresponding
+# Also provide domestication/farm identifier for RDA results
+rosetta$rda.type <- c("FARM", "DOMESTICATION", "FARM", "DOMESTICATION", "FARM", "DOMESTICATION", "DOMESTICATION", "DOMESTICATION")
 
-## Load in per locus contrast metrics (qval and FST)
+## Load in per locus contrast metrics (FST, qval, RDA loading)
 #perloc.list <- list() ; qval.list <- list() ; 
-plotting_data <- list()
+plotting_data <- list() ; rda_datatype <- NULL
 
 for(i in 1:length(datatypes)){
   
@@ -40,14 +70,8 @@ for(i in 1:length(datatypes)){
   perloc_fst <- perloc_fst[with(perloc_fst, order(marker)), ]
   head(perloc_fst)
   
-  ### OLD METHOD 
-  # # Put the perloc FST into a list
-  # perloc.list[[datatype]] <- perloc_fst
-  # head(perloc.list[[datatype]])
-  ### END OLD METHOD
-  
-  # Merge perloc stats with the map info bring the stacks.chr, to match with essential alignment info
-  perloc_fst_w_stacks_chr <- merge(x = perloc_fst, y = map, by.x = "marker", by.y = "locus_pos")
+  # Merge perloc stats w/ map info to bring in the stacks.chr to match w/ alignments
+  perloc_fst_w_stacks_chr <- merge(x = perloc_fst, y = map, by.x = "marker", by.y = "locus_pos", sort = F)
   head(perloc_fst_w_stacks_chr)
   dim(perloc_fst_w_stacks_chr) # How many records?
   dim(alignments) # How many records in alignments?
@@ -61,19 +85,18 @@ for(i in 1:length(datatypes)){
   perloc_fst_w_stacks_chr$matching.mname <- paste0("CLocus_", perloc_fst_w_stacks_chr$marker, "-", perloc_fst_w_stacks_chr$stacks.chr)
   head(perloc_fst_w_stacks_chr)
   
-  head(alignments)
   # Bring in the chromosome info
-  perloc_fst_w_full_chr_pos <- merge(x = perloc_fst_w_stacks_chr, y = alignments, by.x = "matching.mname", by.y = "mname", all.x = T)
+  head(alignments)
+  perloc_fst_w_full_chr_pos <- merge(x = perloc_fst_w_stacks_chr, y = alignments, by.x = "matching.mname", by.y = "mname", all.x = T, sort = F)
   dim(perloc_fst_w_full_chr_pos)
   head(perloc_fst_w_full_chr_pos)
   
   ## General Stats
   # How many markers per chromosome (Should be constant for all contrasts..)
-  table(perloc_fst_w_full_chr_pos$target.chr)
-  sum(table(perloc_fst_w_full_chr_pos$target.chr))
-  table(is.na(perloc_fst_w_full_chr_pos$target.chr))
-  # TRUE shows the markers that are not mapped to the genome (i.e. 2223 of )
-  sum(table(is.na(perloc_fst_w_full_chr_pos$target.chr)))
+  table(perloc_fst_w_full_chr_pos$chr)
+  sum(table(perloc_fst_w_full_chr_pos$chr))
+  table(is.na(perloc_fst_w_full_chr_pos$chr)) # TRUE shows the markers that are not mapped to the genome (i.e. 2223 of )
+  sum(table(is.na(perloc_fst_w_full_chr_pos$chr)))
   
   
   # Identify qval.FN (pcadapt); note: this uses the rosetta translation of datatypes to pcadapt qval files
@@ -82,18 +105,33 @@ for(i in 1:length(datatypes)){
   head(qval.df)
   qval.df$mname <- gsub(pattern = ">", replacement = "", x = qval.df$mname) # Formatting to match other datasets
   head(qval.df)
+  
   # Calculate -log10(qvalue) for plotting
   qval.df$neg.log10.qval <- -log10(qval.df$qval)
   head(qval.df)
   
-  ### OLD METHOD
-  # # Put the qval into a list
-  # qval.list[[datatype]] <- qval.df
-  ### END OLD METHOD
-
-  plotting_data.df <- merge(x = perloc_fst_w_full_chr_pos, y = qval.df, by.x = "matching.mname", by.y = "mname", all.x = TRUE)
+  plotting_data.df <- merge(x = perloc_fst_w_full_chr_pos, y = qval.df, by.x = "matching.mname", by.y = "mname", all.x = TRUE, sort = F)
   head(plotting_data.df)
   
+  
+  # Bring in RDA info
+  rda_datatype <- rosetta[which(rosetta$datatypes==datatype), "rda.type"]
+  rda_results.df <- rda_results.list[[rda_datatype]]
+  rda_results.df$rda.id <- as.character(rda_results.df$rda.id)
+  str(rda_results.df)
+  
+  # Connect to plotting data
+  # First bring in a file that has a connector between the plotting data and rda
+  head(plotting_data.df)
+  head(correspondence.df)
+  plotting_data.df <- merge(x = plotting_data.df, y = correspondence.df, by.x = "matching.mname", by.y = "plot.id", all.x = T, sort = F)
+  
+  # Then bring in the rda
+  head(plotting_data.df)
+  head(rda_results.df)
+  
+  plotting_data.df <- merge(x = plotting_data.df, y = rda_results.df, by = "rda.id", all.x = T, sort = F)
+
   # Save into a list
   plotting_data[[datatype]] <- plotting_data.df
 }
