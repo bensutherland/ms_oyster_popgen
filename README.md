@@ -303,6 +303,8 @@ vcftools --vcf DOMESTICATION.recode.vcf --012 --out DOMESTICATION_geno
 
 Then go to `../ms_oyster_popgen/01_scripts/outlier_detection_rda.R`       
 
+This will output plots into a folder `13_selection/rda_analysis`, as well as .csv files that can be used to integrate with the genome plot below. However, for the genome plot you will also need this answer key:     
+`grep -vE '^#' 13_selection/populations.snps.vcf | awk '{ print $1 ",", $2 "," $3 }' - | awk -F":" '{ print $1 }' - > 13_selection/chrom_pos_id.csv`    
 
 ## 7. Plotting outliers along the chromosome-level assembly
 ### A. Align loci against the reference genome
