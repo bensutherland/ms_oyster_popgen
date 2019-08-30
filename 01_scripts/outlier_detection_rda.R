@@ -160,9 +160,11 @@ for(i in 1:length(datatypes)){
   
   ### Identify outliers and plot RDA loadings ###
   load.rda <- summary(FARM_RDA)$species[, c("RDA1", "PC1", "PC2", "PC3")]  # extract the loadings for these axes/projections
-  str(load.rda)
+  load.rda.df <- as.data.frame(load.rda)
+  load.rda.df$rda.id <- rownames(load.rda.df)
+  head(load.rda.df)
   
-  #### Identify outliers ####
+  ## Identify outliers
   # Make a function to identify outliers
   outliers <- function(loadings, num_sd){
     lims <- mean(loadings) + c(-1, 1) * num_sd * sd(loadings)     # find loadings +/-z sd from mean loading     
@@ -173,6 +175,19 @@ for(i in 1:length(datatypes)){
   SD <- 3.5
   cand1 <- outliers(loadings = load.rda[,"RDA1"], num_sd = 3.5)
   ncand <- length(cand1)  
+  cand1.df <- as.data.frame(cand1)
+  colnames(cand1.df) <- "outlier_loading"
+  cand1.df$rda.id <- rownames(cand1.df)
+  head(cand1.df)
+  
+  # Merge outlier info into loading info
+  load.rda_w_outliers.df<- merge(x = load.rda.df, y = cand1.df, by = "rda.id", all.x = T)
+  head(load.rda_w_outliers.df)
+  table(is.na(load.rda_w_outliers.df$outlier_loading)) # the number of outliers here
+  
+  ## Save Results ####
+  results.FN <- paste0("13_selection/rda_analysis/RDA_loading_vals_", datatype, ".csv") 
+  write.table(x = load.rda_w_outliers.df, file = results.FN, append = F, quote = F, row.names = F, sep = ",")
   
   # Plot loadings
   hist.FN <- paste0("13_selection/rda_analysis/RDA_loading_hist_", datatype, ".pdf") 
@@ -185,13 +200,6 @@ for(i in 1:length(datatypes)){
   abline(v = mean(load.rda[, "RDA1"]) + 3.5 * sd(load.rda[, "RDA1"]), lty = 2, col = "red")
   abline(v = mean(load.rda[, "RDA1"]) - 3.5 * sd(load.rda[, "RDA1"]), lty = 2, col = "red")
   dev.off()
-  
-  ## Save Results ####
-  results.FN <- paste0("13_selection/rda_analysis/RDA_loading_vals_", datatype, ".csv") 
-  load.rda.df <- as.data.frame(load.rda)
-  load.rda.df$mname <- rownames(load.rda.df)
-  write.table(x = load.rda.df, file = results.FN, append = F, quote = F, row.names = F, sep = ",")
 
-  
   }
 
