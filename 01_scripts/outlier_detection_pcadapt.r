@@ -29,7 +29,7 @@ library(pcadapt)
 library(qvalue)
 
 # Set variables
-qval_cutoff <- 0.1
+qval_cutoff <- 0.05
 
 # Identify files
 files <- list.files(path = "13_selection/", pattern = "recode.vcf", full.names = T)
