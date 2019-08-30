@@ -1,6 +1,9 @@
 # Plot differentiation statistics across genome
 ## REQUIRES: already run gwas_01_load_constant_info.r
 
+# Set variables
+FST_percentile <- 0.99
+
 #### 1.0 Read in rda analysis output ####
 DOMESTICATION.rda_loadings <- read.csv("13_selection/rda_analysis/RDA_loading_vals_DOMESTICATION.csv")
 head(DOMESTICATION.rda_loadings)
@@ -131,9 +134,21 @@ for(i in 1:length(datatypes)){
   head(rda_results.df)
   
   plotting_data.df <- merge(x = plotting_data.df, y = rda_results.df, by = "rda.id", all.x = T, sort = F)
+  
+  # Add in the FST 99th percentile to the output file
+  # 95th percentile method
+  FST_percentile_line <- quantile(x = plotting_data.df$Fst, probs = FST_percentile, na.rm = T)
+  plotting_data.df$fst_percentile <- rep(x = FST_percentile_line, times = nrow(plotting_data.df))
+  plotting_data.df$fst_percentile_cutoff <- rep(x = FST_percentile, times = nrow(plotting_data.df))
+  head(plotting_data.df)
 
-  # Save into a list
+  # Save into a list to use for plotting
   plotting_data[[datatype]] <- plotting_data.df
+  
+  # Save into a text file for potential future use
+  output.FN <- paste0("13_selection/", datatype, "_all_data_output.txt")
+  write.table(x = plotting_data.df, file = output.FN, sep = "\t", row.names = F, quote = F, col.names = T)
+  
 }
 
 # Summary # your data is here:
