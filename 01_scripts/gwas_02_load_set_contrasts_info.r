@@ -1,5 +1,6 @@
 # Plot differentiation statistics across genome
-## REQUIRES: already run gwas_01_load_constant_info.r
+## REQUIRES: 
+# already run gwas_01_load_constant_info.r
 
 # Set variables
 FST_percentile <- 0.99

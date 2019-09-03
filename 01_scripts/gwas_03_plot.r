@@ -14,7 +14,7 @@ FST_percentile <- 0.99
 
 ##### Plot data #####
 all_data <- NULL 
-metric_plot.FN <- NULL; fst.outlier <- NULL; FST_percentile_line <- NULL
+metric_plot.FN <- NULL; fst.outlier <- NULL; FST_percentile_line <- NULL ; grob.list <- list()
 
 for(i in 1:length(datatypes)){
   
@@ -31,46 +31,61 @@ for(i in 1:length(datatypes)){
   pdf(file = metric_plot.FN, width = 10, height = 5)
 
   print(paste0("Plotting", datatypes[i]))
-    
-  # Plot
-  plot(x = all_data$cum.pos, y = all_data$Fst, type = "n", las = 1
-       , ylab = paste0("Fst (contrast ", datatypes[i], ")")
-       , xaxt = "n", cex = 0.6, xlab = "Genomic Location (bp)"
-       #, ylim = c(-0.02, 0.4)
-       )
   
-  # Add 0 line
-  abline(h = 0, lty = 1)
+  rda_data <- all_data[!is.na(all_data$outlier_loading), ]
+  dim(rda_data)
   
-  points(x = all_data$cum.pos, y = all_data$Fst)
-  # Add RDA info
-  points(x = all_data$cum.pos[!is.na(all_data$outlier_loading)], y = all_data$Fst[!is.na(all_data$outlier_loading)], pch = 8
-         , col = col_rda, cex = 1.2
-         ) # plot rda outliers
-  # Add pcadapt info
-  points(x = all_data$cum.pos[all_data$qval < qval_plot_thresh], y = all_data$Fst[all_data$qval < qval_plot_thresh], pch = 3
-         , col = col_pcadapt, cex = 1.5
-        ) # plot pcadapt outliers
+  pcadapt_data <- all_data[all_data$qval < qval_plot_thresh, ]
+  pcadapt_data <- all_data[!is.na(pcadapt_data$qval), ]
+  dim(pcadapt_data)
   
-  # Add outlier line for FST
-  
-  # OLD METHOD (2sd of mean)
-  # fst.avg <- mean(all_data$Fst, na.rm = T)
-  # fst.sd <- mean(all_data$Fst, na.rm = T)
-  # fst.outlier <- fst.avg + (2*fst.sd)
-  # END OLD METHOD
-  
-  # 95th percentile method
   FST_percentile_line <- quantile(x = all_data$Fst, probs = FST_percentile, na.rm = T)
-  abline(h = FST_percentile_line, lty = 3)
-
-  # Add dividers between chr
-  abline(v = chr.info$cum.lengths, lty = 2)
   
-  # Add chromosome names
-  axis(side = 1, at = position.of.chr.label, labels= chr.info$chr.names, las=2) 
+  
+  
+  ### NEW SECTION
+  #library("ggplot2")
+  
+  datatype.grob <- ggplot() + 
+    geom_point(data = all_data, aes(x = cum.pos, y = Fst), size = 1, shape = 1) + 
+    
+    # Add pcadapt outliers
+    geom_point(data =  pcadapt_data, aes(x = cum.pos, y = Fst), colour = "red", shape = 11, size = 2) +
+  
+    # Add RDA outliers
+    geom_point(data = rda_data, aes(x = cum.pos, y = Fst), colour = "blue", size = 2) +  # expect some to not have positions
+    
+    # Add horizontal line
+    geom_hline(yintercept = 0, linetype = "solid") +
+    geom_hline(yintercept = FST_percentile_line, linetype = "dashed", colour = "darkgray") +
+  
+    geom_vline(xintercept = chr.info$cum.lengths, linetype = "dashed", colour = "darkgray") +
+    
+    theme(axis.text.x=element_blank()) +  # remove xaxis labels
+    
+    labs(x = "Chromosome and position (bp)", y = paste0("Fst (", datatypes[i], ")")) +
+    
+    ylim(-0.035, max(all_data$Fst, na.rm = T) + 0.02) + 
+  
+    # geom_text(x = 15560284, y = 0.1, label = "test")
+    
+    annotate("text", x=position.of.chr.label, y=-0.03, label= chr.info$chr.names)
+    
+    # geom_label() # still need to do
+  
+    # # Add chromosome names
+    # axis(side = 1, at = position.of.chr.label, labels= chr.info$chr.names, las=2)
+  
+    print(datatype.grob)
 
-  dev.off()
+  ### END NEW SECTION
+  
+  
+    dev.off()
+  
+     grob.list[[datatypes[i]]] <- datatype.grob
+  
+  
   
   # # Metric comparison (old)
   # print(paste0("Metric comparison for ", datatypes[i]))
@@ -80,3 +95,6 @@ for(i in 1:length(datatypes)){
   # dev.off()
 
 }
+
+save(grob.list, file = "13_selection/grob_list.Rdata")
+

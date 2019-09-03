@@ -1,6 +1,9 @@
 # Plot differentiation statistics across genome
 # Load constant info files
 # inputs include:
+# file "13_selection/chrom_pos_id.csv"
+# output for "outlier_detection_rda.R" and 
+# output for "outlier_detection_pcadapt.R" and 
 
 #### Front Matter ####
 # Clean space
