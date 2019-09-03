@@ -14,7 +14,7 @@ if(Sys.info()["nodename"] == "stark"){
 
 
 # Install packages
-install.packages("cowplot")
+# install.packages("cowplot")
 library("cowplot")
 # 
 # genome_plots.files <- list.files("13_selection/", pattern = "*_genome_plot.pdf")

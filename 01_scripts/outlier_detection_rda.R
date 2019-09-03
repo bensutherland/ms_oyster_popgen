@@ -34,7 +34,6 @@ for(i in 1:length(datatypes)){
   datatype <- datatypes[i]
   print(paste0("Working on ", datatype))
   
-  
   ##  Read in genotype data ##
   geno.FN <- paste0("13_selection/rda_analysis/", datatype, "_geno.012")
   ind.FN <- paste0("13_selection/rda_analysis/", datatype, "_geno.012.indv")
@@ -58,9 +57,6 @@ for(i in 1:length(datatypes)){
   # Convert to matrix
   gen <- as.matrix(geno)
   gen[1:5,1:5]
-  
-  
-  
   
   # Identify NAs
   sum(is.na(gen)) # no NAs
@@ -181,7 +177,7 @@ for(i in 1:length(datatypes)){
   head(cand1.df)
   
   # Merge outlier info into loading info
-  load.rda_w_outliers.df<- merge(x = load.rda.df, y = cand1.df, by = "rda.id", all.x = T)
+  load.rda_w_outliers.df <- merge(x = load.rda.df, y = cand1.df, by = "rda.id", all.x = T)
   head(load.rda_w_outliers.df)
   table(is.na(load.rda_w_outliers.df$outlier_loading)) # the number of outliers here
   
