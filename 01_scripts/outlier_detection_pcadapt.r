@@ -29,7 +29,7 @@ library(pcadapt)
 library(qvalue)
 
 # Set variables
-qval_cutoff <- 0.05
+qval_cutoff <- 0.01
 
 # Identify files
 files <- list.files(path = "13_selection/", pattern = "recode.vcf", full.names = T)
@@ -81,6 +81,7 @@ pcadapt.out.list[[1]]$singular.values ^ 2
 
 ##### Observe number of PCs explaining the variation (>2.5%) #####
 contrast.of.interest <- NULL; selected_K <- NULL ; selected_K.list <- list()
+
 for(i in 1:length(pcadapt.out.list)){
   
   # Name for round
@@ -103,15 +104,28 @@ for(i in 1:length(pcadapt.out.list)){
   ## consistently identifies the number of PCs that each explain more than 2.5% of the variance 
   ## and consistently apply among comparisons
   
-  # Count those that take more than 2.5 %
-  selected_K <- table((pcadapt.out.list[[1]]$singular.values ^ 2) > 0.025)["TRUE"]
-  # Save the selected_K
-  selected_K.list[[contrast.of.interest]] <- selected_K
-
+  #### OLD METHOD ###
+  # Count those that take more than 2.5 % 
+  # selected_K <- table((pcadapt.out.list[[i]]$singular.values ^ 2) > 0.025)["TRUE"]
+  # # Save the selected_K
+  # selected_K.list[[contrast.of.interest]] <- selected_K
+  #### END OLD METHOD ###
 }
 
+### Manually input the k selection based on the screeplots produced above:
+names(pcadapt.out.list)
+selected_K.list[["QDC_CHN"]] <- 7
+selected_K.list[["GUR_FRA"]] <- 9
+selected_K.list[["RSC_CHN"]] <- 4
+selected_K.list[["ROS_PIP"]] <- 5
+selected_K.list[["DPB_PEN"]] <- 4
 
-#### Run pcadapt for each contrast with only pcs explaining > 2.5% variation each ####
+selected_K.list[["PEN_PENF"]] <- 1
+selected_K.list[["FRA_FRAF"]] <- 1
+selected_K.list[["CHN_CHNF"]] <- 1
+
+
+#### Run pcadapt for each contrast including the PCs as selected above manually
 # Using the input obj pcadapt.obj.list and selected_K.list, re-run pcadapt using dynamically selected k
 pcadapt.out_dynamic_K.list <- list()
 
@@ -166,6 +180,7 @@ for(i in 1:length(pcadapt.obj.list)){
 
 #### Choosing cutoff for outlier detection ####
 qvals <- NULL; outliers.list <- list(); pval_and_qval.df <- NULL; num_outliers.list <- list(); mname.df <- NULL
+
 # Extract qvals
 for(i in 1:length(pcadapt.out_dynamic_K.list)){
   
