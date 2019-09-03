@@ -1,9 +1,12 @@
 ### Directly compare data without any genome information ####
 datatypes <- c("bc", "fr", "ch")
 perloc_stats_list <- list()
+comps <- c("bc_fr", "bc_ch", "fr_ch")
 
 input_dir <- "11-adegenet_analysis/"
+output_dir <- "13_selection/"
 
+percentile <- 0.95
 
 # Loop
 for(i in 1:length(datatypes)){
@@ -18,33 +21,50 @@ for(i in 1:length(datatypes)){
 
 str(perloc_stats_list)
 
-pdf(file = "11-adegenet_analysis/selection_expt_all_by_all.pdf", width = 8, height = 8)
+pdf(file = paste0(output_dir, "selection_expt_all_by_all.pdf"), width = 8, height = 8)
 par(mfrow=c(2,2))
 
-# France vs China
-plot(perloc_stats_list[["ch"]]["Fst"]$Fst ~ perloc_stats_list[["fr"]]["Fst"]$Fst
-     , ylim = c(-0.05, 0.3)
-     , xlim = c(-0.05, 0.3)
-     , ylab = "China (Fst)", xlab = "France (Fst)")
-abline(h = 0.1, lty = 3)
-abline(v = 0.1, lty = 3)
 
-# BC vs France
-plot(perloc_stats_list[["bc"]]["Fst"]$Fst ~ perloc_stats_list[["fr"]]["Fst"]$Fst
-     , ylim = c(-0.05, 0.3)
-     , xlim = c(-0.05, 0.3)
-     , ylab = "BC (Fst)", xlab = "France (Fst)")
-abline(h = 0.1, lty = 3)
-abline(v = 0.1, lty = 3)
+# Loop to plot
+pop1 <- NULL; pop2 <- NULL
+for(i in 1:length(comps)){
+  
+  # Identify the two comparisons
+  pop1 <- gsub(x = comps[i], pattern = "_.*", replacement = "")
+  pop2 <- gsub(x = comps[i], pattern = ".*_", replacement = "")
+  
+  # Report
+  print(paste0("Working on ", pop1, " vs. ", pop2))
+  
+  # Plot
+  plot(perloc_stats_list[[pop1]]["Fst"]$Fst ~ perloc_stats_list[[pop2]]["Fst"]$Fst
+       , ylim = c(-0.05, 0.3)
+       , xlim = c(-0.05, 0.3)
+       , ylab = paste0(toupper(pop1), " (Fst)")
+       , xlab = paste0(toupper(pop2), " (Fst)")
+       , las = 1
+       )
+  
+  # Find the 95th percentile of the Fst for each pop
+  pop1.quantile <- quantile(x = perloc_stats_list[[pop1]]["Fst"]$Fst, na.rm = TRUE, probs = percentile)
+  pop2.quantile <- quantile(x = perloc_stats_list[[pop2]]["Fst"]$Fst, na.rm = TRUE, probs = percentile)
+  abline(h = pop1.quantile, lty = 3)
+  abline(v = pop2.quantile, lty = 3)
+  
+  # How many markers are in the top-right quadrant?
+  table(perloc_stats_list[[pop1]]["Fst"]$Fst > pop1.quantile)
+  table(perloc_stats_list[[pop2]]["Fst"]$Fst > pop2.quantile)
+  
+  shared_true <- table(perloc_stats_list[[pop1]]["Fst"]$Fst > pop1.quantile & perloc_stats_list[[pop2]]["Fst"]$Fst > pop2.quantile)["TRUE"] # shared
+  
+  text(x = 0.2, y = 0.25, labels = paste0("markers in n.", (percentile*100), "= ", shared_true))
+  
+}
 
-# BC vs China
-plot(perloc_stats_list[["bc"]]["Fst"]$Fst ~ perloc_stats_list[["ch"]]["Fst"]$Fst
-     , ylim = c(-0.05, 0.3)
-     , xlim = c(-0.05, 0.3)
-     , ylab = "BC (Fst)", xlab = "China (Fst)")
-abline(h = 0.1, lty = 3)
-abline(v = 0.1, lty = 3)
 dev.off()
+
+
+
 
 
 # # Find out which markers correspond to this:
