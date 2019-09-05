@@ -2,6 +2,21 @@
 # Clean space
 # rm(list=ls())
 
+# Set working directory
+# Set working directory for stark or xavier
+# if on a different system, prompt for working directory
+if(Sys.info()["nodename"] == "stark"){ 
+  print("On Stark, ready to go")
+  setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/") # stark
+} else if(Sys.info()["nodename"] == "Xavier"){
+  print("On Xavier, ready to go")
+  setwd("/hdd/01_moore_oyster_project/stacks_workflow/") # Xavier
+} else {
+  print("You are on an unrecognized system, please set working directory manually")
+}
+
+
+
 
 ## A simple R example for plotting fineRADstructure output
 ## Author: Milan Malinsky (millanek@gmail.com), adapted from a Finestructure R Example by Daniel Lawson (dan.lawson@bristol.ac.uk) and using his library of R functions
@@ -96,7 +111,9 @@ datamatrix<-dataraw[fullorder,fullorder] # reorder the data matrix
 
 tmpmat<-datamatrix 
 tmpmat[tmpmat>maxIndv]<-maxIndv #  # cap the heatmap
-pdf(file=paste(plotsFolder,analysisName,"-SimpleCoancestry.pdf",sep=""),height=40,width=40)
+pdf(file=paste(plotsFolder,analysisName,"-SimpleCoancestry.pdf",sep=""),height=40,width=40
+    , colormodel = "gray"
+    )
 plotFinestructure(tmpmat,dimnames(tmpmat)[[1]],dend=tdend,cols=some.colorsEnd,cex.axis=1.1,edgePar=list(p.lwd=0,t.srt=90,t.off=-0.1,t.cex=1.2))
 dev.off()
 
@@ -106,7 +123,9 @@ popmeanmatrix<-getPopMeanMatrix(datamatrix,mapstatelist)
 
 tmpmat<-popmeanmatrix
 tmpmat[tmpmat>maxPop]<-maxPop # cap the heatmap
-pdf(file=paste(plotsFolder,analysisName,"-PopAveragedCoancestry.pdf",sep=""),height=20,width=20)
+pdf(file=paste(plotsFolder,analysisName,"-PopAveragedCoancestry.pdf",sep=""),height=20,width=20
+    , colormodel = "gray"
+    )
 plotFinestructure(tmpmat,dimnames(tmpmat)[[1]],dend=tdend,cols=some.colorsEnd,cex.axis=1.1,edgePar=list(p.lwd=0,t.srt=90,t.off=-0.1,t.cex=1.2))
 dev.off()
 
@@ -119,6 +138,8 @@ labellocs<-PopCenters(mappopsizes)
 xcrt=0
 ycrt=45
 
-pdf(file=paste(plotsFolder,analysisName,"-PopAveragedCoancestry2.pdf",sep=""),height=25,width=25)
+pdf(file=paste(plotsFolder,analysisName,"-PopAveragedCoancestry2.pdf",sep=""),height=25,width=25
+    , colormodel = "gray"
+    )
 plotFinestructure(tmpmat,dimnames(tmpmat)[[1]],labelsx=labels(popdendclear),labelsatx=labellocs,xcrt=xcrt,cols=some.colorsEnd,ycrt=ycrt,dend=tdend,cex.axis=1.1,edgePar=list(p.lwd=0,t.srt=90,t.off=-0.1,t.cex=1.2),hmmar=c(3,0,0,1))
 dev.off()
