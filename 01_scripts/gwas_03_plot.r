@@ -1,20 +1,26 @@
 # Plot differentiation statistics across genome
 ## REQUIRES: already run gwas_02_load_set_contrasts_info.r
 
+#library("ggplot2")
+
 # Summary # your data is here:
 names(plotting_data)
 head(plotting_data[[1]])
 datatypes # datatypes
 
-# Set variable
-qval_plot_thresh <- 0.05
+# Set variables
+qval_plot_thresh <- 0.01
 col_pcadapt <- "red"
+cex_pcadapt <- 0.5
+pch_pcadapt <- 16
 col_rda <- "blue"
+cex_rda <- 1
+pch_rda <- 16
 FST_percentile <- 0.99
 
-##### Plot data #####
+##### Set up plot data #####
 all_data <- NULL 
-metric_plot.FN <- NULL; fst.outlier <- NULL; FST_percentile_line <- NULL ; grob.list <- list()
+metric_plot.FN <- NULL; fst.outlier <- NULL; FST_percentile_line <- NULL ; grob.list <- list(); common_ID.RDA_pcadapt <- NULL; rda_and_pcadapt_data <- NULL
 
 for(i in 1:length(datatypes)){
   
@@ -25,38 +31,52 @@ for(i in 1:length(datatypes)){
   all_data$chr <- as.character(all_data$chr)
   
   head(all_data)
-  
-  # Plot
+
   metric_plot.FN <- paste0("13_selection/", datatypes[i], "_sel_genome_plot.pdf")
   pdf(file = metric_plot.FN, width = 10, height = 5)
 
-  print(paste0("Plotting", datatypes[i]))
+  print(paste0("Plotting ", datatypes[i]))
   
+  ##### Subset the data to make it easier to plot ####
+  # Identify RDA data (i.e. data with a significant RDA result as shown by having a loading present)
   rda_data <- all_data[!is.na(all_data$outlier_loading), ]
   dim(rda_data)
   
+  # Identify pcadapt data that is below the user-set qval threshold
   pcadapt_data <- all_data[all_data$qval < qval_plot_thresh, ]
-  pcadapt_data <- all_data[!is.na(pcadapt_data$qval), ]
+  pcadapt_data <- pcadapt_data[!is.na(pcadapt_data$qval), ]
   dim(pcadapt_data)
   
+  # Identify RDA AND pcadapt data
+  common_ID.RDA_pcadapt<- intersect(x = rda_data$rda.id, y = pcadapt_data$rda.id)
+  rda_and_pcadapt_data <- all_data[which(all_data$rda.id %in% common_ID.RDA_pcadapt),]
+
+  # What is the FST percentile line level?
+  FST_percentile # percentile chosen
   FST_percentile_line <- quantile(x = all_data$Fst, probs = FST_percentile, na.rm = T)
   
+  # Note: your data is in rda_data, pcadapt_data and rda_and_pcadapt_data
   
-  
-  ### NEW SECTION
-  #library("ggplot2")
+  ## Actual Plotting
   
   datatype.grob <- ggplot() + 
-    geom_point(data = all_data, aes(x = cum.pos, y = Fst), size = 1, shape = 1) + 
-    
-    # Add pcadapt outliers
-    geom_point(data =  pcadapt_data, aes(x = cum.pos, y = Fst), colour = "red", shape = 11, size = 2) +
-  
-    # Add RDA outliers
-    geom_point(data = rda_data, aes(x = cum.pos, y = Fst), colour = "blue", size = 2) +  # expect some to not have positions
     
     # Add horizontal line
     geom_hline(yintercept = 0, linetype = "solid") +
+    
+    # Plot all Fst vals
+    geom_point(data = all_data, aes(x = cum.pos, y = Fst), size = 1, shape = 16, colour = "darkgrey") + 
+    
+    # Add pcadapt outliers
+    geom_point(data =  pcadapt_data, aes(x = cum.pos, y = Fst), colour = "red", shape = 16, size = 1) +
+  
+    # Add RDA outliers
+    geom_point(data = rda_data, aes(x = cum.pos, y = Fst), colour = "blue", size = 1) +
+    
+    # Add common outliers
+    geom_point(data = rda_and_pcadapt_data, aes(x = cum.pos, y = Fst), colour = "black", size = 2, shape = 8) +
+    
+    
     geom_hline(yintercept = FST_percentile_line, linetype = "dashed", colour = "darkgray") +
   
     geom_vline(xintercept = chr.info$cum.lengths, linetype = "dashed", colour = "darkgray") +
@@ -65,11 +85,11 @@ for(i in 1:length(datatypes)){
     
     labs(x = "Chromosome and position (bp)", y = paste0("Fst (", datatypes[i], ")")) +
     
-    ylim(-0.035, max(all_data$Fst, na.rm = T) + 0.02) + 
+    ylim(-0.04, max(all_data$Fst, na.rm = T) + 0.02) + 
   
     # geom_text(x = 15560284, y = 0.1, label = "test")
     
-    annotate("text", x=position.of.chr.label, y=-0.03, label= chr.info$chr.names)
+    annotate("text", x=position.of.chr.label, y=-0.04, label= chr.info$chr.names)
     
     # geom_label() # still need to do
   
@@ -77,13 +97,10 @@ for(i in 1:length(datatypes)){
     # axis(side = 1, at = position.of.chr.label, labels= chr.info$chr.names, las=2)
   
     print(datatype.grob)
-
-  ### END NEW SECTION
-  
   
     dev.off()
   
-     grob.list[[datatypes[i]]] <- datatype.grob
+    grob.list[[datatypes[i]]] <- datatype.grob
   
   
   
