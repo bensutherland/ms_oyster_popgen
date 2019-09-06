@@ -32,30 +32,38 @@ for(i in 1:length(datatypes)){
   
   head(all_data)
 
-  metric_plot.FN <- paste0("13_selection/", datatypes[i], "_sel_genome_plot.pdf")
-  pdf(file = metric_plot.FN, width = 10, height = 5)
-
-  print(paste0("Plotting ", datatypes[i]))
   
-  ##### Subset the data to make it easier to plot ####
-  # Identify RDA data (i.e. data with a significant RDA result as shown by having a loading present)
+  ##### Subset all_data to make it easier to plot ####
+  # Note: this is all markers, not just those with alignment positions
+  # Identify data with a significant RDA value (i.e. has an outlier_loading shown)
   rda_data <- all_data[!is.na(all_data$outlier_loading), ]
   dim(rda_data)
   
-  # Identify pcadapt data that is below the user-set qval threshold
+  # Identify data with a significant pcadapt value (i.e. below user set qval threshold)
   pcadapt_data <- all_data[all_data$qval < qval_plot_thresh, ]
-  pcadapt_data <- pcadapt_data[!is.na(pcadapt_data$qval), ]
+  pcadapt_data <- pcadapt_data[!is.na(pcadapt_data$qval), ] # get rid of NAs also
   dim(pcadapt_data)
   
-  # Identify RDA AND pcadapt data
-  common_ID.RDA_pcadapt<- intersect(x = rda_data$rda.id, y = pcadapt_data$rda.id)
-  rda_and_pcadapt_data <- all_data[which(all_data$rda.id %in% common_ID.RDA_pcadapt),]
-
+  # Identify common markers in RDA AND pcadapt data
+  common_ID.RDA_pcadapt <- intersect(x = rda_data$rda.id, y = pcadapt_data$rda.id)
+  rda_and_pcadapt_data  <- all_data[which(all_data$rda.id %in% common_ID.RDA_pcadapt),] # collect the common data
+  
+  # Save out the common data (RDA, pcadapt)
+  write.table(file = paste0("13_selection/outliers_common_pcadapt_rda_", datatypes[i], ".txt"), x = rda_and_pcadapt_data
+              , quote = F, row.names = F, col.names = T, sep = "\t")
+  
   # What is the FST percentile line level?
   FST_percentile # percentile chosen
   FST_percentile_line <- quantile(x = all_data$Fst, probs = FST_percentile, na.rm = T)
   
+  
   # Note: your data is in rda_data, pcadapt_data and rda_and_pcadapt_data
+  
+  #### Plot the results ####
+  genome_plot.FN <- paste0("13_selection/", datatypes[i], "_sel_genome_plot.pdf")
+  pdf(file = genome_plot.FN, width = 10, height = 5)
+
+  print(paste0("Plotting ", datatypes[i]))
   
   ## Actual Plotting
   
