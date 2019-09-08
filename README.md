@@ -404,21 +404,3 @@ Evaluate total number of mappings
 `awk '{ print $2 }' 04-all_samples/mappings_per_sample_table.txt | paste -sd+ - | bc`
 
 
-## Run fastStructure
-Run plink to convert plink output from stacks into a .bed, .bim, and .fam file for fastStructure input     
-`plink --noweb --file 06-stacks_rx_output_296_samples_many_sep_pops/batch_1.plink --make-bed --out 06-stacks_rx_output_296_samples_many_sep_pops/batch_1`
-
-Run faststructure:    
-`python ~/Programs/fastStructure/structure.py -K 5 --input=06-stacks_rx_output_296_samples_many_sep_pops/batch_1 --output=test_structure/`
-
-Get labels for distruct:    
-`awk '{ print $2 }' 06-stacks_rx_output_296_samples_many_sep_pops/batch_1.fam > structure_labels.txt`     
-
-Run distruct.py to plot results:     
-`python ~/Programs/fastStructure/distruct.py -K 5 --input=test_structure --output=test_structure_out.svg --popfile=structure_labels.txt`
-
-Test multiple values of K:    
-`for i in $(seq 1 10) ; do echo $i ; python ~/Programs/fastStructure/structure.py -K $i --input=06-stacks_rx_output_296_samples_many_sep_pops/batch_1 --output=test_structure/test_structure ; done`
-
-Evaluate:    
-`python ~/Programs/fastStructure/chooseK.py --input=test_structure/test_structure`
