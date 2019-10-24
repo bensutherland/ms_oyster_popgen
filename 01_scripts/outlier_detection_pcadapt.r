@@ -35,6 +35,8 @@ qval_cutoff <- 0.01
 files <- list.files(path = "13_selection/", pattern = "recode.vcf", full.names = T)
 
 #### Run pcadapt for each contrast with full pcs retained ####
+# This is to determine which PCs contribute significantly to the data, and 
+# to determine which PCs separate the groups
 # set nulls
 pcadapt.obj <- NULL; pcadapt.FN <- NULL; pcadapt.out <- NULL
 pcadapt.out.list <- list(); obj.name <- NULL; pcadapt.obj.list <- list()
@@ -45,14 +47,14 @@ for(i in 1:length(files)){
   pcadapt.FN <- files[i]
   print(paste0("Working on ", pcadapt.FN))
   
-  # Create object name
+  # Create object name from filename (e.g. ROS_PIP)
   obj.name <- gsub(pattern = ".*//", replacement = "", x = files[i])
   obj.name <- gsub(pattern = "\\..*", replacement = "", x = obj.name)
   
   # Read in data
   pcadapt.obj <- read.pcadapt(input = pcadapt.FN, type = "vcf")
   
-  # Save input
+  # Save input data into a list using the object name above
   pcadapt.obj.list[[obj.name]] <- pcadapt.obj
   
   # Run pcadapt
@@ -79,38 +81,67 @@ pcadapt.out.list[[1]]$singular.values ^ 2
 # End example
 
 
-##### Observe number of PCs explaining the variation (>2.5%) #####
+# #### INVESTIGATE SCOREPLOT ### WORKING HERE ####
+# # get sample names
+# file_of_interest <- files[2]
+# file_of_interest
+# 
+# my_vcf <- read.vcfR(file = file_of_interest)
+# sample_names <- colnames(my_vcf@gt)[2:length(colnames(my_vcf@gt))]
+# pop <- gsub(pattern = "_.*", replacement = "", x = sample_names)
+# 
+# pcadapt::score_plot(x = pcadapt.out.list[[2]], i = 1, j = 2, pop = pop) #DPB_PEN
+# pcadapt::score_plot(x = pcadapt.out.list[[2]], i = 3, j = 4, pop = pop) #DPB_PEN
+# pcadapt::score_plot(x = pcadapt.out.list[[2]], i = 5, j = 6, pop = pop) #DPB_PEN
+# pcadapt::score_plot(x = pcadapt.out.list[[2]], i = 7, j = 8, pop = pop) #DPB_PEN
+# 
+# #### END WORKING HERE ####
+
+
+##### Plot screeplot and scoreplot to ID the number and identity of PCs to obtain #####
 contrast.of.interest <- NULL; selected_K <- NULL ; selected_K.list <- list()
+my_vcf.FN <- NULL; my_vcf <- NULL; sample_names <- NULL; pop <- NULL
 
 for(i in 1:length(pcadapt.out.list)){
   
   # Name for round
   contrast.of.interest <- names(pcadapt.out.list)[i]
+  print(contrast.of.interest) # reporting
   
-  # Use screeplot
+  # SCORE PLOT SECTION
+  # Obtain the individual names for this round
+  my_vcf.FN <- paste0("13_selection//", contrast.of.interest, ".recode.vcf")
+  my_vcf <- read.vcfR(file = my_vcf.FN)
+  sample_names <- colnames(my_vcf@gt)[2:length(colnames(my_vcf@gt))] # obtain sample names, which start at column 2
+  pop <- gsub(pattern = "_.*", replacement = "", x = sample_names) # obtain pop names, by dropping everything after the underscore
+  
+  # Use scoreplot, saving 10 pcs (five plots, 2 PCs each) for evaluating
+  for(s in seq(from = 1, to = 10, by = 2)){
+    
+    # Save out five score plots 
+    pdf(file = paste0("13_selection/", contrast.of.interest, "_scoreplot_", s, "_", s+1, ".pdf"), width = 5, height = 5)
+    print(
+      pcadapt::score_plot(x = pcadapt.out.list[[i]], i = s, j = s + 1, pop = pop)
+    )
+    dev.off()
+  }
+  # END SCORE PLOT SECTION
+  
+  # SCREE PLOT SECTION
   pdf(file = paste0("13_selection/", contrast.of.interest, "_screeplot_K20.pdf"), width = 5, height = 5)
   print(
     plot(pcadapt.out.list[[i]], option = "screeplot", K = 20)
   )
   dev.off()
   
-  # Use scoreplot
-  #plot(pcadapt.out.list[[i]], option = "scores")
-  # not clear how to dynamically name this yet, but it doesn't look like we end up using it
-  # if want to, it would be with the argument 'pop = poplist.names'
-  
-  ## Method:
-  ## As in many cases, the population structure is not visible, and so put a threshold that
-  ## consistently identifies the number of PCs that each explain more than 2.5% of the variance 
-  ## and consistently apply among comparisons
-  
-  #### OLD METHOD ###
-  # Count those that take more than 2.5 % 
-  # selected_K <- table((pcadapt.out.list[[i]]$singular.values ^ 2) > 0.025)["TRUE"]
-  # # Save the selected_K
-  # selected_K.list[[contrast.of.interest]] <- selected_K
-  #### END OLD METHOD ###
 }
+
+
+
+##### Manual inspection of results and input of k and PCs of relevance #####
+
+# Now inspect the screeplot to find out how many PCs actually explain a significant proportion of the variation 
+# (i.e. to the left of the plateau)
 
 ### Manually input the k selection based on the screeplots produced above:
 names(pcadapt.out.list)
@@ -123,6 +154,21 @@ selected_K.list[["DPB_PEN"]] <- 4
 selected_K.list[["PEN_PENF"]] <- 1
 selected_K.list[["FRA_FRAF"]] <- 1
 selected_K.list[["CHN_CHNF"]] <- 1
+
+
+# Now inspect the score plots to find out which of the PCs within the k selection above 
+# actually separate the groups of interest
+# selected_PCs.list[["QDC_CHN"]] <- 
+# selected_PCs.list[["GUR_FRA"]] <- 
+# selected_PCs.list[["RSC_CHN"]] <- 
+# selected_PCs.list[["ROS_PIP"]] <- 
+# selected_PCs.list[["DPB_PEN"]] <- 
+# 
+# selected_PCs.list[["PEN_PENF"]] <- 
+# selected_PCs.list[["FRA_FRAF"]] <- 
+# selected_PCs.list[["CHN_CHNF"]] <- 
+
+
 
 
 #### Run pcadapt for each contrast including the PCs as selected above manually
