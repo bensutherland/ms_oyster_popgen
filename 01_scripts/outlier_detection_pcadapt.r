@@ -80,27 +80,10 @@ pcadapt.out.list[[1]]$singular.values
 pcadapt.out.list[[1]]$singular.values ^ 2
 # End example
 
-
-# #### INVESTIGATE SCOREPLOT ### WORKING HERE ####
-# # get sample names
-# file_of_interest <- files[2]
-# file_of_interest
-# 
-# my_vcf <- read.vcfR(file = file_of_interest)
-# sample_names <- colnames(my_vcf@gt)[2:length(colnames(my_vcf@gt))]
-# pop <- gsub(pattern = "_.*", replacement = "", x = sample_names)
-# 
-# pcadapt::score_plot(x = pcadapt.out.list[[2]], i = 1, j = 2, pop = pop) #DPB_PEN
-# pcadapt::score_plot(x = pcadapt.out.list[[2]], i = 3, j = 4, pop = pop) #DPB_PEN
-# pcadapt::score_plot(x = pcadapt.out.list[[2]], i = 5, j = 6, pop = pop) #DPB_PEN
-# pcadapt::score_plot(x = pcadapt.out.list[[2]], i = 7, j = 8, pop = pop) #DPB_PEN
-# 
-# #### END WORKING HERE ####
-
-
 ##### Plot screeplot and scoreplot to ID the number and identity of PCs to obtain #####
 contrast.of.interest <- NULL; selected_K <- NULL ; selected_K.list <- list()
 my_vcf.FN <- NULL; my_vcf <- NULL; sample_names <- NULL; pop <- NULL
+mnames <- NULL; mnames.list <- list()
 
 for(i in 1:length(pcadapt.out.list)){
   
@@ -114,6 +97,17 @@ for(i in 1:length(pcadapt.out.list)){
   my_vcf <- read.vcfR(file = my_vcf.FN)
   sample_names <- colnames(my_vcf@gt)[2:length(colnames(my_vcf@gt))] # obtain sample names, which start at column 2
   pop <- gsub(pattern = "_.*", replacement = "", x = sample_names) # obtain pop names, by dropping everything after the underscore
+  
+  # Obtain marker names for this round
+  head(my_vcf@fix)
+  
+  mnames <- paste0(">CLocus_"
+                   , gsub(x = my_vcf@fix[,"ID"], pattern = ":.*", replacement = "")
+                   , "-"
+                   , my_vcf@fix[,"CHROM"]
+                )
+  
+  mnames.list[[contrast.of.interest]] <- mnames
   
   # Use scoreplot, saving 10 pcs (five plots, 2 PCs each) for evaluating
   for(s in seq(from = 1, to = 10, by = 2)){
@@ -138,42 +132,41 @@ for(i in 1:length(pcadapt.out.list)){
 
 
 
-##### Manual inspection of results and input of k and PCs of relevance #####
+##### Manually inspect results and input k and PCs of relevance #####
 
-# Now inspect the screeplot to find out how many PCs actually explain a significant proportion of the variation 
+# Inspect the screeplots to find out how many PCs actually explain a significant proportion of the variation 
 # (i.e. to the left of the plateau)
 
 ### Manually input the k selection based on the screeplots produced above:
 names(pcadapt.out.list)
-selected_K.list[["QDC_CHN"]] <- 7
-selected_K.list[["GUR_FRA"]] <- 9
-selected_K.list[["RSC_CHN"]] <- 4
+selected_K.list[["QDC_CHN"]] <- 6
+selected_K.list[["GUR_FRA"]] <- 6
+selected_K.list[["RSC_CHN"]] <- 3
 selected_K.list[["ROS_PIP"]] <- 5
-selected_K.list[["DPB_PEN"]] <- 4
+selected_K.list[["DPB_PEN"]] <- 3
 
 selected_K.list[["PEN_PENF"]] <- 1
 selected_K.list[["FRA_FRAF"]] <- 1
 selected_K.list[["CHN_CHNF"]] <- 1
 
 
-# Now inspect the score plots to find out which of the PCs within the k selection above 
+# Inspect the score plots to find out which of the PCs within the k selection above 
 # actually separate the groups of interest
-# selected_PCs.list[["QDC_CHN"]] <- 
-# selected_PCs.list[["GUR_FRA"]] <- 
-# selected_PCs.list[["RSC_CHN"]] <- 
-# selected_PCs.list[["ROS_PIP"]] <- 
-# selected_PCs.list[["DPB_PEN"]] <- 
-# 
-# selected_PCs.list[["PEN_PENF"]] <- 
-# selected_PCs.list[["FRA_FRAF"]] <- 
-# selected_PCs.list[["CHN_CHNF"]] <- 
+selected_PCs.list <- list()
+selected_PCs.list[["QDC_CHN"]] <- c(1,2,3,4)
+selected_PCs.list[["GUR_FRA"]] <- c(1)
+selected_PCs.list[["RSC_CHN"]] <- c(1)
+selected_PCs.list[["ROS_PIP"]] <- c(1,2,3,4)
+selected_PCs.list[["DPB_PEN"]] <- c(1,3)
 
-
+selected_PCs.list[["PEN_PENF"]] <- c(0)
+selected_PCs.list[["FRA_FRAF"]] <- c(0)
+selected_PCs.list[["CHN_CHNF"]] <- c(0)
 
 
 #### Run pcadapt for each contrast including the PCs as selected above manually
 # Using the input obj pcadapt.obj.list and selected_K.list, re-run pcadapt using dynamically selected k
-pcadapt.out_dynamic_K.list <- list()
+pcadapt.out_dynamic_K.list <- list() # This will be the OUTPUT required for downstream
 
 for(i in 1:length(pcadapt.obj.list)){
   
@@ -224,8 +217,16 @@ for(i in 1:length(pcadapt.obj.list)){
 # Plots saved in 13_selection
 
 
+##### HERE TODAY #####
+# To edit: use get.pc() on each pcadapt object to find which is the top-loading PC for each marker, and retain only those in the
+# retained PCs list (using %in% or similar)
+# Also: fix the mname issue somewhere above, probably when importing the VCF file
+
+
+
 #### Choosing cutoff for outlier detection ####
-qvals <- NULL; outliers.list <- list(); pval_and_qval.df <- NULL; num_outliers.list <- list(); mname.df <- NULL
+qvals <- NULL; outliers.list <- list(); pval_and_qval.df <- NULL; num_outliers.list <- list()
+mname.df <- NULL
 
 # Extract qvals
 for(i in 1:length(pcadapt.out_dynamic_K.list)){
@@ -241,10 +242,12 @@ for(i in 1:length(pcadapt.out_dynamic_K.list)){
   pval_and_qval.df <- as.data.frame(cbind(pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues, qvals), stringsAsFactors = F)
   colnames(pval_and_qval.df) <- c("pval", "qval")
   
-  # Bring in marker name
-  mname.df <- read.table(file = paste0("13_selection/", contrast.of.interest, "_mnames.txt"), header = F, sep = "\t")
-  mname.df$V2 <- seq(1:length(mname.df$V1))
+  # Obtain the marker names that were input with the VCF
+  mname.df <- mnames.list[[contrast.of.interest]]
+  mname.df <- as.data.frame(mname.df)
+  mname.df[,"index"] <- seq(1:length(mname.df$mname.df))
   colnames(mname.df) <- c("mname", "index")
+  head(mname.df)
   
   # TODO: add test to make sure the two df match before combining them
   
