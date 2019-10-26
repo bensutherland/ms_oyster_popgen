@@ -217,54 +217,65 @@ for(i in 1:length(pcadapt.obj.list)){
 # Plots saved in 13_selection
 
 
-##### HERE TODAY #####
+##### HERE TODAY (Self note) #####
 # To edit: use get.pc() on each pcadapt object to find which is the top-loading PC for each marker, and retain only those in the
 # retained PCs list (using %in% or similar)
 # Also: fix the mname issue somewhere above, probably when importing the VCF file
-
+##### END HERE #####
 
 
 #### Choosing cutoff for outlier detection ####
-qvals <- NULL; outliers.list <- list(); pval_and_qval.df <- NULL; num_outliers.list <- list()
+qvals <- NULL; outliers.list <- list(); outliers_details.df <- NULL; num_outliers.list <- list()
 mname.df <- NULL
 
-# Extract qvals
+# Extract qvals from the pcadapt obj
 for(i in 1:length(pcadapt.out_dynamic_K.list)){
   
   # Name for round
   contrast.of.interest <- names(pcadapt.out_dynamic_K.list)[i]
   
-  # extract pvals and convert to qval
-  qvals <- qvalue(pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues)$qvalues
-  outliers.list[[contrast.of.interest]] <- qvals
+  # Extract pvals, convert to qval, create df
+  outliers_details.df <- pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues
+  outliers_details.df <- as.data.frame(outliers_details.df, stringsAsFactors=FALSE)
+  colnames(outliers_details.df) <- "pval"
+  head(outliers_details.df)
+  outliers_details.df$qval <- qvalue(pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues)$qvalues
+  str(outliers_details.df)
   
-  # Combine pval with qvalue
-  pval_and_qval.df <- as.data.frame(cbind(pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues, qvals), stringsAsFactors = F)
-  colnames(pval_and_qval.df) <- c("pval", "qval")
+  # Find out which pc contributed most to make this marker significant
+  top.pc <- get.pc(x = pcadapt.out_dynamic_K.list[[contrast.of.interest]], list = seq(1:length(qvals)))
+  colnames(top.pc) <- c("index", "top.pc")
   
-  # Obtain the marker names that were input with the VCF
+  # Bring this into the df too
+  outliers_details.df <- cbind(outliers_details.df, top.pc)
+  head(outliers_details.df)
+  
+  # And finally add the SNP name generated earlier
   mname.df <- mnames.list[[contrast.of.interest]]
   mname.df <- as.data.frame(mname.df)
   mname.df[,"index"] <- seq(1:length(mname.df$mname.df))
-  colnames(mname.df) <- c("mname", "index")
+  colnames(mname.df) <- c("mname", "index2")
   head(mname.df)
+  outliers_details.df <- cbind(outliers_details.df, mname.df)
   
-  # TODO: add test to make sure the two df match before combining them
+  head(outliers_details.df)
   
-  # Combine pval/qval with marker name
-  pval_and_qval.df <- cbind(mname.df, pval_and_qval.df)
+  # view results briefly
+  table(outliers_details.df$top.pc)
+  table(outliers_details.df$top.pc[outliers_details.df$qval < qval_cutoff])
   
+  # Write out results
   write.table(file = paste0("13_selection/", "qvals_", contrast.of.interest, ".csv")
-              , x = pval_and_qval.df, sep = ",", col.names = T, row.names = F
+              , x = outliers_details.df, sep = ",", col.names = T, row.names = F
               , quote = F)
   
-  # # Finds the *indices* (not names) of which markers are outliers
-  num_outliers.list[[contrast.of.interest]] <- length(which(qvals < qval_cutoff))
-  
+  # Find the number of markers that are outliers for the pcs of interest
+  num_outliers.list[[contrast.of.interest]] <- table(outliers_details.df$top.pc %in% selected_PCs.list[[contrast.of.interest]])["TRUE"]
 }
 
 num_outliers.list
 
+# 
 num_outliers <- sapply(num_outliers.list, function(x){as.numeric(x[1])})
 as.data.frame(num_outliers)
 num_outliers.df <- as.data.frame(as.numeric(num_outliers), stringsAsFactors = FALSE)
