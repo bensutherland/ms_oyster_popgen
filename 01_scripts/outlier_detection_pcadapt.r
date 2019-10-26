@@ -217,12 +217,8 @@ for(i in 1:length(pcadapt.obj.list)){
 # Plots saved in 13_selection
 
 
-##### HERE TODAY (Self note) #####
-# To edit: use get.pc() on each pcadapt object to find which is the top-loading PC for each marker, and retain only those in the
-# retained PCs list (using %in% or similar)
-# Also: fix the mname issue somewhere above, probably when importing the VCF file
-##### END HERE #####
-
+# New: use get.pc() on each pcadapt object to find which is the top-loading PC for each marker
+#  and retain only those markers that are top loading for the retained PCs list (using %in% or similar)
 
 #### Choosing cutoff for outlier detection ####
 qvals <- NULL; outliers.list <- list(); outliers_details.df <- NULL; num_outliers.list <- list()
@@ -233,20 +229,22 @@ for(i in 1:length(pcadapt.out_dynamic_K.list)){
   
   # Name for round
   contrast.of.interest <- names(pcadapt.out_dynamic_K.list)[i]
+  print(paste0("Working on ", contrast.of.interest))
   
   # Extract pvals, convert to qval, create df
   outliers_details.df <- pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues
   outliers_details.df <- as.data.frame(outliers_details.df, stringsAsFactors=FALSE)
   colnames(outliers_details.df) <- "pval"
   head(outliers_details.df)
+  table(is.na(outliers_details.df$pval)==FALSE) # TRUE shows number outliers with pvals
   outliers_details.df$qval <- qvalue(pcadapt.out_dynamic_K.list[[contrast.of.interest]]$pvalues)$qvalues
   str(outliers_details.df)
   
   # Find out which pc contributed most to make this marker significant
-  top.pc <- get.pc(x = pcadapt.out_dynamic_K.list[[contrast.of.interest]], list = seq(1:length(qvals)))
+  top.pc <- get.pc(x = pcadapt.out_dynamic_K.list[[contrast.of.interest]], list = seq(1:nrow(outliers_details.df)))
   colnames(top.pc) <- c("index", "top.pc")
   
-  # Bring this into the df too
+  # Bring the top loading pc into the df
   outliers_details.df <- cbind(outliers_details.df, top.pc)
   head(outliers_details.df)
   
@@ -269,13 +267,19 @@ for(i in 1:length(pcadapt.out_dynamic_K.list)){
               , x = outliers_details.df, sep = ",", col.names = T, row.names = F
               , quote = F)
   
+  # 
+  
   # Find the number of markers that are outliers for the pcs of interest
-  num_outliers.list[[contrast.of.interest]] <- table(outliers_details.df$top.pc %in% selected_PCs.list[[contrast.of.interest]])["TRUE"]
+  print(paste0("For this contrast, you are primarily interested in the following pc: ", selected_PCs.list[[contrast.of.interest]] ))
+  num_outliers.list[[contrast.of.interest]] <- table(outliers_details.df$top.pc[outliers_details.df$qval < qval_cutoff] %in% selected_PCs.list[[contrast.of.interest]])["TRUE"]
 }
 
 num_outliers.list
 
-# 
+###### WORKING HERE #####
+
+
+# Record the number of outliers for each dataset
 num_outliers <- sapply(num_outliers.list, function(x){as.numeric(x[1])})
 as.data.frame(num_outliers)
 num_outliers.df <- as.data.frame(as.numeric(num_outliers), stringsAsFactors = FALSE)
