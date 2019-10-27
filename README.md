@@ -367,12 +367,27 @@ The next steps involve:
 This will output a bunch of selection plots in `13_selection`
 
 
+## Find genomic positions and related genes for top outliers
+Here we define top outliers as those that were identified using both RDA and pcadapt. To find those, after all selection scripts have been run, use the following:     
+```
+# Identify the marker names for common outliers that will correspond to the fasta output 
+# FASTA output: 12_genome_plot/markers_in_vcf.fa
+
+# Identify the top outliers: 
+cat 13_selection/outliers_common_pcadapt_rda_* | awk '{ print $2 }' - | grep -vE '^matching' - | sort -n | uniq -c | sort -nk1 | awk '{ print ">"$2 }' - > 13_selection/top_outliers.txt
+
+# Use top outliers to extract from FASTA
+cat 13_selection/top_outliers.txt | xargs -I{} grep -A1 {} 12_genome_plot/markers_in_vcf.fa > 13_selection/top_outliers.fa
+
+# Go to NCBI page for Pacific oyster genome and manual BLAST using that file to see where these are in the genome. 
+
+```
+
+
 
 ## Other Utilities 
-Jump to:    
 [Evaluate positions of SNPs in tags](#evaluate-positions-of-snps-in-tags)    
 [Evaluate number of reads used in output](#evaluate-number-of-reads-used-in-output)    
-[Run fastStructure](#run-faststructure)
 
 
 ## Evaluate position of SNPs in tags
