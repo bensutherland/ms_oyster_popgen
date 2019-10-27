@@ -1,12 +1,22 @@
 # Plot differentiation statistics across genome
 ## REQUIRES: already run gwas_02_load_set_contrasts_info.r
+# or, object containing post this script
 
-#library("ggplot2")
+#### Front Matter ####
+# Clean space
+# rm(list=ls())
+
+# Load libraries
+library("ggplot2")
+
+
+load(file = "13_selection/constant_and_contrasts_loaded.Rdata")
 
 # Summary # your data is here:
 names(plotting_data)
-head(plotting_data[[1]])
 datatypes # datatypes
+head(plotting_data[["fr"]])
+
 
 # Set variables
 qval_plot_thresh <- 0.01
@@ -17,6 +27,8 @@ col_rda <- "blue"
 cex_rda <- 1
 pch_rda <- 16
 FST_percentile <- 0.99
+
+limit.to.top.pc <- TRUE # if only want to print top pc pcadapt vals
 
 ##### Set up plot data #####
 all_data <- NULL 
@@ -34,15 +46,29 @@ for(i in 1:length(datatypes)){
 
   
   ##### Subset all_data to make it easier to plot ####
-  # Note: this is all markers, not just those with alignment positions
+  # Note: this selection retains all markers, not just those with alignment positions
   # Identify data with a significant RDA value (i.e. has an outlier_loading shown)
+  # TODO: this value goes above 0.05 ##
+  
   rda_data <- all_data[!is.na(all_data$outlier_loading), ]
   dim(rda_data)
   
   # Identify data with a significant pcadapt value (i.e. below user set qval threshold)
-  pcadapt_data <- all_data[all_data$qval < qval_plot_thresh, ]
-  pcadapt_data <- pcadapt_data[!is.na(pcadapt_data$qval), ] # get rid of NAs also
-  dim(pcadapt_data)
+  ### HERE, also limit if "is.top.pc == TRUE" #####
+  
+  if(limit.to.top.pc==TRUE){
+    
+    pcadapt_data <- all_data[all_data$qval < qval_plot_thresh & all_data$is.top.pc==TRUE, ]
+    pcadapt_data <- pcadapt_data[!is.na(pcadapt_data$qval), ] # get rid of NAs also
+    dim(pcadapt_data)
+    
+  } else if(limit.to.top.pc==FALSE){
+   
+    pcadapt_data <- all_data[all_data$qval < qval_plot_thresh, ]
+    pcadapt_data <- pcadapt_data[!is.na(pcadapt_data$qval), ] # get rid of NAs also
+    dim(pcadapt_data)
+     
+  }
   
   # Identify common markers in RDA AND pcadapt data
   common_ID.RDA_pcadapt <- intersect(x = rda_data$rda.id, y = pcadapt_data$rda.id)

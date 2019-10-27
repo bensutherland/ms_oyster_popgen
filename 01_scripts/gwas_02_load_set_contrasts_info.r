@@ -40,7 +40,10 @@ perloc_stats.files <- list.files(path = "11-adegenet_analysis/", pattern = "_sel
 datatypes <- gsub(pattern = "_sel_perloc_stats.csv", replacement = "", x = perloc_stats.files) # make short form
 
 # Identify the pcadapt qval files (requires checking)
-pcadapt_qvals.files <- list.files(path = "13_selection/", pattern = "qvals_")
+
+### NOTE: HARD CODED ###
+#pcadapt_qvals.files <- list.files(path = "13_selection/", pattern = "qvals_")
+pcadapt_qvals.files <- list.files(path = "13_selection/", pattern = "outliers_details")
 rosetta <- as.data.frame(pcadapt_qvals.files, stringsAsFactors = F)
 rosetta$datatypes <- c("ch", "dpb", "fr", "gur", "bc", "qdc", "ros", "rsc")
 rosetta # confirm that these are corresponding
@@ -156,3 +159,5 @@ for(i in 1:length(datatypes)){
 names(plotting_data) # qval per datatype
 head(plotting_data[[1]])
 datatypes # datatypes
+
+save.image("13_selection/constant_and_contrasts_loaded.Rdata")

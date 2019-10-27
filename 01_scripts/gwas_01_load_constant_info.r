@@ -40,7 +40,7 @@ length(unique(alignments$mname)) # Is there only a single alignment per input ma
 length(alignments$mname) # seems to be a handful of multiple alignments
 # TODO# Keep top mapping locus (using mapq, keeping only one row per alignment query)
 
-## Read in map file (interp with FST data)
+## Read in map file (to bring in FST info)
 map <- read.table(file = "11-adegenet_analysis/populations.plink.map")
 map <- map[,c(1,2)] # Only need first two cols (stacks chr, locus_pos)
 colnames(map) <- c("stacks.chr", "locus_pos")
@@ -138,3 +138,4 @@ head(alignments)
 head(map)
 head(chr.info)
 
+#### TODO: save out data needed for next step ######
