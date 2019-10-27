@@ -222,7 +222,7 @@ for(i in 1:length(pcadapt.obj.list)){
 
 #### Choosing cutoff for outlier detection ####
 qvals <- NULL; outliers.list <- list(); outliers_details.df <- NULL; num_outliers.list <- list()
-mname.df <- NULL
+mname.df <- NULL; pcs.of.interest <- NULL
 
 # Extract qvals from the pcadapt obj
 for(i in 1:length(pcadapt.out_dynamic_K.list)){
@@ -248,6 +248,17 @@ for(i in 1:length(pcadapt.out_dynamic_K.list)){
   outliers_details.df <- cbind(outliers_details.df, top.pc)
   head(outliers_details.df)
   
+  # For info, also keep the specific pcs being looked for
+  pcs.of.interest <- paste(selected_PCs.list[[contrast.of.interest]], collapse = '; ')
+  outliers_details.df <- cbind(outliers_details.df, pcs.of.interest)
+  
+  # Is the top loading pc one of the selected?
+  head(outliers_details.df)
+  selected_PCs.list[[contrast.of.interest]] # these are the pcs of interest
+  is.top.pc <- outliers_details.df$top.pc %in% selected_PCs.list[[contrast.of.interest]]
+  outliers_details.df <- cbind(outliers_details.df, is.top.pc)
+  head(outliers_details.df, n = 50)
+  
   # And finally add the SNP name generated earlier
   mname.df <- mnames.list[[contrast.of.interest]]
   mname.df <- as.data.frame(mname.df)
@@ -263,23 +274,22 @@ for(i in 1:length(pcadapt.out_dynamic_K.list)){
   table(outliers_details.df$top.pc[outliers_details.df$qval < qval_cutoff])
   
   # Write out results
-  write.table(file = paste0("13_selection/", "qvals_", contrast.of.interest, ".csv")
+  write.table(file = paste0("13_selection/", "outliers_details_", contrast.of.interest, ".csv")
               , x = outliers_details.df, sep = ",", col.names = T, row.names = F
               , quote = F)
   
   # 
   
   # Find the number of markers that are outliers for the pcs of interest
-  print(paste0("For this contrast, you are primarily interested in the following pc: ", selected_PCs.list[[contrast.of.interest]] ))
+  print(paste0("For this contrast, you are primarily interested in the following pc(s): ", pcs.of.interest))
   num_outliers.list[[contrast.of.interest]] <- table(outliers_details.df$top.pc[outliers_details.df$qval < qval_cutoff] %in% selected_PCs.list[[contrast.of.interest]])["TRUE"]
 }
 
 num_outliers.list
 
-###### WORKING HERE #####
 
-
-# Record the number of outliers for each dataset
+# Record the number of outliers for each dataset (based on num_outliers.list above)
+#  note: this info is also contained within the outliers_details* output above, but summarized here
 num_outliers <- sapply(num_outliers.list, function(x){as.numeric(x[1])})
 as.data.frame(num_outliers)
 num_outliers.df <- as.data.frame(as.numeric(num_outliers), stringsAsFactors = FALSE)
