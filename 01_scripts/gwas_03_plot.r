@@ -5,6 +5,19 @@
 # Clean space
 # rm(list=ls())
 
+# Set working directory for stark or xavier
+# if on a different system, prompt for working directory
+if(Sys.info()["nodename"] == "stark"){ 
+  print("On Stark, ready to go")
+  setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/") # stark
+} else if(Sys.info()["nodename"] == "Xavier"){
+  print("On Xavier, ready to go")
+  setwd("/hdd/01_moore_oyster_project/stacks_workflow/") # Xavier
+} else {
+  print("You are on an unrecognized system, please set working directory manually")
+}
+
+
 # Load libraries
 library("ggplot2")
 
@@ -91,6 +104,12 @@ for(i in 1:length(datatypes)){
   
   ## Actual Plotting
   
+  datatypes.labels <- datatypes
+  datatypes.labels <- gsub(x = datatypes.labels, pattern = "bc", replacement = "bcw-f")
+  datatypes.labels <- gsub(x = datatypes.labels, pattern = "ch", replacement = "chn-f")
+  datatypes.labels <- gsub(x = datatypes.labels, pattern = "fr", replacement = "fra-f")
+  datatypes.labels <- toupper(datatypes.labels)
+  
   datatype.grob <- ggplot() + 
     
     # Add horizontal line
@@ -115,7 +134,7 @@ for(i in 1:length(datatypes)){
     
     theme(axis.text.x=element_blank()) +  # remove xaxis labels
     
-    labs(x = "Chromosome and position (bp)", y = paste0("Fst (", datatypes[i], ")")) +
+    labs(x = "Chromosome and position (bp)", y = paste0("Fst (", datatypes.labels[i], ")")) +
     
     ylim(-0.04, max(all_data$Fst, na.rm = T) + 0.02) + 
   
