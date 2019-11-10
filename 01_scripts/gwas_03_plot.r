@@ -1,6 +1,5 @@
-# Plot differentiation statistics across genome
-## REQUIRES: already run gwas_02_load_set_contrasts_info.r
-# or, object containing post this script
+## Plot differentiation statistics across genome
+##  as well as a result w/ pcadapt & RDA concordant results (text file), including those not aligning to chromosomes
 
 #### Front Matter ####
 # Clean space
@@ -9,7 +8,7 @@
 # Load libraries
 library("ggplot2")
 
-
+# Load data
 load(file = "13_selection/constant_and_contrasts_loaded.Rdata")
 
 # Summary # your data is here:
@@ -43,10 +42,11 @@ for(i in 1:length(datatypes)){
   all_data$chr <- as.character(all_data$chr)
   
   head(all_data)
+  dim(all_data)
 
   
   ##### Subset all_data to make it easier to plot ####
-  # Note: this selection retains all markers, not just those with alignment positions
+  # Important Note: this selection retains all markers, not just those with alignment positions
   # Identify data with a significant RDA value (i.e. has an outlier_loading shown)
   # TODO: this value goes above 0.05 ##
   
@@ -54,8 +54,6 @@ for(i in 1:length(datatypes)){
   dim(rda_data)
   
   # Identify data with a significant pcadapt value (i.e. below user set qval threshold)
-  ### HERE, also limit if "is.top.pc == TRUE" #####
-  
   if(limit.to.top.pc==TRUE){
     
     pcadapt_data <- all_data[all_data$qval < qval_plot_thresh & all_data$is.top.pc==TRUE, ]

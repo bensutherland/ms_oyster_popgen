@@ -206,7 +206,7 @@ map_plot
 #### 3. Draw Rectangle for farms #####
 mp <- map_plot # for troubleshooting
 mp <- mp + annotate("rect", xmin=-210, xmax=-160, ymin = 15, ymax=40, alpha=0.6)
-mp <- mp + annotate("rect", xmin=160, xmax=210, ymin = 15, ymax=40, alpha=0.6)
+mp <- mp + annotate("rect", xmin=160, xmax=210, ymin = 25, ymax=40, alpha=0.6)
 mp
 
 # Add connectors from farms to Pendrell
@@ -225,14 +225,14 @@ mp <- mp + geom_label(aes(x = -185, y = 20, label = "GUR"), fill = "white")
 mp
 
 # Add connectors from farms to CHN
-mp <- mp + geom_line(aes(x=c(loc_global.df[3,1], 185), y = c(loc_global.df[3,2], 35)), col = "blue")
-mp <- mp + geom_line(aes(x=c(loc_global.df[3,1], 185), y = c(loc_global.df[3,2], 20)), col = "blue")
+mp <- mp + geom_line(aes(x=c(loc_global.df[3,1], 185), y = c(loc_global.df[3,2], 36)), col = "blue")
+mp <- mp + geom_line(aes(x=c(loc_global.df[3,1], 185), y = c(loc_global.df[3,2], 29)), col = "blue")
 mp
 
 # China-based farms
 # Add geom_labels for farms
-mp <- mp + geom_label(aes(x = 185, y = 35, label = "QDC"), fill = "white")
-mp <- mp + geom_label(aes(x = 185, y = 20, label = "RSC"), fill = "white")
+mp <- mp + geom_label(aes(x = 185, y = 36, label = "QDC"), fill = "white")
+mp <- mp + geom_label(aes(x = 185, y = 29, label = "RSC"), fill = "white")
 mp
 
 # Add label for farms
@@ -261,8 +261,8 @@ mp
 chn.farm.fst <- as.numeric(c(as.character(comparisons_fst.df["CHN-QDC", "fst.vals"])
                 , as.character(comparisons_fst.df["CHN-RSC", "fst.vals"])
                 ))
-mp <- mp + geom_label(aes(x = c(155,  155)
-                          , y = c(35, 27)
+mp <- mp + geom_label(aes(x = c(156,  156)
+                          , y = c(36, 32)
                           , label = chn.farm.fst), fill = "lightgrey", size = 3) #QDC, RSC
 mp
 

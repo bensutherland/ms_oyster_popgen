@@ -1,3 +1,5 @@
+### This appears to be a very preliminary script
+
 files <- list.files(path = "13_selection/", pattern = "outliers_common")
 
 temp.df  <- NULL
