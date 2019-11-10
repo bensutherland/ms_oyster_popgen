@@ -94,8 +94,8 @@ head(data)
 #### 1.2 Plot nucleotide diversity ####
 ### 1.2.1 Plot pi per locus all pops vs BC wild (PEN) ####
 
-pdf(file = "pi_per_locus_all_vs_BCW.pdf", width = 15, height = 7)
-par(mfrow=c(3,4), mar=c(5,5,3,3))
+pdf(file = "pi_per_locus_all_vs_BCW.pdf", width = 12, height = 16)
+par(mfrow=c(4, 3), mar=c(5, 5, 3, 3))
 
 # Set nulls
 adj.rsq <- NULL; mod <- NULL
@@ -109,12 +109,14 @@ for(i in 2:length(datatypes)){
   
   plot(data$BCW ~ data[,i]
        , xlab = colnames(data)[i]
-       , ylab = "bc_wild"
+       , ylab = "BCW"
        , ylim = c(0,0.55)
+       , cex.lab = 2
+       , cex.axis = 2
        )
   
-  text(x = 0.05, y = 0.52
-      , labels = paste0("adj.R2 = ", adj.rsq))
+  text(x = 0.1, y = 0.52
+      , labels = paste0("adj.R2 = ", adj.rsq), cex = 1.5)
   # legend(x = 0.03, y = 0.45, legend = paste0("adj.R2 = ", adj.rsq), cex = 0.8)
 }
 dev.off()
