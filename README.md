@@ -330,6 +330,14 @@ And use xargs to extract only the relevant lines from the renamed fasta:
 
 Your fasta is now ready for alignment.     
 
+
+#### Genomic coverage? #### 
+How to calculate what proportion of the genome is covered by your markers?    
+First, find out the number of bp in your markers present in your filtered VCF:     
+`grep -vE '^>' 12_genome_plot/markers_in_vcf.fa | wc -c`      
+For example, this is calculated as 1532384 bp (1.5 M bp).     
+The oyster genome is assumed to be 600 Mbp.     
+Therefore, you have `1532384 / 600000000 * 100` , or 0.255% of your genome represented here.    
 #### Alignment ####
 
 First download the assembly from http://dx.doi.org/10.12770/dbf64e8d-45dd-437f-b734-00b77606430a 
