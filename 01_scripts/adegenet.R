@@ -117,15 +117,43 @@ dev.off()
 # Perform PCA
 pca1 <- glPca(my.data, nf = 3)
 
-# Plot PCA (axes 1,2,3)
-pdf(file = paste0(output.dir, "pca_all_samples.pdf"), width = 11.5, height = 7.5)
-par(mfrow=c(2,1))
-scatter(x = pca1, posi = "topleft", xax = 1, yax = 2)
-title("PC1 (x) vs PC2 (y)", adj = 1)
+### New method of plotting pca ####
+# see dimensions
+colnames(pca1$scores)
+max(pca1$scores[,"PC1"])
+min(pca1$scores[,"PC1"])
+max(pca1$scores[,"PC2"])
+min(pca1$scores[,"PC2"])
 
-scatter(x = pca1, posi = "topleft", xax = 3, yax = 2) # show PC3 and PC4
-title("PC3 (x) vs PC2 (y)", adj = 1)
+# Plot screeplot
+pdf(file = paste0(output.dir, "pca_all_samples.pdf"), width = 7, height = 7)
+par(mfrow=c(3,1))
+
+# First plot
+scatter(x = pca1, main = "PC1(x) vs PC2(y)", posi = "none", xax = 1, yax = 2)
+text(x = -15, y = 5, labels = paste0("PC1 vs. PC2"), cex = 1.5)
+
+# see the percent variation explained per PC:
+text(labels = paste0("PVE = ", round(
+                                  (pca1$eig[1] / sum(pca1$eig) * 100) + (pca1$eig[2] / sum(pca1$eig) * 100)
+  , digits = 2))
+  , x = -15, y = 4, cex = 1.5)
+
+# Second plot
+scatter(x = pca1, main = "PC3(x) vs PC2(y)", posi = "none", xax = 3, yax = 2)
+text(x = -12, y = 5, labels = paste0("PC3 vs. PC2"), cex = 1.5)
+
+# see the percent variation explained per PC:
+text(labels = paste0("PVE = ", round(
+  (pca1$eig[2] / sum(pca1$eig) * 100) + (pca1$eig[3] / sum(pca1$eig) * 100)
+  , digits = 2))
+  , x = -12, y = 4, cex = 1.5)
+
+# scree
+barplot(pca1$eig, col=c("black", "lightgrey"), las = 1, ylab = "Eigenvalues")
 dev.off()
+
+
 
 # Plot allele loadings
 num.retained.pcs <- length(dimnames(pca1$loadings)[[2]]) # how many axes were retained? 
@@ -147,7 +175,7 @@ dev.off()
 pdf(file = paste0(output.dir , "pca_colorplot.pdf"), width = 8, height = 8)
 par(mfrow=c(1,1), mar = c(4,4,4,4))
 myCol <- colorplot(pca1$scores, pca1$scores, transp=T, cex=4)
-abline(h=0,v=0, col = "grey")
+abline(h=0,v=0, col = "black")
 text(x = 2, y = 5, paste(labels=nLoc(my.data), "loci", sep = " "))
 text(x = 2, y = 4, labels=paste("PC1=Red", "\n", "PC2=Green", "\n", "PC3=Blue"))
 dev.off()
