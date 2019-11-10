@@ -96,14 +96,63 @@ head(data)
 
 pdf(file = "pi_per_locus_all_vs_BCW.pdf", width = 15, height = 7)
 par(mfrow=c(3,4), mar=c(5,5,3,3))
+
+# Set nulls
+adj.rsq <- NULL; mod <- NULL
+
 for(i in 2:length(datatypes)){
+  
+  # Get the rsq val per comparison
+  mod <- lm(data$BCW ~ data[, i])
+  adj.rsq <- summary(mod)$adj.r.squared
+  adj.rsq <- round(x = adj.rsq, digits = 2)
+  
   plot(data$BCW ~ data[,i]
        , xlab = colnames(data)[i]
-       , ylab = "bc_wild")
+       , ylab = "bc_wild"
+       , ylim = c(0,0.55)
+       )
+  
+  text(x = 0.05, y = 0.52
+      , labels = paste0("adj.R2 = ", adj.rsq))
+  # legend(x = 0.03, y = 0.45, legend = paste0("adj.R2 = ", adj.rsq), cex = 0.8)
 }
 dev.off()
 
 ### 1.2.2 Plot pi per population each pop individually ####
+
+### WORKING ####
+# Need to put data into long form
+colnames(data)
+NROW(data)
+long.form.grouping <- rep(x = colnames(data), each = (NROW(data)))
+head(long.form.grouping)
+tail(long.form.grouping)
+
+long.form.vals <- as.vector(as.matrix(data))
+long.form.data <- cbind(long.form.grouping, long.form.vals)
+long.form.data.df <- as.data.frame(long.form.data)
+head(long.form.data.df)
+colnames(long.form.data.df) <- c("pop", "nuc.div")
+long.form.data.df$nuc.div <- as.numeric(as.character(long.form.data.df$nuc.div))
+head(long.form.data.df)
+head(data) # confirm its ok
+
+# Test plotting, note that the order will be different than below's method
+boxplot(long.form.data.df$nuc.div ~ long.form.data.df$pop) # looks good though
+mod1 <- aov(long.form.data.df$nuc.div ~ long.form.data.df$pop)
+summary(mod1)
+TukeyHSD(x = mod1)
+
+# Working to find a solution for non-normal data
+kruskal.test(long.form.data.df$nuc.div ~ long.form.data.df$pop)
+
+# install.packages("pgirmess")
+# library("pgirmess")
+# kruskalmc(long.form.data.df$nuc.div ~ long.form.data.df$pop)
+
+
+#### PLOTTING ####
 
 pdf(file = "pi_per_pop_mean.pdf", width = 8, height = 5)
 par(mfrow=c(1,1), mar = c(5,5,3,3))
@@ -115,9 +164,68 @@ boxplot(data, las = 1, ylab = "Nucleotide Diversity (pi)"
 axis(side = 1, at = c(1:length(datatypes.short)), labels = datatypes.short, las = 2)
 dev.off()
 
-#### 1.3 Nucleotide diversity stats ####
-# Note: Not yet implemented as not sure on the best approach. May just use descriptive statistics
-# head(data)
+
+##### Plot distributions #### WORKING
+percent.zero <- NULL; nuc_div.FN <- NULL
+
+colnames(data)
+
+pdf(file = "nuc_div_hist.pdf", width =7, height = 9)
+par(mfrow = c(4,3), mar = c(4,2,2,2))
+for(i in 1:length(colnames(data))){
+  
+  # Find your percent zero
+  percent.zero <- (table(data[,i]==0)["TRUE"] / sum(table(data[,i]))) * 100
+  percent.zero <- round(percent.zero, digits = 1)
+  percent.zero <- as.numeric(percent.zero)
+  
+  # Plot
+  hist(data[,i], breaks = 100, ylim = c(0, 10000), main = ""
+       , xlab = paste0(colnames(data)[i], " nucleotide diversity")
+       )
+  text(x = 0.4, y = 1000, labels = paste0("% 0 = ", percent.zero))
+  text(x = 0.4, y = 3000, labels = paste0("avg "
+                                          , round(mean(x = data[,i]), digits = 4)
+                                          )
+       )
+  text(x = 0.4, y = 5000, labels = paste0("med "
+                                          , round(median(x = data[,i]), digits = 4)
+  )
+  )
+  
+  
+  
+}
+dev.off()
+
+# Testing
+par(mfrow = c(2,2), mar = c(3,3,3,3))
+
+boxplot(data$FRA)
+hist(data$FRA, breaks = 50)
+
+hist(data$DPB, breaks = 50)
+boxplot(data$DPB)
+
+
+
+#DPB
+percent.zero <- (table(data$DPB==0)["TRUE"] / sum(table(data$DPB))) * 100
+percent.zero <- round(percent.zero, digits = 1)
+percent.zero<- as.numeric(percent.zero)
+
+hist(data$DPB, breaks = 100, ylim = c(0,10000))
+text(x = 0.4, y = 1000, labels = paste0("% 0 = ", percent.zero))
+
+
+
+### 1.3 Nucleotide diversity stats ####
+summary(data)
+
+
+# USING LONG FORM DF (NOT READY)
+# # Note: Not yet implemented as not sure on the best approach. May just use descriptive statistics
+# # head(data)
 # 
 # # Convert data into long form
 # data.long <- NULL; data.long.pop <- NULL; data.long.df <- NULL
@@ -127,16 +235,17 @@ dev.off()
 #   data.long <- c(data.long, data[,i])
 #   data.long.pop <- c(data.long.pop, rep(colnames(data)[i], times = length(data[,i])))
 #   data.long.df <- as.data.frame(cbind(data.long.pop, data.long)) # combine
-#   
+# 
 #   # Name columns
 #   colnames(data.long.df) <- c("pop", "per.locus.pi")
-#   
+# 
 #   # Change the nucleotide diversity to numeric
 #   data.long.df$per.locus.pi <- as.numeric(as.character(data.long.df$per.locus.pi))
 #   #data.long.df$pop <- as.character(data.long.df$pop)
 # }
 # 
 # head(data.long.df)
+# tail(data.long.df)
 # str(data.long.df)
 # 
 # # Confirm the data still looks as expected via boxplot (need to set an order of levels)
@@ -149,23 +258,24 @@ dev.off()
 # #         )
 # 
 # # Run model
-# mod.pi <- aov(data.long.df$per.locus.pi ~ data.long.df$pop) 
-# summary(mod.pi)
-# TukeyHSD(mod.pi)
+# mod.pi <- aov(data.long.df$per.locus.pi ~ data.long.df$pop)
+# summary(mod.pi) # significant overall
+# TukeyHSD(mod.pi) # no pairwise significant differences
 # 
 # # What are the unique population names?
 # unique(data.long.df$pop)
 # 
 # # Other methods (rank sum)
 # mod.kr.pi <- kruskal.test(data.long.df$per.locus.pi ~ data.long.df$pop)
-# mod.kr.pi
+# mod.kr.pi # highly significant
 # 
+# # Pairwise comparisons using Wilcoxon rank sum test
 # pairwise.wilcox.test(data.long.df$per.locus.pi, data.long.df$pop, p.adjust.method = "BH")
 # 
 # # Just compare between deepbay and bc wild
 # data.long.bcw.dpb <- data.long.df[data.long.df$pop=="BCW"|data.long.df$pop=="DPB",]
-# wilcox.test(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop)
-# summary(aov(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop))
+# wilcox.test(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop) # highly signfiicant
+# summary(aov(data.long.bcw.dpb$per.locus.pi ~ data.long.bcw.dpb$pop)) # not significant at all (p = 0.913); why such large differences?
 
 
 #### 2. Heterozygosity ####
