@@ -128,7 +128,9 @@ output.df$group <- factor(output.df$group , levels=c("PEN", "PENF", "PIP", "HIS"
 
 
 # To set wang for now..
-i <- 1
+# i <- 1
+# Set Ritland
+i <- 2
 
 # ## Loop to plot
 # for(i in 1:length(relatedness_metrics)){
@@ -146,13 +148,14 @@ i <- 1
           #, col = comp_names.df$colour
           , las = 2
           , ylab = paste0("relatedness (", metric, ")")
-          , ylim = c(-0.4, 0.9)
+          , ylim = c(-0.4, 1.1)
+          , xlab = ""
           , col = cols
   )
   abline(h = 0, lty = 2)
   
-  sig.indicators <- c("a", "b", "ad", "cdf", "cdf", "e", "adf", "b", "b", "adf", "f", "a", "ac", "ac")
-  text(x = seq(1:length(levels(output.df$group))), y = 0.8
+  sig.indicators <- c("a", "aeh", "a", "a", "af", "b", "c", "ag", "a", "d", "d", "cfh", "cg", "ce")
+  text(x = seq(1:length(levels(output.df$group))), y = 1
        , labels = sig.indicators
   )
   

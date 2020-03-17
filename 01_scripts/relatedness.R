@@ -25,7 +25,7 @@ require("tidyr")
 # if on a different system, prompt for working directory
 if(Sys.info()["nodename"] == "stark"){ 
   print("On Stark, ready to go")
-  setwd("/mnt/data/01_moore_oyster_project/stacks_workflow/") # stark
+  setwd("/mnt/data/bsuther/01_moore_oyster_project/stacks_workflow/") # stark
 } else if(Sys.info()["nodename"] == "Xavier"){
   print("On Xavier, ready to go")
   setwd("~/Documents/01_moore_oyster_project/stacks_workflow_all_data/") # Xavier
@@ -149,7 +149,7 @@ datatypes <- c("wang", "ritland","quellergt")
 for(i in 1:length(datatypes)){
   datatype <- datatypes[i]
   
-  pdf(file = paste0(output.dir, "relatedness_", datatype, "_", date, ".pdf"), width = 12, height = 8)
+  pdf(file = paste0("09-diversity_stats/", "relatedness_", datatype, "_", date, ".pdf"), width = 12, height = 8)
   boxplot(output$relatedness[[datatype]] ~ output$relatedness$group
           , col = colours
           , las = 2
