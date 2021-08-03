@@ -14,6 +14,7 @@ mappings.data <- read.table("04-all_samples/mappings_per_sample_table.txt"
 mappings.data
 
 mappings.data$sample <- gsub(pattern = ".bam", replacement = "", x = mappings.data$sample)
+mappings.data$sample <- gsub(pattern = ".sorted", replacement = "", x = mappings.data$sample)
 mappings.data
 
 collective <- merge(x = reads.data, y = mappings.data, by = "sample")
